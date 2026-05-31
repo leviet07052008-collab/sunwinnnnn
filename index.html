@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SunWin AI Collector</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04030d;font-family:'Share Tech Mono',monospace;width:100vw;height:100vh;overflow:hidden;}
+
+#sw-frame{position:fixed;inset:0;width:100%;height:100%;border:none;z-index:1;}
+
+/* ─── STATUS BAR ─── */
+.status-bar{
+  position:fixed;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.88);border:1px solid rgba(0,220,255,0.35);
+  padding:4px 14px;border-radius:30px;font-size:10px;color:#00ffaa;
+  z-index:999998;display:flex;align-items:center;gap:7px;
+  backdrop-filter:blur(20px);white-space:nowrap;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#00ff88;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+/* ─── TOGGLE BUTTON ─── */
+#sw-toggle{
+  position:fixed;bottom:20px;right:14px;width:44px;height:44px;
+  border-radius:50%;background:linear-gradient(145deg,#00c8ff,#0025aa);
+  border:none;color:#fff;font-size:20px;cursor:pointer;
+  z-index:999998;display:none;align-items:center;justify-content:center;
+  box-shadow:0 0 16px rgba(0,200,255,0.55);
+}
+#sw-toggle.show{display:flex;}
+
+/* ─── MAIN PANEL ─── */
+#sw-panel{
+  position:fixed;bottom:20px;right:14px;width:240px;
+  background:rgba(4,3,16,0.97);border:1px solid rgba(0,200,255,0.4);
+  border-radius:16px;z-index:999999;backdrop-filter:blur(30px);
+  transition:opacity 0.2s;
+}
+#sw-panel.hidden{opacity:0;pointer-events:none;}
+#sw-panel.mini .sw-body{display:none;}
+
+/* ─── HEADER ─── */
+.sw-header{
+  padding:8px 10px;background:rgba(0,200,255,0.06);
+  border-bottom:1px solid rgba(0,200,255,0.15);
+  border-radius:16px 16px 0 0;
+  display:flex;justify-content:space-between;align-items:center;
+  cursor:grab;user-select:none;
+}
+.sw-brand{font-family:'Orbitron',monospace;font-size:10px;font-weight:900;color:#0cf;letter-spacing:1px;}
+.sw-brand em{color:#ffffff55;font-style:normal;}
+.sw-ctrl-group{display:flex;gap:5px;}
+.sw-ctrl{
+  width:20px;height:20px;border-radius:50%;border:none;
+  background:rgba(255,255,255,0.07);color:#aaa;cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+}
+.sw-ctrl:hover{background:rgba(255,255,255,0.15);}
+
+/* ─── BODY ─── */
+.sw-body{padding:10px;}
+
+/* SESSION ROW */
+.sess-row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:#00000060;padding:5px 9px;border-radius:8px;margin-bottom:8px;
+}
+.sess-lbl{font-size:8px;color:#aaa;text-transform:uppercase;letter-spacing:1px;}
+.sess-num{font-family:'Orbitron',monospace;font-size:12px;color:#0cf;font-weight:700;}
+
+/* LAST RESULT */
+.last-row{
+  background:#0a0a1a;border:1px solid rgba(0,255,180,0.18);
+  border-radius:10px;padding:7px 9px;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;gap:4px;
+}
+.dice-wrap{display:flex;gap:3px;}
+.dv{
+  width:24px;height:24px;background:#05050f;border:1px solid #0cf44a;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:#fff;
+}
+.l-total{font-family:'Orbitron',monospace;font-size:16px;font-weight:800;color:#fff;}
+.l-tag{font-size:9px;font-weight:800;padding:3px 8px;border-radius:30px;}
+.tag-t{background:#2ecc7122;color:#2ecc71;border:1px solid #2ecc71;}
+.tag-x{background:#e74c3c22;color:#e74c3c;border:1px solid #e74c3c;}
+
+/* LOG */
+.log-box{
+  background:#00000070;border-left:2px solid #f0c420;border-radius:6px;
+  padding:5px 8px;margin-bottom:8px;font-size:8px;color:#ffdd88;
+  max-height:36px;overflow:hidden;line-height:1.4;
+}
+
+/* PREDICTION */
+.pred-box{
+  background:linear-gradient(135deg,#07071a,#010010);
+  border:1px solid rgba(0,200,255,0.45);border-radius:14px;
+  padding:10px 8px 8px;text-align:center;margin-bottom:8px;
+}
+.pred-lbl{font-size:8px;color:#0cf8;letter-spacing:2px;margin-bottom:4px;}
+.pred-val{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;letter-spacing:2px;}
+.pred-val.tai{color:#2ecc71;text-shadow:0 0 10px #2ecc71;}
+.pred-val.xiu{color:#e74c3c;text-shadow:0 0 10px #e74c3c;}
+.pred-val.wait{color:#555;font-size:20px;}
+.conf-row{display:flex;justify-content:space-between;margin-top:6px;margin-bottom:3px;}
+.conf-lbl{font-size:8px;color:#ccc6;}
+.conf-pct{font-family:'Orbitron',monospace;font-size:10px;color:#0cf;}
+.conf-track{height:3px;background:#1e1e2e;border-radius:3px;overflow:hidden;}
+.conf-fill{height:100%;width:0%;background:linear-gradient(90deg,#2ecc71,#0cf);transition:width 0.5s;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;}
+.sc{
+  background:#0a0a18;border:1px solid #1e1e30;border-radius:9px;
+  padding:5px 0;text-align:center;
+}
+.sc-lbl{font-size:7px;color:#999;margin-bottom:2px;}
+.sc-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;}
+
+/* HISTORY */
+.hist-strip{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;}
+.hd{
+  width:22px;height:22px;border-radius:5px;font-size:10px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.hd-t{background:#173322;color:#2ecc71;border:1px solid #2ecc7166;}
+.hd-x{background:#3a1510;color:#e74c3c;border:1px solid #e74c3c66;}
+.hd-e{background:#141420;color:#333;border:1px solid #2a2a3a;}
+
+/* FOOTER */
+.sw-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid #ffffff14;padding-top:6px;
+}
+.sw-time{font-size:8px;color:#0cf8;}
+.sw-ver{font-size:7px;color:#ffffff30;}
+</style>
+</head>
+<body>
+
+<iframe id="sw-frame" src="https://web.sunwin.qa" allowfullscreen></iframe>
+
+<div class="status-bar">
+  <div class="live-dot"></div>
+  <span id="status-text">Đang kết nối...</span>
+</div>
+
+<button id="sw-toggle">🤖</button>
+
+<div id="sw-panel">
+  <div class="sw-header" id="sw-drag">
+    <div class="sw-brand">SW·<em>AI</em></div>
+    <div class="sw-ctrl-group">
+      <button class="sw-ctrl" id="sw-min" title="Thu nhỏ">−</button>
+      <button class="sw-ctrl" id="sw-close" title="Đóng">✕</button>
+    </div>
+  </div>
+
+  <div class="sw-body">
+    <div class="sess-row">
+      <span class="sess-lbl">📌 Phiên</span>
+      <span class="sess-num" id="sw-session">#------</span>
+    </div>
+
+    <div class="last-row">
+      <div class="dice-wrap" id="sw-dice">
+        <div class="dv">-</div><div class="dv">-</div><div class="dv">-</div>
+      </div>
+      <span class="l-total" id="sw-total">--</span>
+      <span class="l-tag" id="sw-ltag">---</span>
+    </div>
+
+    <div class="log-box" id="sw-log">⚡ Khởi động...</div>
+
+    <div class="pred-box">
+      <div class="pred-lbl">🧠 DỰ ĐOÁN TIẾP THEO</div>
+      <div class="pred-val wait" id="sw-pred">--</div>
+      <div class="conf-row">
+        <span class="conf-lbl">TIN CẬY</span>
+        <span class="conf-pct" id="sw-cpct">--%</span>
+      </div>
+      <div class="conf-track"><div class="conf-fill" id="sw-cfill"></div></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="sc"><div class="sc-lbl">🟢 TÀI</div><div class="sc-val" id="sw-tai">--</div></div>
+      <div class="sc"><div class="sc-lbl">🔴 XỈU</div><div class="sc-val" id="sw-xiu">--</div></div>
+      <div class="sc"><div class="sc-lbl">⚡ CHUỖI</div><div class="sc-val" id="sw-streak">--</div></div>
+    </div>
+
+    <div class="hist-strip" id="sw-hist"></div>
+
+    <div class="sw-foot">
+      <span class="sw-time" id="sw-time">--:--:--</span>
+      <span class="sw-ver">v4.0 · MULTI-PROXY</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ══════════════════════════════════════════════
+     CONFIG
+  ══════════════════════════════════════════════ */
+  const API_SERVER   = "https://sunwin-tool.onrender.com";
+  const SOURCE_API   = "https://api-sunwin-urrv.onrender.com/api/history";
+
+  // Danh sách CORS proxy fallback
+  const PROXIES = [
+    "https://api.allorigins.win/raw?url=",
+    "https://corsproxy.io/?",
+    "https://cors-anywhere.herokuapp.com/",
+    "https://crossorigin.me/",
+  ];
+  let proxyIdx = 0;
+
+  let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
+  let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
+  let consecutiveErrs = 0;
+
+  /* ══════════════════════════════════════════════
+     HELPERS
+  ══════════════════════════════════════════════ */
+  const $  = id => document.getElementById(id);
+  const log = msg => { const el=$("sw-log"); if(el) el.textContent=msg; console.log("[SW]",msg); };
+  const setStatus = (msg, ok=true) => {
+    const el=$("status-text"); if(el) el.textContent=msg;
+    const dot=document.querySelector(".live-dot");
+    if(dot) dot.style.background = ok?"#00ff88":"#ff4444";
+  };
+
+  function toResult(raw){
+    if(!raw) return null;
+    const s = String(raw).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(/tai/.test(s)) return "Tài";
+    if(/xiu|xu/.test(s)) return "Xỉu";
+    return null;
+  }
+
+  /* ══════════════════════════════════════════════
+     UI UPDATE
+  ══════════════════════════════════════════════ */
+  function renderHist(){
+    const c=$("sw-hist"); if(!c) return;
+    c.innerHTML="";
+    const recent=[...localHistory].slice(-12);
+    while(recent.length<12) recent.unshift(null);
+    recent.forEach(item=>{
+      const d=document.createElement("div");
+      if(!item){ d.className="hd hd-e"; d.textContent="?"; }
+      else if(item.r==="Tài"){ d.className="hd hd-t"; d.textContent="T"; }
+      else { d.className="hd hd-x"; d.textContent="X"; }
+      c.appendChild(d);
+    });
+  }
+
+  function updateUI(session, dice, total, result){
+    const sEl=$("sw-session"); if(sEl) sEl.textContent=`#${session}`;
+    const dvs=document.querySelectorAll("#sw-dice .dv");
+    dvs.forEach((el,i)=>{ el.textContent=dice[i]??"-"; });
+    const tEl=$("sw-total"); if(tEl) tEl.textContent=total||"--";
+    const tag=$("sw-ltag");
+    if(tag && result){
+      if(result==="Tài"){ tag.textContent="TÀI"; tag.className="l-tag tag-t"; }
+      else { tag.textContent="XỈU"; tag.className="l-tag tag-x"; }
+    }
+  }
+
+  function addHistory(result, dice, total){
+    localHistory.push({r:result, dice, total, ts:Date.now()});
+    if(localHistory.length>40) localHistory.shift();
+    localStorage.setItem("sw_history", JSON.stringify(localHistory));
+    renderHist();
+  }
+
+  /* ══════════════════════════════════════════════
+     FETCH VỚI PROXY FALLBACK
+  ══════════════════════════════════════════════ */
+  async function fetchWithProxy(url, timeout=9000){
+    const proxy = PROXIES[proxyIdx % PROXIES.length];
+    const fullUrl = proxy + encodeURIComponent(url);
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), timeout);
+    try {
+      const res = await fetch(fullUrl, { signal: ctrl.signal });
+      clearTimeout(tid);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch(e) {
+      clearTimeout(tid);
+      // Thử proxy tiếp theo
+      proxyIdx++;
+      if(proxyIdx > PROXIES.length * 2) proxyIdx=0;
+      throw e;
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     FETCH DIRECT (không proxy - thử trước)
+  ══════════════════════════════════════════════ */
+  async function fetchDirect(url, timeout=8000){
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), timeout);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(tid);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch(e) {
+      clearTimeout(tid);
+      throw e;
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     GỬI KẾT QUẢ LÊN SERVER
+  ══════════════════════════════════════════════ */
+  async function sendResult(session, dice, total, result){
+    try {
+      log(`📡 Gửi #${session} → ${result}`);
+      const res = await fetch(`${API_SERVER}/api/result`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({session, dice, total, result, ts:Date.now()})
+      });
+      const data = await res.json();
+      log(`✅ Gửi OK phiên #${session}`);
+      if(session > lastSentSession){
+        lastSentSession = session;
+        localStorage.setItem("sw_last_session", session);
+      }
+      setStatus(`✅ #${session} · ${result}`);
+      consecutiveErrs = 0;
+      return true;
+    } catch(e){
+      log(`❌ Lỗi gửi: ${e.message}`);
+      setStatus(`⚠️ Gửi thất bại #${session}`, false);
+      return false;
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     LẤY DỰ ĐOÁN
+  ══════════════════════════════════════════════ */
+  async function fetchPred(){
+    try {
+      const p = await fetchDirect(`${API_SERVER}/api/predict?_=${Date.now()}`);
+      const predEl=$("sw-pred"), cfill=$("sw-cfill"), cpct=$("sw-cpct");
+      const tai=$("sw-tai"), xiu=$("sw-xiu"), streak=$("sw-streak");
+      if(p.prediction){
+        const isTai = String(p.prediction).toUpperCase().includes("TÀI");
+        if(predEl){ predEl.textContent=isTai?"TÀI":"XỈU"; predEl.className=`pred-val ${isTai?"tai":"xiu"}`; }
+        const conf=Math.round(p.confidence??0);
+        if(cfill) cfill.style.width=`${conf}%`;
+        if(cpct)  cpct.textContent=`${conf}%`;
+      }
+      if(p.stats){
+        if(tai)    tai.textContent=p.stats.tai??"--";
+        if(xiu)    xiu.textContent=p.stats.xiu??"--";
+        if(streak) streak.textContent=p.stats.streak??"--";
+      }
+    } catch(e){ /* silent */ }
+  }
+
+  /* ══════════════════════════════════════════════
+     PARSE DATA TỪ NHIỀU ĐỊNH DẠNG API
+  ══════════════════════════════════════════════ */
+  function parseData(data){
+    // Hỗ trợ nhiều cấu trúc JSON khác nhau
+    let c = data?.current ?? data?.data?.current ?? data?.result ?? data;
+    if(Array.isArray(c)) c = c[0];
+    if(!c) return null;
+
+    const keys = Object.keys(c).map(k=>k.toLowerCase());
+    const get = (...names) => {
+      for(const n of names){
+        for(const k of Object.keys(c)){
+          if(k.toLowerCase()===n) return c[k];
+        }
+      }
+      return undefined;
+    };
+
+    const session = Number(get("phien","session","round","id","session_id"));
+    if(isNaN(session)||session<=0) return null;
+
+    const d1=Number(get("xuc_xac_1","dice1","d1","xucxac1")||0);
+    const d2=Number(get("xuc_xac_2","dice2","d2","xucxac2")||0);
+    const d3=Number(get("xuc_xac_3","dice3","d3","xucxac3")||0);
+    const dice=[d1,d2,d3];
+
+    let total=Number(get("tong","total","sum","tongdiem")||0);
+    if(!total && d1&&d2&&d3) total=d1+d2+d3;
+
+    const rawResult = get("ket_qua","ketqua","result","outcome","kq");
+    let result = toResult(rawResult);
+    // Nếu không có text thì tính từ tổng
+    if(!result && total>=3){
+      result = total >= 11 ? "Tài" : "Xỉu";
+    }
+
+    return {session, dice, total, result};
+  }
+
+  /* ══════════════════════════════════════════════
+     COLLECT CHÍNH
+  ══════════════════════════════════════════════ */
+  async function collect(){
+    let data = null;
+
+    // Thử 1: Fetch thẳng (nếu API cho phép CORS)
+    try {
+      data = await fetchDirect(SOURCE_API);
+      log(`📥 Direct OK`);
+    } catch(e1){
+      // Thử 2: Qua proxy
+      try {
+        data = await fetchWithProxy(SOURCE_API);
+        log(`📥 Proxy[${proxyIdx%PROXIES.length}] OK`);
+      } catch(e2){
+        consecutiveErrs++;
+        log(`❌ Lỗi ${consecutiveErrs}x: ${e2.message.slice(0,40)}`);
+        setStatus(`⚠️ Mất kết nối (${consecutiveErrs}x)`, false);
+        return;
+      }
+    }
+
+    const parsed = parseData(data);
+    if(!parsed){ log("⚠️ Parse thất bại / không có dữ liệu"); return; }
+
+    const {session, dice, total, result} = parsed;
+    updateUI(session, dice, total, result);
+
+    if(!result){
+      setStatus(`🔄 Phiên #${session} chờ kết quả...`);
+      log(`🔄 Phiên #${session} — chờ kết quả`);
+      return;
+    }
+
+    log(`📥 #${session}: ${result} (${dice.join(",")}=${total})`);
+
+    if(session > lastSentSession){
+      addHistory(result, dice, total);
+      await sendResult(session, dice, total, result);
+    } else if(session === lastSentSession){
+      setStatus(`✔️ #${session} đã xử lý`);
+    } else {
+      // session thụt lùi → reset
+      log(`⚠️ Reset counter (${session} < ${lastSentSession})`);
+      lastSentSession = session - 1;
+      localStorage.setItem("sw_last_session", lastSentSession);
+      addHistory(result, dice, total);
+      await sendResult(session, dice, total, result);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     DRAG PANEL
+  ══════════════════════════════════════════════ */
+  const panel=$("sw-panel"), handle=$("sw-drag");
+  let drag=false, sx,sy,sl,st;
+  handle.addEventListener("mousedown", e=>{
+    if(e.target.closest(".sw-ctrl-group")) return;
+    drag=true;
+    const r=panel.getBoundingClientRect();
+    sl=r.left; st=r.top; sx=e.clientX-sl; sy=e.clientY-st;
+    panel.style.right="auto"; panel.style.left=sl+"px"; panel.style.top=st+"px";
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove", e=>{
+    if(!drag) return;
+    let l=e.clientX-sx, t=e.clientY-sy;
+    l=Math.max(4, Math.min(window.innerWidth-panel.offsetWidth-4, l));
+    t=Math.max(4, Math.min(window.innerHeight-panel.offsetHeight-4, t));
+    panel.style.left=l+"px"; panel.style.top=t+"px";
+  });
+  window.addEventListener("mouseup", ()=>drag=false);
+
+  // Touch drag support
+  handle.addEventListener("touchstart", e=>{
+    if(e.target.closest(".sw-ctrl-group")) return;
+    const r=panel.getBoundingClientRect();
+    sl=r.left; st=r.top;
+    sx=e.touches[0].clientX-sl; sy=e.touches[0].clientY-st;
+    panel.style.right="auto"; panel.style.left=sl+"px"; panel.style.top=st+"px";
+  });
+  window.addEventListener("touchmove", e=>{
+    if(!e.touches[0]) return;
+    let l=e.touches[0].clientX-sx, t=e.touches[0].clientY-sy;
+    l=Math.max(4, Math.min(window.innerWidth-panel.offsetWidth-4, l));
+    t=Math.max(4, Math.min(window.innerHeight-panel.offsetHeight-4, t));
+    panel.style.left=l+"px"; panel.style.top=t+"px";
+  });
+
+  /* ══════════════════════════════════════════════
+     CONTROLS
+  ══════════════════════════════════════════════ */
+  const toggleBtn=$("sw-toggle");
+  $("sw-min").onclick  = ()=>panel.classList.toggle("mini");
+  $("sw-close").onclick= ()=>{ panel.classList.add("hidden"); toggleBtn.classList.add("show"); };
+  toggleBtn.onclick    = ()=>{ panel.classList.remove("hidden"); toggleBtn.classList.remove("show"); };
+
+  // Clock
+  setInterval(()=>{ const el=$("sw-time"); if(el) el.textContent=new Date().toLocaleTimeString("vi-VN"); }, 1000);
+
+  /* ══════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════ */
+  renderHist();
+  setStatus("✅ Sẵn sàng");
+  log("🚀 Khởi động — thử kết nối...");
+
+  collect();
+  fetchPred();
+  setInterval(collect,  3000);
+  setInterval(fetchPred, 5000);
+
+})();
+</script>
+</body>
+</html>
