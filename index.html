@@ -3,567 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SunWin AI - Overlay Scanner</title>
+    <title>SunWin AI - Loader</title>
     <style>
-        /* Style cho overlay hiển thị trên web.sunwin.qa */
-        .sunwin-ai-overlay {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 320px;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(10, 20, 40, 0.95));
-            border: 1px solid rgba(0, 200, 255, 0.5);
-            border-radius: 16px;
-            z-index: 999999;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .sunwin-ai-header {
-            padding: 12px 15px;
-            background: linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 100, 200, 0.1));
-            border-radius: 16px 16px 0 0;
-            cursor: move;
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0a1a 0%, #0f0f23 100%);
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            border-bottom: 1px solid rgba(0, 200, 255, 0.3);
-        }
-        
-        .sunwin-ai-title {
-            font-weight: bold;
-            color: #00c8ff;
-            font-size: 14px;
-        }
-        
-        .sunwin-ai-controls {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .sunwin-ai-controls button {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            cursor: pointer;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        
-        .sunwin-ai-controls button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .sunwin-ai-body {
-            padding: 15px;
-        }
-        
-        .sunwin-session {
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 12px;
-        }
-        
-        .sunwin-session-label {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 10px;
-        }
-        
-        .sunwin-session-value {
-            color: #ffaa00;
-            font-size: 20px;
-            font-weight: bold;
             font-family: monospace;
         }
         
-        .sunwin-dice {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 15px 0;
+        .loader-container {
+            text-align: center;
+            color: #00c8ff;
         }
         
-        .sunwin-dice-item {
+        .spinner {
             width: 50px;
             height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(0, 200, 255, 0.5);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
+            border: 3px solid rgba(0, 200, 255, 0.3);
+            border-top-color: #00c8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
         
-        .sunwin-total {
-            text-align: center;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .status {
+            margin-top: 20px;
             font-size: 14px;
-            margin: 10px 0;
         }
         
-        .sunwin-total-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffaa00;
-        }
-        
-        .sunwin-result {
-            text-align: center;
-            padding: 8px;
-            border-radius: 20px;
-            margin: 10px 0;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .sunwin-result-tai {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid #2ecc71;
-        }
-        
-        .sunwin-result-xiu {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
-        }
-        
-        .sunwin-prediction {
-            background: rgba(0, 200, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        .sunwin-prediction-label {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-        }
-        
-        .sunwin-prediction-value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-        
-        .sunwin-prediction-tai {
-            color: #2ecc71;
-        }
-        
-        .sunwin-prediction-xiu {
-            color: #e74c3c;
-        }
-        
-        .sunwin-confidence {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        
-        .sunwin-confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #2ecc71, #00c8ff);
-            transition: width 0.5s;
-        }
-        
-        .sunwin-status {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .sunwin-log {
-            font-size: 9px;
-            color: rgba(255, 255, 0, 0.5);
-            margin-top: 8px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-            max-height: 40px;
-            overflow-y: auto;
-        }
-        
-        /* Animation */
-        @keyframes sunwinPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .sunwin-scanning {
-            animation: sunwinPulse 1s ease-in-out infinite;
+        .note {
+            margin-top: 30px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
-    <!-- Overlay sẽ được inject vào trang SunWin -->
-    <div id="sunwin-ai-root"></div>
-    
+    <div class="loader-container">
+        <div class="spinner"></div>
+        <div class="status">🎲 Đang chuyển đến SunWin...</div>
+        <div class="note">Vui lòng đợi, tự động tải overlay khi vào trang</div>
+    </div>
+
     <script>
-        // ============ SUNWIN AI OVERLAY ============
-        // Script này chạy TRỰC TIẾP trên web.sunwin.qa
-        
         (function() {
-            'use strict';
+            // Chuyển hướng đến SunWin
+            window.location.href = 'https://web.sunwin.qa';
             
-            console.log('🎲 SunWin AI Overlay - Đang khởi tạo...');
-            
-            // Cấu hình
-            const CONFIG = {
-                apiBase: 'https://sunwin-tool.onrender.com',
-                scanInterval: 3000,
-                lastSession: localStorage.getItem('sw_last_session') || null
-            };
-            
-            // State
-            let overlayElement = null;
-            let scanTimer = null;
-            let isDragging = false;
-            let dragOffset = { x: 0, y: 0 };
-            let currentData = {
-                session: null,
-                dice: [0, 0, 0],
-                total: 0,
-                result: null
-            };
-            
-            // ============ TẠO OVERLAY UI ============
-            function createOverlay() {
-                const overlay = document.createElement('div');
-                overlay.className = 'sunwin-ai-overlay';
-                overlay.id = 'sunwin-ai-overlay';
-                overlay.innerHTML = `
-                    <div class="sunwin-ai-header" id="sunwin-drag-handle">
-                        <span class="sunwin-ai-title">🎲 SUNWIN AI</span>
-                        <div class="sunwin-ai-controls">
-                            <button id="sunwin-minimize">−</button>
-                            <button id="sunwin-close">✕</button>
-                        </div>
-                    </div>
-                    <div class="sunwin-ai-body" id="sunwin-body">
-                        <div class="sunwin-session">
-                            <div class="sunwin-session-label">PHIÊN HIỆN TẠI</div>
-                            <div class="sunwin-session-value" id="session-value">#------</div>
-                        </div>
+            // Lưu script overlay vào sessionStorage để khi chuyển trang vẫn chạy
+            const overlayScript = `
+                // SUNWIN AI OVERLAY - TỰ ĐỘNG CHẠY
+                (function() {
+                    'use strict';
+                    
+                    // Chờ trang load xong
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', initOverlay);
+                    } else {
+                        initOverlay();
+                    }
+                    
+                    function initOverlay() {
+                        // Kiểm tra đã có overlay chưa
+                        if (document.getElementById('sunwin-ai-overlay')) return;
                         
-                        <div class="sunwin-dice" id="dice-container">
-                            <div class="sunwin-dice-item">-</div>
-                            <div class="sunwin-dice-item">-</div>
-                            <div class="sunwin-dice-item">-</div>
-                        </div>
+                        // Tạo style
+                        const style = document.createElement('style');
+                        style.textContent = \`
+                            .sunwin-ai-overlay {
+                                position: fixed;
+                                bottom: 20px;
+                                right: 20px;
+                                width: 320px;
+                                background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(10, 20, 40, 0.95));
+                                border: 1px solid rgba(0, 200, 255, 0.5);
+                                border-radius: 16px;
+                                z-index: 999999;
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                backdrop-filter: blur(10px);
+                                box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+                                transition: all 0.3s ease;
+                            }
+                            .sunwin-ai-header {
+                                padding: 12px 15px;
+                                background: linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 100, 200, 0.1));
+                                border-radius: 16px 16px 0 0;
+                                cursor: move;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                border-bottom: 1px solid rgba(0, 200, 255, 0.3);
+                            }
+                            .sunwin-ai-title {
+                                font-weight: bold;
+                                color: #00c8ff;
+                                font-size: 14px;
+                            }
+                            .sunwin-ai-controls {
+                                display: flex;
+                                gap: 8px;
+                            }
+                            .sunwin-ai-controls button {
+                                background: rgba(255, 255, 255, 0.1);
+                                border: none;
+                                color: white;
+                                cursor: pointer;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 4px;
+                                font-size: 12px;
+                            }
+                            .sunwin-ai-controls button:hover {
+                                background: rgba(255, 255, 255, 0.3);
+                            }
+                            .sunwin-ai-body {
+                                padding: 15px;
+                            }
+                            .sunwin-session {
+                                background: rgba(0, 0, 0, 0.5);
+                                border-radius: 8px;
+                                padding: 8px;
+                                margin-bottom: 10px;
+                                text-align: center;
+                                font-size: 12px;
+                            }
+                            .sunwin-session-label {
+                                color: rgba(255, 255, 255, 0.5);
+                                font-size: 10px;
+                            }
+                            .sunwin-session-value {
+                                color: #ffaa00;
+                                font-size: 20px;
+                                font-weight: bold;
+                                font-family: monospace;
+                            }
+                            .sunwin-dice {
+                                display: flex;
+                                justify-content: center;
+                                gap: 15px;
+                                margin: 15px 0;
+                            }
+                            .sunwin-dice-item {
+                                width: 50px;
+                                height: 50px;
+                                background: rgba(255, 255, 255, 0.1);
+                                border: 2px solid rgba(0, 200, 255, 0.5);
+                                border-radius: 12px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: white;
+                            }
+                            .sunwin-total {
+                                text-align: center;
+                                font-size: 14px;
+                                margin: 10px 0;
+                            }
+                            .sunwin-total-value {
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #ffaa00;
+                            }
+                            .sunwin-result {
+                                text-align: center;
+                                padding: 8px;
+                                border-radius: 20px;
+                                margin: 10px 0;
+                                font-weight: bold;
+                                font-size: 18px;
+                            }
+                            .sunwin-result-tai {
+                                background: rgba(46, 204, 113, 0.2);
+                                color: #2ecc71;
+                                border: 1px solid #2ecc71;
+                            }
+                            .sunwin-result-xiu {
+                                background: rgba(231, 76, 60, 0.2);
+                                color: #e74c3c;
+                                border: 1px solid #e74c3c;
+                            }
+                            .sunwin-prediction {
+                                background: rgba(0, 200, 255, 0.1);
+                                border-radius: 12px;
+                                padding: 12px;
+                                margin-top: 10px;
+                                text-align: center;
+                            }
+                            .sunwin-prediction-label {
+                                font-size: 10px;
+                                color: rgba(255, 255, 255, 0.5);
+                            }
+                            .sunwin-prediction-value {
+                                font-size: 28px;
+                                font-weight: bold;
+                            }
+                            .sunwin-prediction-tai {
+                                color: #2ecc71;
+                            }
+                            .sunwin-prediction-xiu {
+                                color: #e74c3c;
+                            }
+                            .sunwin-confidence {
+                                height: 4px;
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 2px;
+                                margin: 10px 0;
+                                overflow: hidden;
+                            }
+                            .sunwin-confidence-fill {
+                                height: 100%;
+                                background: linear-gradient(90deg, #2ecc71, #00c8ff);
+                                transition: width 0.5s;
+                            }
+                            .sunwin-status {
+                                font-size: 10px;
+                                color: rgba(255, 255, 255, 0.4);
+                                text-align: center;
+                                margin-top: 10px;
+                                padding-top: 10px;
+                                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                            }
+                            .sunwin-log {
+                                font-size: 9px;
+                                color: rgba(255, 255, 0, 0.5);
+                                margin-top: 8px;
+                                padding: 5px;
+                                background: rgba(0, 0, 0, 0.3);
+                                border-radius: 4px;
+                                max-height: 40px;
+                                overflow-y: auto;
+                            }
+                        \`;
+                        document.head.appendChild(style);
                         
-                        <div class="sunwin-total">
-                            Tổng: <span class="sunwin-total-value" id="total-value">--</span>
-                        </div>
-                        
-                        <div class="sunwin-result" id="result-badge">---</div>
-                        
-                        <div class="sunwin-prediction">
-                            <div class="sunwin-prediction-label">🤖 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
-                            <div class="sunwin-prediction-value" id="prediction-value">---</div>
-                            <div class="sunwin-confidence">
-                                <div class="sunwin-confidence-fill" id="confidence-fill" style="width: 0%"></div>
+                        // Tạo overlay HTML
+                        const overlay = document.createElement('div');
+                        overlay.className = 'sunwin-ai-overlay';
+                        overlay.id = 'sunwin-ai-overlay';
+                        overlay.innerHTML = \`
+                            <div class="sunwin-ai-header" id="sunwin-drag-handle">
+                                <span class="sunwin-ai-title">🎲 SUNWIN AI</span>
+                                <div class="sunwin-ai-controls">
+                                    <button id="sunwin-minimize">−</button>
+                                    <button id="sunwin-close">✕</button>
+                                </div>
                             </div>
-                            <div id="confidence-text" style="font-size: 11px;">Độ tin cậy: --%</div>
-                        </div>
+                            <div class="sunwin-ai-body" id="sunwin-body">
+                                <div class="sunwin-session">
+                                    <div class="sunwin-session-label">PHIÊN HIỆN TẠI</div>
+                                    <div class="sunwin-session-value" id="session-value">#------</div>
+                                </div>
+                                <div class="sunwin-dice">
+                                    <div class="sunwin-dice-item">-</div>
+                                    <div class="sunwin-dice-item">-</div>
+                                    <div class="sunwin-dice-item">-</div>
+                                </div>
+                                <div class="sunwin-total">
+                                    Tổng: <span class="sunwin-total-value" id="total-value">--</span>
+                                </div>
+                                <div class="sunwin-result" id="result-badge">---</div>
+                                <div class="sunwin-prediction">
+                                    <div class="sunwin-prediction-label">🤖 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
+                                    <div class="sunwin-prediction-value" id="prediction-value">---</div>
+                                    <div class="sunwin-confidence">
+                                        <div class="sunwin-confidence-fill" id="confidence-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div id="confidence-text" style="font-size: 11px;">Độ tin cậy: --%</div>
+                                </div>
+                                <div class="sunwin-log" id="log-area">[✓] Đã khởi tạo</div>
+                                <div class="sunwin-status" id="status-text">🔍 Đang quét dữ liệu...</div>
+                            </div>
+                        \`;
+                        document.body.appendChild(overlay);
                         
-                        <div class="sunwin-log" id="log-area">
-                            [✓] Đã khởi tạo
-                        </div>
+                        // Khởi tạo các chức năng
+                        const CONFIG = {
+                            apiBase: 'https://sunwin-tool.onrender.com',
+                            scanInterval: 3000,
+                            lastSession: localStorage.getItem('sw_last_session') || null
+                        };
                         
-                        <div class="sunwin-status" id="status-text">
-                            🔍 Đang quét dữ liệu...
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(overlay);
-                return overlay;
-            }
-            
-            // ============ QUÉT DOM TRỰC TIẾP TỪ SUNWIN ============
-            function scanDOM() {
-                try {
-                    // Lấy toàn bộ text trong trang
-                    const bodyText = document.body.innerText || document.body.textContent;
-                    
-                    // Tìm mã phiên (6 chữ số)
-                    const sessionMatch = bodyText.match(/\b(\d{6})\b/);
-                    let session = null;
-                    if (sessionMatch) {
-                        session = sessionMatch[1];
-                    }
-                    
-                    // Nếu không tìm thấy 6 số, thử tìm dạng có dấu chấm: 52.550.259
-                    if (!session) {
-                        const dotMatch = bodyText.match(/(\d{2})\.(\d{3})\.(\d{3})/);
-                        if (dotMatch) {
-                            session = dotMatch[1] + dotMatch[2] + dotMatch[3];
+                        let scanTimer = null;
+                        let isDragging = false;
+                        let dragOffset = { x: 0, y: 0 };
+                        
+                        function addLog(msg, isError) {
+                            const logEl = document.getElementById('log-area');
+                            if (logEl) {
+                                const time = new Date().toLocaleTimeString('vi-VN');
+                                const color = isError ? '#e74c3c' : '#ffff00';
+                                logEl.innerHTML += \`<div style="color: \${color};">[\${time}] \${msg}</div>\`;
+                                logEl.scrollTop = logEl.scrollHeight;
+                                while (logEl.children.length > 10) logEl.removeChild(logEl.firstChild);
+                            }
+                            console.log(\`[SunWin] \${msg}\`);
                         }
-                    }
-                    
-                    // Tìm kết quả Tài/Xỉu
-                    let result = null;
-                    if (bodyText.includes('Tài') || bodyText.includes('TAI')) {
-                        result = 'Tài';
-                    } else if (bodyText.includes('Xỉu') || bodyText.includes('XIU')) {
-                        result = 'Xỉu';
-                    }
-                    
-                    // Tìm xúc xắc (tìm các số 1-6 xuất hiện trong khu vực kết quả)
-                    let dice = [0, 0, 0];
-                    const diceMatches = bodyText.match(/[1-6]/g);
-                    if (diceMatches && diceMatches.length >= 3) {
-                        // Lấy 3 số đầu tiên hoặc 3 số cuối
-                        dice = diceMatches.slice(0, 3).map(Number);
-                    }
-                    
-                    // Tìm tổng điểm (có thể là số 3-18)
-                    let total = 0;
-                    const totalMatch = bodyText.match(/\b(1[0-8]|[3-9])\b/);
-                    if (totalMatch && parseInt(totalMatch[1]) >= 3 && parseInt(totalMatch[1]) <= 18) {
-                        total = parseInt(totalMatch[1]);
-                    } else {
-                        total = dice.reduce((a, b) => a + b, 0);
-                    }
-                    
-                    // Nếu có phiên mới
-                    if (session && session !== CONFIG.lastSession) {
-                        addLog(`📦 Phát hiện phiên mới: #${session}`);
-                        CONFIG.lastSession = session;
-                        localStorage.setItem('sw_last_session', session);
                         
-                        // Gửi lên API
-                        sendToAPI(session, dice, total, result);
+                        function scanDOM() {
+                            try {
+                                const bodyText = document.body.innerText;
+                                const sessionMatch = bodyText.match(/\\b(\\d{6})\\b/);
+                                let session = sessionMatch ? sessionMatch[1] : null;
+                                
+                                if (!session) {
+                                    const dotMatch = bodyText.match(/(\\d{2})\\.(\\d{3})\\.(\\d{3})/);
+                                    if (dotMatch) session = dotMatch[1] + dotMatch[2] + dotMatch[3];
+                                }
+                                
+                                let result = null;
+                                if (bodyText.includes('Tài')) result = 'Tài';
+                                else if (bodyText.includes('Xỉu')) result = 'Xỉu';
+                                
+                                let dice = [0,0,0];
+                                const diceMatches = bodyText.match(/[1-6]/g);
+                                if (diceMatches && diceMatches.length >= 3) {
+                                    dice = diceMatches.slice(0,3).map(Number);
+                                }
+                                
+                                let total = dice.reduce((a,b)=>a+b,0);
+                                const totalMatch = bodyText.match(/\\b(1[0-8]|[3-9])\\b/);
+                                if (totalMatch && parseInt(totalMatch[1]) >=3 && parseInt(totalMatch[1]) <=18) {
+                                    total = parseInt(totalMatch[1]);
+                                }
+                                
+                                if (session && session !== CONFIG.lastSession) {
+                                    addLog(\`📦 Phát hiện phiên mới: #\${session}\`);
+                                    CONFIG.lastSession = session;
+                                    localStorage.setItem('sw_last_session', session);
+                                    
+                                    fetch(\`\${CONFIG.apiBase}/api/result\`, {
+                                        method: 'POST',
+                                        headers: {'Content-Type': 'application/json'},
+                                        body: JSON.stringify({
+                                            session: parseInt(session),
+                                            dice: dice,
+                                            total: total,
+                                            result: result || (total >= 11 ? 'Tài' : 'Xỉu'),
+                                            ts: Date.now()
+                                        })
+                                    }).then(() => addLog(\`✅ Đã gửi phiên #\${session}\`));
+                                    
+                                    fetchPrediction();
+                                }
+                                
+                                document.getElementById('session-value').textContent = session ? \`#\${session}\` : '#------';
+                                const diceEls = document.querySelectorAll('.sunwin-dice-item');
+                                dice.forEach((v,i)=> { if(diceEls[i]) diceEls[i].textContent = v || '-'; });
+                                document.getElementById('total-value').textContent = total;
+                                
+                                const badge = document.getElementById('result-badge');
+                                if (result === 'Tài') {
+                                    badge.textContent = 'TÀI';
+                                    badge.className = 'sunwin-result sunwin-result-tai';
+                                } else if (result === 'Xỉu') {
+                                    badge.textContent = 'XỈU';
+                                    badge.className = 'sunwin-result sunwin-result-xiu';
+                                }
+                            } catch(e) { addLog(\`Lỗi: \${e.message}\`, true); }
+                        }
+                        
+                        async function fetchPrediction() {
+                            try {
+                                const res = await fetch(\`\${CONFIG.apiBase}/api/predict\`);
+                                const pred = await res.json();
+                                const predEl = document.getElementById('prediction-value');
+                                predEl.textContent = pred.prediction;
+                                predEl.className = \`sunwin-prediction-value sunwin-prediction-\${pred.prediction === 'Tài' ? 'tai' : 'xiu'}\`;
+                                document.getElementById('confidence-fill').style.width = \`\${pred.confidence}%\`;
+                                document.getElementById('confidence-text').textContent = \`Độ tin cậy: \${pred.confidence}%\`;
+                            } catch(e) {}
+                        }
+                        
+                        // Drag
+                        const header = document.getElementById('sunwin-drag-handle');
+                        const ov = document.getElementById('sunwin-ai-overlay');
+                        header.addEventListener('mousedown', (e) => {
+                            if (e.target.closest('.sunwin-ai-controls')) return;
+                            isDragging = true;
+                            const rect = ov.getBoundingClientRect();
+                            dragOffset.x = e.clientX - rect.left;
+                            dragOffset.y = e.clientY - rect.top;
+                            e.preventDefault();
+                        });
+                        document.addEventListener('mousemove', (e) => {
+                            if (!isDragging) return;
+                            ov.style.left = \`\${Math.max(0, Math.min(window.innerWidth - ov.offsetWidth, e.clientX - dragOffset.x))}px\`;
+                            ov.style.top = \`\${Math.max(0, Math.min(window.innerHeight - ov.offsetHeight, e.clientY - dragOffset.y))}px\`;
+                            ov.style.right = 'auto';
+                            ov.style.bottom = 'auto';
+                        });
+                        document.addEventListener('mouseup', () => { isDragging = false; });
+                        
+                        // Controls
+                        document.getElementById('sunwin-minimize').onclick = () => {
+                            const body = document.getElementById('sunwin-body');
+                            body.style.display = body.style.display === 'none' ? 'block' : 'none';
+                        };
+                        document.getElementById('sunwin-close').onclick = () => {
+                            ov.style.display = 'none';
+                            addLog('Overlay đã ẩn, refresh để hiện lại');
+                        };
+                        
+                        addLog('🚀 SunWin AI Overlay đã sẵn sàng');
+                        scanDOM();
+                        fetchPrediction();
+                        scanTimer = setInterval(scanDOM, CONFIG.scanInterval);
+                        setInterval(() => {
+                            const st = document.getElementById('status-text');
+                            if(st) st.innerHTML = \`🕐 \${new Date().toLocaleTimeString('vi-VN')} | Đang theo dõi...\`;
+                        }, 1000);
                     }
-                    
-                    // Cập nhật giao diện
-                    updateUI(session, dice, total, result);
-                    
-                    return { session, dice, total, result };
-                    
-                } catch (error) {
-                    addLog(`❌ Lỗi quét: ${error.message}`, true);
-                    return null;
-                }
-            }
+                })();
+            `;
             
-            // ============ GỬI DỮ LIỆU LÊN API ============
-            async function sendToAPI(session, dice, total, result) {
-                if (!session) return;
-                
-                try {
-                    const payload = {
-                        session: parseInt(session),
-                        dice: dice,
-                        total: total,
-                        result: result || (total >= 11 ? 'Tài' : total <= 10 ? 'Xỉu' : '?'),
-                        ts: Date.now()
-                    };
-                    
-                    const response = await fetch(`${CONFIG.apiBase}/api/result`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (response.ok) {
-                        addLog(`✅ Đã gửi phiên #${session}: ${payload.result}`);
-                    } else {
-                        addLog(`⚠️ Gửi thất bại phiên #${session}`, true);
-                    }
-                    
-                    // Lấy dự đoán mới
-                    await fetchPrediction();
-                    
-                } catch (error) {
-                    addLog(`❌ Lỗi gửi API: ${error.message}`, true);
-                }
-            }
+            // Lưu vào sessionStorage để khi chuyển trang vẫn nhớ
+            sessionStorage.setItem('sunwin_overlay', overlayScript);
             
-            // ============ LẤY DỰ ĐOÁN ============
-            async function fetchPrediction() {
-                try {
-                    const response = await fetch(`${CONFIG.apiBase}/api/predict`);
-                    const pred = await response.json();
-                    updatePrediction(pred);
-                } catch (error) {
-                    console.error('Lỗi lấy dự đoán:', error);
-                }
-            }
-            
-            // ============ CẬP NHẬT GIAO DIỆN ============
-            function updateUI(session, dice, total, result) {
-                // Cập nhật phiên
-                const sessionEl = document.getElementById('session-value');
-                if (sessionEl) sessionEl.textContent = session ? `#${session}` : '#------';
-                
-                // Cập nhật xúc xắc
-                const diceEls = document.querySelectorAll('.sunwin-dice-item');
-                dice.forEach((val, idx) => {
-                    if (diceEls[idx]) diceEls[idx].textContent = val || '-';
-                });
-                
-                // Cập nhật tổng
-                const totalEl = document.getElementById('total-value');
-                if (totalEl) totalEl.textContent = total || '--';
-                
-                // Cập nhật kết quả
-                const resultEl = document.getElementById('result-badge');
-                if (resultEl) {
-                    if (result === 'Tài') {
-                        resultEl.textContent = 'TÀI';
-                        resultEl.className = 'sunwin-result sunwin-result-tai';
-                    } else if (result === 'Xỉu') {
-                        resultEl.textContent = 'XỈU';
-                        resultEl.className = 'sunwin-result sunwin-result-xiu';
-                    } else {
-                        resultEl.textContent = '---';
-                        resultEl.className = 'sunwin-result';
-                    }
-                }
-            }
-            
-            function updatePrediction(pred) {
-                const predEl = document.getElementById('prediction-value');
-                if (predEl) {
-                    predEl.textContent = pred.prediction || '---';
-                    predEl.className = `sunwin-prediction-value sunwin-prediction-${pred.prediction === 'Tài' ? 'tai' : 'xiu'}`;
-                }
-                
-                const fillEl = document.getElementById('confidence-fill');
-                if (fillEl) fillEl.style.width = `${pred.confidence || 0}%`;
-                
-                const textEl = document.getElementById('confidence-text');
-                if (textEl) textEl.textContent = `Độ tin cậy: ${pred.confidence || 0}%`;
-            }
-            
-            function addLog(message, isError = false) {
-                const logEl = document.getElementById('log-area');
-                if (logEl) {
-                    const time = new Date().toLocaleTimeString('vi-VN');
-                    const color = isError ? '#e74c3c' : '#ffff00';
-                    const logEntry = `<div style="color: ${color}; font-size: 9px;">[${time}] ${message}</div>`;
-                    logEl.innerHTML += logEntry;
-                    logEl.scrollTop = logEl.scrollHeight;
-                    
-                    // Giữ log không quá dài
-                    while (logEl.children.length > 10) {
-                        logEl.removeChild(logEl.firstChild);
-                    }
-                }
-                console.log(`[SunWin AI] ${message}`);
-            }
-            
-            function updateStatus(text) {
-                const statusEl = document.getElementById('status-text');
-                if (statusEl) statusEl.textContent = text;
-            }
-            
-            // ============ DRAG & DROP CHO OVERLAY ============
-            function initDrag() {
-                const header = document.getElementById('sunwin-drag-handle');
-                const overlay = document.getElementById('sunwin-ai-overlay');
-                
-                if (!header || !overlay) return;
-                
-                header.addEventListener('mousedown', (e) => {
-                    if (e.target.closest('.sunwin-ai-controls')) return;
-                    isDragging = true;
-                    const rect = overlay.getBoundingClientRect();
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
-                    overlay.style.cursor = 'grabbing';
-                    e.preventDefault();
-                });
-                
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    const x = e.clientX - dragOffset.x;
-                    const y = e.clientY - dragOffset.y;
-                    overlay.style.left = `${Math.max(0, Math.min(window.innerWidth - overlay.offsetWidth, x))}px`;
-                    overlay.style.top = `${Math.max(0, Math.min(window.innerHeight - overlay.offsetHeight, y))}px`;
-                    overlay.style.right = 'auto';
-                    overlay.style.bottom = 'auto';
-                });
-                
-                document.addEventListener('mouseup', () => {
-                    isDragging = false;
-                    if (overlay) overlay.style.cursor = '';
-                });
-            }
-            
-            // ============ KHỞI TẠO ============
-            function init() {
-                // Tạo overlay
-                overlayElement = createOverlay();
-                
-                // Khởi tạo drag
-                initDrag();
-                
-                // Nút điều khiển
-                const minimizeBtn = document.getElementById('sunwin-minimize');
-                const closeBtn = document.getElementById('sunwin-close');
-                const bodyEl = document.getElementById('sunwin-body');
-                
-                if (minimizeBtn) {
-                    minimizeBtn.onclick = () => {
-                        if (bodyEl) bodyEl.style.display = bodyEl.style.display === 'none' ? 'block' : 'none';
-                        minimizeBtn.textContent = bodyEl.style.display === 'none' ? '+' : '−';
-                    };
-                }
-                
-                if (closeBtn) {
-                    closeBtn.onclick = () => {
-                        if (overlayElement) overlayElement.style.display = 'none';
-                        addLog('⏸ Overlay đã ẩn. Refresh trang để hiện lại.');
-                    };
-                }
-                
-                // Bắt đầu quét
-                addLog('🚀 SunWin AI Overlay đã sẵn sàng');
-                addLog('📍 Đang quét dữ liệu từ trang SunWin...');
-                updateStatus('🔍 Đang quét...');
-                
-                // Quét lần đầu
-                setTimeout(() => {
-                    scanDOM();
-                    fetchPrediction();
-                }, 1000);
-                
-                // Quét định kỳ
-                scanTimer = setInterval(() => {
-                    scanDOM();
-                }, CONFIG.scanInterval);
-                
-                // Cập nhật thời gian
-                setInterval(() => {
-                    const statusEl = document.getElementById('status-text');
-                    if (statusEl && !statusEl.textContent.includes('Quét')) {
-                        const time = new Date().toLocaleTimeString('vi-VN');
-                        statusEl.innerHTML = `🕐 ${time} | Đang theo dõi...`;
-                    }
-                }, 1000);
-            }
-            
-            // Đợi DOM load xong
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
+            // Kiểm tra nếu đang ở SunWin thì chạy luôn
+            if (window.location.href.includes('web.sunwin.qa')) {
+                eval(overlayScript);
             }
         })();
     </script>
