@@ -3,548 +3,834 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SunWin AI - Dự đoán Tài Xỉu</title>
+    <title>SunWin AI - Tự động quét dữ liệu</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#080612; font-family:'Rajdhani',sans-serif; width:100vw; height:100vh; overflow:hidden; }
-
-        #sunwin-frame { position:fixed; inset:0; width:100%; height:100%; border:none; z-index:1; }
-
-        .status-bar {
-            position:fixed; top:12px; left:50%; transform:translateX(-50%);
-            background:rgba(0,0,0,0.82); border:1px solid rgba(0,200,255,0.25);
-            padding:5px 14px; border-radius:20px; font-size:10px; color:#00ff88;
-            z-index:999998; display:flex; align-items:center; gap:7px;
-            backdrop-filter:blur(12px); font-family:'Rajdhani',sans-serif;
-            font-weight:600; letter-spacing:0.5px; white-space:nowrap;
-        }
-        .live-dot {
-            width:6px; height:6px; border-radius:50%; background:#00ff88; flex-shrink:0;
-            animation:pulse-dot 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 4px #00ff88} 50%{opacity:0.3;box-shadow:none} }
-
-        #sw-panel {
-            position:fixed; bottom:20px; right:12px; width:280px;
-            background:rgba(6,5,16,0.95); border:1px solid rgba(0,200,255,0.28);
-            border-radius:16px;
-            box-shadow:0 0 40px rgba(0,200,255,0.1),0 20px 60px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.05);
-            z-index:999999; backdrop-filter:blur(24px); user-select:none;
-            transition:opacity 0.3s,transform 0.3s;
-        }
-        #sw-panel.hidden { opacity:0; pointer-events:none; transform:translateY(10px); }
-        #sw-panel.mini .sw-body { display:none; }
-
-        #sw-toggle {
-            position:fixed; bottom:20px; right:12px;
-            width:46px; height:46px; border-radius:50%;
-            background:linear-gradient(135deg,#00c8ff,#0044aa);
-            border:none; color:#fff; font-size:20px; cursor:pointer;
-            z-index:999998;
-            box-shadow:0 0 20px rgba(0,200,255,0.4),0 4px 15px rgba(0,0,0,0.5);
-            display:none; align-items:center; justify-content:center; transition:all 0.2s;
-        }
-        #sw-toggle.show { display:flex; }
-
-        .sw-header {
-            padding:10px 12px;
-            background:rgba(0,200,255,0.06); border-bottom:1px solid rgba(0,200,255,0.12);
-            border-radius:16px 16px 0 0;
-            display:flex; justify-content:space-between; align-items:center; cursor:move;
-        }
-        .sw-brand { font-family:'Orbitron',monospace; font-size:11px; font-weight:900; letter-spacing:2px; color:#00c8ff; text-shadow:0 0 10px rgba(0,200,255,0.5); }
-        .sw-brand span { color:rgba(255,255,255,0.35); font-weight:400; }
-        .sw-controls { display:flex; gap:6px; align-items:center; }
-        .sw-ctrl {
-            width:18px; height:18px; border-radius:50%; border:none; cursor:pointer;
-            font-size:9px; display:flex; align-items:center; justify-content:center;
-            background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); transition:all 0.15s;
-        }
-        .sw-ctrl:hover { background:rgba(255,255,255,0.18); color:#fff; }
-
-        .sw-body { padding:11px; }
-
-        .session-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; padding:0 2px; }
-        .session-label { font-size:9px; color:rgba(255,255,255,0.32); letter-spacing:1px; text-transform:uppercase; }
-        .session-num { font-family:'Orbitron',monospace; font-size:11px; color:#00ff88; letter-spacing:1px; }
-
-        .last-result {
-            display:flex; align-items:center; gap:5px;
-            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
-            border-radius:8px; padding:6px 9px; margin-bottom:9px;
-        }
-        .last-result-label { font-size:8px; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:0.5px; flex:1; }
-        .last-dice { display:flex; gap:3px; }
-        .dice-val {
-            width:20px; height:20px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
-            border-radius:4px; display:flex; align-items:center; justify-content:center;
-            font-size:10px; font-weight:700; color:#fff;
-        }
-        .last-total { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:#fff; margin:0 3px; }
-        .last-tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; }
-        .tag-tai { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
-        .tag-xiu { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
-
-        .log-box {
-            background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,0,0.15);
-            border-radius:6px; padding:5px 7px; margin-bottom:9px;
-            font-size:8px; color:rgba(255,255,0,0.7); font-family:monospace;
-            max-height:32px; overflow:hidden; line-height:1.4;
-        }
-
-        .pred-box {
-            background:rgba(0,0,0,0.45); border:1px solid rgba(0,200,255,0.15);
-            border-radius:12px; padding:12px 10px; text-align:center;
-            margin-bottom:9px; position:relative; overflow:hidden;
-        }
-        .pred-box::before {
-            content:''; position:absolute; top:0; left:0; right:0; height:1px;
-            background:linear-gradient(90deg,transparent,rgba(0,200,255,0.5),transparent);
-        }
-        .pred-label { font-size:8px; color:rgba(255,255,255,0.32); letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; }
-        .pred-value { font-family:'Orbitron',monospace; font-size:26px; font-weight:900; letter-spacing:3px; margin-bottom:4px; transition:all 0.4s; }
-        .pred-tai { color:#2ecc71; text-shadow:0 0 20px rgba(46,204,113,0.55); }
-        .pred-xiu { color:#e74c3c; text-shadow:0 0 20px rgba(231,76,60,0.55); }
-        .pred-waiting { color:rgba(255,255,255,0.18); }
-
-        .conf-section { margin-top:7px; }
-        .conf-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-        .conf-label { font-size:8px; color:rgba(255,255,255,0.32); letter-spacing:1px; }
-        .conf-pct { font-family:'Orbitron',monospace; font-size:10px; color:#00c8ff; }
-        .conf-track { height:3px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
-        .conf-fill { height:100%; border-radius:2px; transition:width 0.6s ease; background:linear-gradient(90deg,#2ecc71,#00c8ff,#e74c3c); }
-
-        .stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:9px; }
-        .stat-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:6px 4px; text-align:center; }
-        .stat-icon { font-size:10px; margin-bottom:2px; }
-        .stat-label { font-size:7px; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.5px; }
-        .stat-val { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:#fff; margin-top:2px; }
-
-        .history-strip { display:flex; gap:3px; margin-bottom:9px; flex-wrap:wrap; }
-        .hist-dot { width:15px; height:15px; border-radius:4px; font-size:7px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .hist-t { background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
-        .hist-x { background:rgba(231,76,60,0.2); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
-        .hist-empty { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.07); }
-
-        .sw-footer { border-top:1px solid rgba(255,255,255,0.05); padding-top:7px; display:flex; justify-content:space-between; align-items:center; }
-        .sw-time { font-size:9px; color:rgba(255,255,255,0.2); font-family:'Orbitron',monospace; letter-spacing:1px; }
-        .sw-version { font-size:8px; color:rgba(0,200,255,0.3); letter-spacing:1px; }
-
-        @keyframes scan { 0%{transform:translateY(-100%);opacity:0.8} 100%{transform:translateY(200%);opacity:0} }
-        .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,200,255,0.6),transparent); animation:scan 0.8s ease-out forwards; pointer-events:none; }
         
-        .refresh-btn {
-            background:rgba(0,200,255,0.2);
-            border:1px solid rgba(0,200,255,0.3);
-            border-radius:4px;
-            padding:2px 6px;
-            font-size:8px;
-            cursor:pointer;
-            color:#00c8ff;
-            margin-left:5px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .refresh-btn:hover { background:rgba(0,200,255,0.4); }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #0f0f23 100%);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+        }
+        
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            color: #00c8ff;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+        }
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 1.5s ease-in-out infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px #00ff88; }
+            50% { opacity: 0.3; box-shadow: none; }
+        }
+        
+        .status-text {
+            color: #00ff88;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .session-id {
+            font-family: 'Orbitron', monospace;
+            color: #ffaa00;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .last-update {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Card kết quả */
+        .result-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dice-area {
+            text-align: center;
+        }
+        
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .dice {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .dice.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .total-area {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+        
+        .total-value {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            color: #ffaa00;
+        }
+        
+        .result-badge {
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .result-tai {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        .result-xiu {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Dự đoán */
+        .prediction-card {
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.1), rgba(0, 100, 255, 0.05));
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .prediction-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .prediction-value {
+            font-size: 48px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .confidence-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #00c8ff);
+            transition: width 0.5s ease;
+        }
+        
+        .confidence-text {
+            font-size: 12px;
+            color: #00c8ff;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            color: #00c8ff;
+            margin-top: 5px;
+        }
+        
+        /* Lịch sử */
+        .history-strip {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .history-item {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .history-tai {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+        
+        .history-xiu {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .history-empty {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Log */
+        .log-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 0, 0.15);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            font-size: 10px;
+            font-family: monospace;
+            color: rgba(255, 255, 0, 0.7);
+            max-height: 60px;
+            overflow-y: auto;
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: rgba(0, 200, 255, 0.2);
+            border: 1px solid #00c8ff;
+            color: #00c8ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(0, 200, 255, 0.4);
+            transform: scale(1.02);
+        }
+        
+        button.danger {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        
+        button.danger:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 200, 255, 0.3);
+            border-top-color: #00c8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-
-<iframe id="sunwin-frame" src="https://web.sunwin.qa" allowfullscreen></iframe>
-
-<div class="status-bar">
-    <div class="live-dot"></div>
-    <span id="status-text">Đang khởi tạo...</span>
-</div>
-
-<button id="sw-toggle">🤖</button>
-
-<div id="sw-panel">
-    <div class="sw-header" id="sw-drag-handle">
-        <div class="sw-brand">SUNGAMIN <span>AI</span></div>
-        <div class="sw-controls">
-            <button class="sw-ctrl" id="sw-min">−</button>
-            <button class="sw-ctrl" id="sw-close">✕</button>
-        </div>
-    </div>
-
-    <div class="sw-body">
-        <div class="session-row">
-            <span class="session-label">Phiên hiện tại</span>
-            <span class="session-num" id="sw-session">#------</span>
-            <button class="refresh-btn" id="refresh-data">⟳</button>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 SUNWIN AI</h1>
+            <p>Tự động quét dữ liệu • Dự đoán thông minh</p>
         </div>
 
-        <div class="last-result">
-            <span class="last-result-label">Phiên trước</span>
-            <div class="last-dice" id="sw-dice">
-                <div class="dice-val">-</div>
-                <div class="dice-val">-</div>
-                <div class="dice-val">-</div>
+        <div class="status-bar">
+            <div>
+                <span class="live-dot"></span>
+                <span class="status-text" id="statusText">Đang khởi động...</span>
             </div>
-            <span class="last-total" id="sw-total">--</span>
-            <span class="last-tag" id="sw-last-tag">---</span>
+            <div>
+                <div class="session-id" id="sessionId">#------</div>
+                <div class="last-update" id="lastUpdate">--:--:--</div>
+            </div>
         </div>
 
-        <div class="log-box" id="sw-log">Đang khởi động...</div>
+        <div class="log-box" id="logBox">
+            [System] Khởi động trình thu thập dữ liệu...
+        </div>
 
-        <div class="pred-box" id="pred-box">
-            <div class="pred-label">🤖 Dự đoán phiên tiếp theo</div>
-            <div class="pred-value pred-waiting" id="sw-prediction">---</div>
-            <div class="conf-section">
-                <div class="conf-row">
-                    <span class="conf-label">Độ tin cậy</span>
-                    <span class="conf-pct" id="sw-conf-pct">--%</span>
+        <div class="result-card">
+            <div class="dice-area">
+                <div class="dice-container" id="diceContainer">
+                    <div class="dice">-</div>
+                    <div class="dice">-</div>
+                    <div class="dice">-</div>
                 </div>
-                <div class="conf-track">
-                    <div class="conf-fill" id="sw-conf-fill" style="width:0%"></div>
+                <div class="total-area">
+                    Tổng điểm: <span class="total-value" id="totalValue">--</span>
+                </div>
+                <div>
+                    <span class="result-badge" id="resultBadge">---</span>
                 </div>
             </div>
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-label">🤖 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
+            <div class="prediction-value" id="predictionValue">---</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+            </div>
+            <div class="confidence-text" id="confidenceText">Độ tin cậy: --%</div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">🟢</div>
-                <div class="stat-label">Tài (10P)</div>
-                <div class="stat-val" id="sw-tai-count">--</div>
+                <div class="stat-label">🟢 TÀI (10P)</div>
+                <div class="stat-value" id="taiCount">--</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🔴</div>
-                <div class="stat-label">Xỉu (10P)</div>
-                <div class="stat-val" id="sw-xiu-count">--</div>
+                <div class="stat-label">🔴 XỈU (10P)</div>
+                <div class="stat-value" id="xiuCount">--</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🔥</div>
-                <div class="stat-label">Chuỗi</div>
-                <div class="stat-val" id="sw-streak">--</div>
+                <div class="stat-label">🔥 CHUỖI</div>
+                <div class="stat-value" id="streakCount">--</div>
             </div>
         </div>
 
-        <div class="history-strip" id="sw-history"></div>
+        <div class="history-strip" id="historyStrip"></div>
 
-        <div class="sw-footer">
-            <span class="sw-time" id="sw-time">--:--:--</span>
-            <span class="sw-version">v3.0</span>
+        <div class="button-group">
+            <button onclick="manualRefresh()">🔄 Làm mới</button>
+            <button onclick="clearData()" class="danger">🗑️ Xóa dữ liệu</button>
+        </div>
+
+        <div class="footer">
+            <span>Thu thập từ API nguồu • Cập nhật mỗi 3 giây</span>
         </div>
     </div>
-</div>
 
-<script>
-(function () {
-    // ============ CẤU HÌNH ============
-    const USE_MOCK_FALLBACK = true;  // Dùng dữ liệu mẫu nếu API lỗi
-    let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
-    let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
-    let currentData     = null;  // Lưu data hiện tại
-    
-    // Mock data mẫu (dựa theo file IMG_1043.png)
-    const MOCK_DATA = {
-        current: {
-            Phien: 52550259,
-            Ket_qua: "Tài",
-            Tong: 14,
-            Xuc_xac_1: 5,
-            Xuc_xac_2: 4,
-            Xuc_xac_3: 5
-        },
-        history: [
-            { Phien: 52550258, Ket_qua: "Xỉu", Tong: 8, Xuc_xac_1: 2, Xuc_xac_2: 3, Xuc_xac_3: 3 },
-            { Phien: 52550257, Ket_qua: "Tài", Tong: 12, Xuc_xac_1: 4, Xuc_xac_2: 4, Xuc_xac_3: 4 },
-            { Phien: 52550256, Ket_qua: "Tài", Tong: 15, Xuc_xac_1: 5, Xuc_xac_2: 5, Xuc_xac_3: 5 },
-            { Phien: 52550255, Ket_qua: "Xỉu", Tong: 7, Xuc_xac_1: 2, Xuc_xac_2: 2, Xuc_xac_3: 3 },
-            { Phien: 52550254, Ket_qua: "Tài", Tong: 11, Xuc_xac_1: 4, Xuc_xac_2: 3, Xuc_xac_3: 4 },
-            { Phien: 52550253, Ket_qua: "Xỉu", Tong: 9, Xuc_xac_1: 3, Xuc_xac_2: 3, Xuc_xac_3: 3 },
-            { Phien: 52550252, Ket_qua: "Tài", Tong: 13, Xuc_xac_1: 5, Xuc_xac_2: 4, Xuc_xac_3: 4 },
-            { Phien: 52550251, Ket_qua: "Xỉu", Tong: 6, Xuc_xac_1: 2, Xuc_xac_2: 2, Xuc_xac_3: 2 }
-        ]
-    };
-
-    function log(msg) {
-        const el = document.getElementById("sw-log");
-        if (el) {
-            el.textContent = msg;
-            setTimeout(() => {
-                if (el.textContent === msg) el.textContent = "✓ Đã cập nhật";
-            }, 3000);
-        }
-        console.log("[SW]", msg);
-    }
-
-    function setStatus(msg, ok = true) {
-        document.getElementById("status-text").textContent = msg;
-        document.querySelector(".live-dot").style.background = ok ? "#00ff88" : "#e74c3c";
-    }
-
-    function normalizeResult(v) {
-        if (!v) return null;
-        const t = String(v).toLowerCase().trim();
-        if (t === "tài" || t === "tai") return "Tài";
-        if (t === "xỉu" || t === "xiu") return "Xỉu";
-        return null;
-    }
-
-    function scanEffect() {
-        const box = document.getElementById("pred-box");
-        const line = document.createElement("div");
-        line.className = "scan-line";
-        box.appendChild(line);
-        setTimeout(() => line.remove(), 900);
-    }
-
-    // ============ GỌI API THỰC TẾ ============
-    async function fetchRealData() {
-        try {
-            log("🔄 Đang lấy dữ liệu từ API...");
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+    <script>
+        // ============ CẤU HÌNH ============
+        const API_BASE = "https://sunwin-tool.onrender.com";
+        const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+        
+        // State
+        let lastSentSession = parseInt(localStorage.getItem("collector_last_session") || "0");
+        let localHistory = JSON.parse(localStorage.getItem("sw_history") || "[]");
+        let autoRefreshInterval = null;
+        
+        // Helper functions
+        function addLog(message, isError = false) {
+            const logBox = document.getElementById('logBox');
+            const time = new Date().toLocaleTimeString('vi-VN');
+            const color = isError ? '#e74c3c' : '#ffff00';
+            const logEntry = `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logBox.innerHTML += logEntry;
+            logBox.scrollTop = logBox.scrollHeight;
             
-            const response = await fetch("https://sunwin-tool.onrender.com/api/history", {
-                signal: controller.signal,
-                headers: { "Accept": "application/json" }
+            // Giữ log không quá dài
+            while (logBox.children.length > 20) {
+                logBox.removeChild(logBox.firstChild);
+            }
+            
+            console.log(`[${time}] ${message}`);
+        }
+        
+        function updateStatus(message, isError = false) {
+            const statusEl = document.getElementById('statusText');
+            statusEl.textContent = message;
+            statusEl.style.color = isError ? '#e74c3c' : '#00ff88';
+        }
+        
+        function formatSessionId(session) {
+            if (!session) return '------';
+            const num = parseInt(session);
+            if (isNaN(num)) return String(session).slice(0, 6);
+            return num.toString().padStart(6, '0').slice(0, 6);
+        }
+        
+        function shakeDice() {
+            const diceEls = document.querySelectorAll('.dice');
+            diceEls.forEach(dice => {
+                dice.classList.add('shake');
+                setTimeout(() => dice.classList.remove('shake'), 500);
             });
-            clearTimeout(timeoutId);
+        }
+        
+        // ============ LẤY DỮ LIỆU TỪ API NGUỒN ============
+        async function fetchSourceData() {
+            try {
+                addLog('🔄 Đang quét dữ liệu từ API nguồn...');
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
+                const response = await fetch(`${SOURCE_API}?_=${Date.now()}`, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                addLog(`✅ Đã nhận dữ liệu từ API nguồn`);
+                return data;
+                
+            } catch (error) {
+                addLog(`⚠️ Lỗi API nguồn: ${error.message}`, true);
+                return null;
+            }
+        }
+        
+        // ============ GỬI DỮ LIỆU LÊN API CỦA BẠN ============
+        async function sendToYourAPI(payload) {
+            try {
+                const response = await fetch(`${API_BASE}/api/result`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                return { success: true, data: result };
+                
+            } catch (error) {
+                addLog(`❌ Lỗi gửi lên API: ${error.message}`, true);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // ============ LẤY DỰ ĐOÁN ============
+        async function fetchPrediction() {
+            try {
+                const response = await fetch(`${API_BASE}/api/predict`);
+                if (!response.ok) throw new Error('Predict error');
+                const pred = await response.json();
+                renderPrediction(pred);
+            } catch (error) {
+                addLog(`⚠️ Lỗi lấy dự đoán: ${error.message}`, true);
+                renderMockPrediction();
+            }
+        }
+        
+        // ============ LẤY LỊCH SỬ TỪ API CỦA BẠN ============
+        async function fetchHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/api/history`);
+                if (!response.ok) throw new Error('History error');
+                const data = await response.json();
+                if (data && data.current) {
+                    renderData(data);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                addLog(`⚠️ Lỗi lấy lịch sử: ${error.message}`, true);
+                return false;
+            }
+        }
+        
+        // ============ THU THẬP VÀ XỬ LÝ ============
+        async function collect() {
+            try {
+                // Lấy dữ liệu từ API nguồn
+                const sourceData = await fetchSourceData();
+                
+                if (!sourceData || !sourceData.current) {
+                    updateStatus('Chờ dữ liệu từ nguồn...');
+                    return;
+                }
+                
+                const c = sourceData.current;
+                const session = Number(c.Phien);
+                const result = normalizeResult(c.Ket_qua);
+                
+                if (!result) {
+                    addLog(`⚠️ Không xác định được kết quả phiên #${session}`);
+                    return;
+                }
+                
+                updateStatus(`Đang xử lý phiên #${session}...`);
+                
+                // Kiểm tra xem đã gửi chưa
+                if (session > lastSentSession) {
+                    addLog(`📦 Phát hiện phiên mới #${session} → ${result}`);
+                    
+                    const payload = {
+                        session: session,
+                        dice: [
+                            Number(c.Xuc_xac_1) || 0,
+                            Number(c.Xuc_xac_2) || 0,
+                            Number(c.Xuc_xac_3) || 0
+                        ],
+                        total: Number(c.Tong) || 0,
+                        result: result,
+                        ts: Date.now()
+                    };
+                    
+                    const sendResult = await sendToYourAPI(payload);
+                    
+                    if (sendResult.success) {
+                        lastSentSession = session;
+                        localStorage.setItem("collector_last_session", session);
+                        addLog(`✅ Đã gửi thành công phiên #${session} → ${result}`);
+                        updateStatus(`Đã gửi phiên #${session}`);
+                        shakeDice();
+                        
+                        // Cập nhật lại giao diện
+                        await fetchHistory();
+                    } else {
+                        addLog(`❌ Gửi thất bại phiên #${session}`, true);
+                    }
+                } else {
+                    addLog(`⏳ Phiên #${session} đã được gửi trước đó`);
+                }
+                
+                // Luôn lấy dự đoán mới
+                await fetchPrediction();
+                
+            } catch (error) {
+                addLog(`❌ Lỗi collector: ${error.message}`, true);
+                updateStatus('Lỗi kết nối', true);
+            }
+        }
+        
+        function normalizeResult(v) {
+            if (!v) return null;
+            const t = String(v).toLowerCase().trim();
+            if (t === 'tài' || t === 'tai') return 'Tài';
+            if (t === 'xỉu' || t === 'xiu') return 'Xỉu';
+            return null;
+        }
+        
+        // ============ RENDER GIAO DIỆN ============
+        function renderData(data) {
+            if (!data || !data.current) return;
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            log("✅ API trả về dữ liệu");
-            return data;
-        } catch (error) {
-            log(`⚠️ API lỗi: ${error.message}`);
-            return null;
-        }
-    }
-
-    // ============ LẤY DỮ LIỆU (API + Fallback) ============
-    async function fetchData() {
-        let data = await fetchRealData();
-        
-        // Nếu API không có dữ liệu hoặc lỗi, dùng mock
-        if (!data || !data.current || !data.current.Ket_qua) {
-            if (USE_MOCK_FALLBACK) {
-                log("📦 Sử dụng dữ liệu mẫu (Mock)");
-                setStatus("📊 Dữ liệu mẫu (API chưa sẵn sàng)", true);
-                return { ...MOCK_DATA };
-            }
-            return null;
-        }
-        
-        setStatus("✅ Đang theo dõi", true);
-        return data;
-    }
-
-    // ============ TÍNH TOÁN DỰ ĐOÁN ============
-    function calculatePrediction(history) {
-        if (!history || history.length === 0) {
-            return { prediction: "Tài", confidence: 50, stats: { tai: 0, xiu: 0, streak: 0 } };
-        }
-        
-        const last10 = history.slice(-10);
-        const taiCount = last10.filter(h => normalizeResult(h.Ket_qua) === "Tài").length;
-        const xiuCount = last10.length - taiCount;
-        
-        // Đếm chuỗi hiện tại
-        let streak = 1;
-        const lastResult = normalizeResult(history[history.length - 1]?.Ket_qua);
-        for (let i = history.length - 2; i >= 0; i--) {
-            if (normalizeResult(history[i]?.Ket_qua) === lastResult) streak++;
-            else break;
-        }
-        
-        // AI dự đoán đơn giản: dựa vào xu hướng
-        let prediction = "Tài";
-        let confidence = 55;
-        
-        if (streak >= 3) {
-            // Nếu chuỗi dài, khả năng đảo cầu
-            prediction = lastResult === "Tài" ? "Xỉu" : "Tài";
-            confidence = 65 + Math.min(15, streak * 3);
-        } else if (taiCount > xiuCount + 2) {
-            prediction = "Xỉu";
-            confidence = 60;
-        } else if (xiuCount > taiCount + 2) {
-            prediction = "Tài";
-            confidence = 60;
-        } else {
-            prediction = Math.random() > 0.5 ? "Tài" : "Xỉu";
-            confidence = 50 + Math.floor(Math.random() * 20);
-        }
-        
-        return {
-            prediction: prediction,
-            confidence: confidence,
-            stats: { tai: taiCount, xiu: xiuCount, streak: streak }
-        };
-    }
-
-    // ============ RENDER GIAO DIỆN ============
-    function renderData(data) {
-        if (!data || !data.current) {
-            log("⏳ Chưa có dữ liệu để hiển thị");
-            return false;
-        }
-        
-        const curr = data.current;
-        const session = curr.Phien || curr.session || 0;
-        const result = normalizeResult(curr.Ket_qua || curr.result);
-        const dice = [
-            curr.Xuc_xac_1 || curr.dice?.[0] || 0,
-            curr.Xuc_xac_2 || curr.dice?.[1] || 0,
-            curr.Xuc_xac_3 || curr.dice?.[2] || 0
-        ];
-        const total = curr.Tong || curr.total || (dice[0] + dice[1] + dice[2]);
-        
-        // Hiển thị phiên
-        document.getElementById("sw-session").textContent = `#${session.toLocaleString()}`;
-        
-        // Hiển thị xúc xắc
-        const diceEls = document.getElementById("sw-dice").querySelectorAll(".dice-val");
-        dice.forEach((v, i) => {
-            if (diceEls[i]) diceEls[i].textContent = v || "-";
-        });
-        document.getElementById("sw-total").textContent = total || "--";
-        
-        // Hiển thị kết quả
-        const tag = document.getElementById("sw-last-tag");
-        if (result === "Tài") {
-            tag.textContent = "TÀI";
-            tag.className = "last-tag tag-tai";
-        } else if (result === "Xỉu") {
-            tag.textContent = "XỈU";
-            tag.className = "last-tag tag-xiu";
-        } else {
-            tag.textContent = "???";
-        }
-        
-        // Cập nhật lịch sử
-        if (data.history && data.history.length > 0) {
-            updateHistoryDisplay(data.history);
-        }
-        
-        // Dự đoán
-        const history = data.history || [curr];
-        const pred = calculatePrediction(history);
-        updatePrediction(pred);
-        
-        return true;
-    }
-    
-    function updateHistoryDisplay(history) {
-        const container = document.getElementById("sw-history");
-        container.innerHTML = "";
-        const last10 = history.slice(-10);
-        
-        last10.forEach(item => {
-            const dot = document.createElement("div");
-            const result = normalizeResult(item.Ket_qua || item.result);
-            if (!result) {
-                dot.className = "hist-dot hist-empty";
-                dot.textContent = "·";
-            } else if (result === "Tài") {
-                dot.className = "hist-dot hist-t";
-                dot.textContent = "T";
+            const current = data.current;
+            const session = current.Phien || current.session || 0;
+            const result = current.Ket_qua || current.result;
+            const dice = [
+                current.Xuc_xac_1 || current.dice?.[0] || 0,
+                current.Xuc_xac_2 || current.dice?.[1] || 0,
+                current.Xuc_xac_3 || current.dice?.[2] || 0
+            ];
+            const total = current.Tong || current.total || (dice[0] + dice[1] + dice[2]);
+            
+            // Cập nhật phiên
+            document.getElementById('sessionId').textContent = `#${formatSessionId(session)}`;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('vi-VN');
+            
+            // Cập nhật xúc xắc
+            const diceEls = document.querySelectorAll('.dice');
+            dice.forEach((val, idx) => {
+                if (diceEls[idx]) diceEls[idx].textContent = val || '-';
+            });
+            
+            // Tổng điểm
+            document.getElementById('totalValue').textContent = total || '--';
+            
+            // Kết quả
+            const badge = document.getElementById('resultBadge');
+            if (result === 'Tài') {
+                badge.textContent = 'TÀI';
+                badge.className = 'result-badge result-tai';
+            } else if (result === 'Xỉu') {
+                badge.textContent = 'XỈU';
+                badge.className = 'result-badge result-xiu';
             } else {
-                dot.className = "hist-dot hist-x";
-                dot.textContent = "X";
+                badge.textContent = '???';
             }
-            container.appendChild(dot);
-        });
-        
-        // Thêm ô trống nếu thiếu
-        while (container.children.length < 10) {
-            const empty = document.createElement("div");
-            empty.className = "hist-dot hist-empty";
-            empty.textContent = "·";
-            container.appendChild(empty);
+            
+            // Lịch sử
+            if (data.history && data.history.length > 0) {
+                renderHistory(data.history);
+            }
         }
-    }
-    
-    function updatePrediction(pred) {
-        const el = document.getElementById("sw-prediction");
-        el.textContent = pred.prediction;
-        el.className = `pred-value ${pred.prediction === "Tài" ? "pred-tai" : "pred-xiu"}`;
         
-        document.getElementById("sw-conf-fill").style.width = `${pred.confidence}%`;
-        document.getElementById("sw-conf-pct").textContent = `${pred.confidence}%`;
-        
-        document.getElementById("sw-tai-count").textContent = pred.stats.tai;
-        document.getElementById("sw-xiu-count").textContent = pred.stats.xiu;
-        document.getElementById("sw-streak").textContent = pred.stats.streak;
-        
-        scanEffect();
-    }
-    
-    // ============ LUỒNG CHÍNH ============
-    async function refreshAll() {
-        const data = await fetchData();
-        if (data) {
-            currentData = data;
-            renderData(data);
+        function renderHistory(history) {
+            const container = document.getElementById('historyStrip');
+            container.innerHTML = '';
+            
+            const last10 = history.slice(0, 10);
+            
+            for (let i = 0; i < last10.length; i++) {
+                const item = last10[i];
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                
+                if (item.Ket_qua === 'Tài') {
+                    div.classList.add('history-tai');
+                    div.textContent = 'T';
+                } else if (item.Ket_qua === 'Xỉu') {
+                    div.classList.add('history-xiu');
+                    div.textContent = 'X';
+                } else {
+                    div.classList.add('history-empty');
+                    div.textContent = '·';
+                }
+                container.appendChild(div);
+            }
+            
+            while (container.children.length < 10) {
+                const empty = document.createElement('div');
+                empty.className = 'history-item history-empty';
+                empty.textContent = '·';
+                container.appendChild(empty);
+            }
         }
-    }
-    
-    // ============ DRAG & DROP ============
-    const panel = document.getElementById("sw-panel");
-    const handle = document.getElementById("sw-drag-handle");
-    let dragging = false, startX, startY, startL, startT;
-    
-    function startDrag(cx, cy) {
-        dragging = true;
-        startX = cx;
-        startY = cy;
-        const r = panel.getBoundingClientRect();
-        startL = r.left;
-        startT = r.top;
-    }
-    
-    function moveDrag(cx, cy) {
-        if (!dragging) return;
-        let l = Math.max(5, Math.min(window.innerWidth - panel.offsetWidth - 5, startL + cx - startX));
-        let t = Math.max(5, Math.min(window.innerHeight - panel.offsetHeight - 5, startT + cy - startY));
-        panel.style.left = l + "px";
-        panel.style.top = t + "px";
-        panel.style.right = "auto";
-        panel.style.bottom = "auto";
-    }
-    
-    handle.addEventListener("mousedown", e => {
-        if (!e.target.closest(".sw-controls")) startDrag(e.clientX, e.clientY);
-    });
-    document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
-    document.addEventListener("mouseup", () => { dragging = false; });
-    handle.addEventListener("touchstart", e => {
-        if (!e.target.closest(".sw-controls")) {
-            const t = e.touches[0];
-            startDrag(t.clientX, t.clientY);
+        
+        function renderPrediction(pred) {
+            const predValue = document.getElementById('predictionValue');
+            const confidence = pred.confidence || 50;
+            
+            if (pred.prediction === 'Tài') {
+                predValue.textContent = 'TÀI';
+                predValue.style.color = '#2ecc71';
+                predValue.style.textShadow = '0 0 20px rgba(46, 204, 113, 0.5)';
+            } else {
+                predValue.textContent = 'XỈU';
+                predValue.style.color = '#e74c3c';
+                predValue.style.textShadow = '0 0 20px rgba(231, 76, 60, 0.5)';
+            }
+            
+            document.getElementById('confidenceFill').style.width = `${confidence}%`;
+            document.getElementById('confidenceText').textContent = `Độ tin cậy: ${confidence}%`;
+            
+            if (pred.stats) {
+                document.getElementById('taiCount').textContent = pred.stats.tai || 0;
+                document.getElementById('xiuCount').textContent = pred.stats.xiu || 0;
+                document.getElementById('streakCount').textContent = pred.stats.streak || 0;
+            }
         }
-    }, { passive: true });
-    document.addEventListener("touchmove", e => {
-        const t = e.touches[0];
-        moveDrag(t.clientX, t.clientY);
-    }, { passive: true });
-    document.addEventListener("touchend", () => { dragging = false; });
-    
-    // ============ CONTROLS ============
-    const toggleBtn = document.getElementById("sw-toggle");
-    document.getElementById("sw-min").onclick = () => panel.classList.toggle("mini");
-    document.getElementById("sw-close").onclick = () => {
-        panel.classList.add("hidden");
-        toggleBtn.classList.add("show");
-    };
-    toggleBtn.onclick = () => {
-        panel.classList.remove("hidden");
-        toggleBtn.classList.remove("show");
-    };
-    document.getElementById("refresh-data").onclick = () => refreshAll();
-    
-    // ============ KHỞI ĐỘNG ============
-    refreshAll();
-    setInterval(() => refreshAll(), 8000);
-    setInterval(() => {
-        document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
-    }, 1000);
-    
-    log("✅ SunWin AI v3.0 sẵn sàng");
-    setStatus("🟢 Đã khởi động", true);
-})();
-</script>
+        
+        // Dữ liệu mẫu
+        function renderMockData() {
+            document.getElementById('sessionId').textContent = '#525502';
+            const diceEls = document.querySelectorAll('.dice');
+            [5, 4, 5].forEach((val, idx) => {
+                if (diceEls[idx]) diceEls[idx].textContent = val;
+            });
+            document.getElementById('totalValue').textContent = '14';
+            const badge = document.getElementById('resultBadge');
+            badge.textContent = 'TÀI';
+            badge.className = 'result-badge result-tai';
+        }
+        
+        function renderMockPrediction() {
+            document.getElementById('predictionValue').textContent = 'TÀI';
+            document.getElementById('predictionValue').style.color = '#2ecc71';
+            document.getElementById('confidenceFill').style.width = '65%';
+            document.getElementById('confidenceText').textContent = 'Độ tin cậy: 65%';
+            document.getElementById('taiCount').textContent = '6';
+            document.getElementById('xiuCount').textContent = '4';
+            document.getElementById('streakCount').textContent = '2';
+        }
+        
+        // ============ ACTIONS ============
+        async function manualRefresh() {
+            addLog('🔄 Người dùng yêu cầu làm mới...');
+            updateStatus('Đang làm mới...');
+            await collect();
+            await fetchHistory();
+            updateStatus('Đã làm mới ✓');
+        }
+        
+        function clearData() {
+            if (confirm('Bạn có chắc muốn xóa toàn bộ dữ liệu?')) {
+                localStorage.removeItem("collector_last_session");
+                localStorage.removeItem("sw_history");
+                lastSentSession = 0;
+                localHistory = [];
+                addLog('🗑️ Đã xóa dữ liệu localStorage');
+                updateStatus('Đã xóa dữ liệu');
+                setTimeout(() => collect(), 1000);
+            }
+        }
+        
+        // ============ KHỞI TẠO ============
+        async function init() {
+            addLog('🚀 Khởi động SunWin Collector...');
+            addLog(`📡 API nguồn: ${SOURCE_API}`);
+            addLog(`🎯 API đích: ${API_BASE}`);
+            addLog(`📝 Last session: ${lastSentSession || 'chưa có'}`);
+            
+            updateStatus('Đang khởi động...');
+            
+            // Thử lấy dữ liệu hiện tại
+            const hasData = await fetchHistory();
+            if (!hasData) {
+                renderMockData();
+                renderMockPrediction();
+            }
+            
+            await fetchPrediction();
+            
+            // Bắt đầu thu thập
+            await collect();
+            
+            // Tự động chạy mỗi 3 giây
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(() => {
+                collect();
+            }, 3000);
+            
+            addLog('✅ Collector đã sẵn sàng!');
+            updateStatus('Đang theo dõi...');
+        }
+        
+        // Chạy khi tải trang
+        init();
+    </script>
 </body>
 </html>
