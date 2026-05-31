@@ -2,619 +2,610 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SunWin AI Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SunWin AI - Cài Bookmarklet</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{background:#000;overflow:hidden;height:100vh;width:100vw;}
-
-#swFrame{position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:1;}
-
-.tool{
-  position:fixed;bottom:20px;right:16px;width:270px;
-  background:linear-gradient(135deg,rgba(20,8,3,0.98),rgba(10,3,1,0.98));
-  border-radius:18px;border:1px solid rgba(255,200,0,0.35);
-  box-shadow:0 8px 32px rgba(0,0,0,0.6);
-  z-index:2147483647;font-family:'Courier New',monospace;
-  transition:opacity .2s;
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:linear-gradient(135deg,#0a0500,#1a0a00);
+  min-height:100vh;font-family:'Courier New',monospace;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
 }
-.tool.hide{opacity:0;pointer-events:none;}
-.tool.mini .body{display:none;}
-.tool.mini{width:auto;border-radius:40px;}
-.tool.mini .hdr{border-radius:40px;border-bottom:none;}
-
-.hdr{
-  padding:10px 13px;
-  background:linear-gradient(135deg,rgba(255,200,0,0.12),rgba(255,120,0,0.05));
-  border-radius:18px 18px 0 0;border-bottom:1px solid rgba(255,200,0,0.2);
-  display:flex;align-items:center;justify-content:space-between;cursor:grab;
-}
-.hdr:active{cursor:grabbing;}
-.htitle{display:flex;align-items:center;gap:7px;}
-.htitle .ico{font-size:16px;}
-.htitle .nm{
-  font-size:12px;font-weight:900;letter-spacing:1px;
+.wrap{max-width:420px;width:100%;text-align:center;}
+.logo{font-size:48px;margin-bottom:12px;}
+h1{
+  font-size:22px;font-weight:900;letter-spacing:2px;
   background:linear-gradient(135deg,#ffd700,#ff8c00);
   -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin-bottom:6px;
 }
-.hbtns{display:flex;gap:6px;}
-.hbtns button{
-  width:22px;height:22px;border-radius:50%;border:none;
-  background:rgba(255,255,255,0.08);color:#ffd700;
-  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+.sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:28px;}
+
+.steps{text-align:left;margin-bottom:24px;}
+.step{
+  display:flex;align-items:flex-start;gap:12px;
+  background:rgba(255,200,0,0.05);border:1px solid rgba(255,200,0,0.15);
+  border-radius:12px;padding:12px;margin-bottom:10px;
 }
-.hbtns button:hover{background:rgba(255,200,0,0.25);}
-
-.body{padding:11px;}
-
-/* STATUS */
-.srow{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:7px 10px;background:rgba(0,0,0,0.45);
-  border-radius:10px;margin-bottom:9px;
-}
-.sdot{
-  width:7px;height:7px;border-radius:50%;background:#f44;
-  display:inline-block;margin-right:6px;
-  animation:blink 1.5s infinite;
-}
-.sdot.on{background:#4f4;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.stxt{font-size:9px;color:rgba(255,255,255,.65);}
-.sessid{font-size:11px;font-weight:bold;color:#ffd700;}
-
-/* DICE */
-.drow{display:flex;justify-content:center;gap:9px;margin-bottom:9px;}
-.dbox{
-  width:46px;height:46px;
-  background:rgba(255,255,255,0.07);
-  border:1.5px solid rgba(255,200,0,0.5);
-  border-radius:10px;display:flex;align-items:center;justify-content:center;
-  font-size:22px;font-weight:bold;color:#ffd700;
-  transition:transform .2s;
-}
-.dbox.pop{animation:pop .3s ease-out;}
-@keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
-
-.trow{text-align:center;font-size:10px;color:rgba(255,255,255,.5);margin-bottom:7px;}
-.tval{font-size:20px;font-weight:bold;color:#ff8c00;}
-
-.rbadge{
-  display:block;width:100%;text-align:center;
-  padding:5px;border-radius:20px;font-size:13px;font-weight:bold;
-  margin-bottom:9px;
-}
-.rtai{background:rgba(76,175,80,.18);color:#4caf50;border:1px solid #4caf5055;}
-.rxiu{background:rgba(244,67,54,.18);color:#f44336;border:1px solid #f4433655;}
-.rempty{background:rgba(255,255,255,.05);color:#555;border:1px solid #333;}
-
-/* PREDICTION */
-.pbox{
-  background:linear-gradient(135deg,rgba(255,200,0,0.08),rgba(255,120,0,0.03));
-  border:1px solid rgba(255,200,0,0.2);
-  border-radius:10px;padding:8px;margin-bottom:9px;text-align:center;
-}
-.plbl{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:4px;}
-.pval{font-size:26px;font-weight:900;letter-spacing:2px;}
-.ptai{color:#4caf50;text-shadow:0 0 12px rgba(76,175,80,.5);}
-.pxiu{color:#f44336;text-shadow:0 0 12px rgba(244,67,54,.5);}
-.pwait{color:#444;}
-.cbar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:5px;overflow:hidden;}
-.cfill{height:100%;background:linear-gradient(90deg,#ffd700,#ff8c00);transition:width .5s;width:0%;}
-.ctxt{font-size:8px;color:rgba(255,255,255,.3);margin-top:3px;}
-
-/* STATS */
-.strow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:9px;}
-.stcard{background:rgba(0,0,0,.4);border-radius:8px;padding:5px;text-align:center;}
-.stlbl{font-size:8px;color:rgba(255,255,255,.4);}
-.stval{font-size:13px;font-weight:bold;color:#ffd700;}
-
-/* LOG */
-.logbox{
-  font-size:8px;color:#f0c420;
-  padding:5px 8px;background:rgba(0,0,0,.5);
-  border-left:2px solid #f0c420;border-radius:5px;
-  margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  min-height:24px;
-}
-
-/* HISTORY */
-.hrow{display:flex;gap:4px;justify-content:center;margin-bottom:9px;}
-.hitem{
-  width:26px;height:26px;border-radius:6px;
-  font-size:11px;font-weight:bold;
+.snum{
+  min-width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#ffd700,#ff8c00);
+  color:#1a0a00;font-size:12px;font-weight:900;
   display:flex;align-items:center;justify-content:center;
 }
-.htai{background:rgba(76,175,80,.18);border:1px solid #4caf5055;color:#4caf50;}
-.hxiu{background:rgba(244,67,54,.18);border:1px solid #f4433655;color:#f44336;}
-.hempty{background:rgba(255,255,255,.04);border:1px solid #1a1a1a;color:#333;}
+.stxt{font-size:11px;color:rgba(255,255,255,.7);line-height:1.5;}
+.stxt b{color:#ffd700;}
 
-/* BUTTONS */
-.btnrow{display:flex;gap:6px;}
-.rbtn{
-  flex:1;background:linear-gradient(135deg,#ffd700,#ff8c00);
-  border:none;padding:7px;border-radius:20px;
-  font-size:10px;font-weight:bold;color:#1a0a00;cursor:pointer;
+/* BOOKMARKLET LINK */
+.bm-wrap{
+  background:rgba(255,200,0,0.08);
+  border:2px dashed rgba(255,200,0,0.4);
+  border-radius:14px;padding:16px;margin-bottom:20px;
 }
-.rbtn:active{transform:scale(.97);}
-.ibtn{
-  flex:1;background:rgba(255,200,0,.12);
-  border:1px solid rgba(255,200,0,.35);color:#ffd700;
-  padding:7px;border-radius:20px;font-size:10px;cursor:pointer;
+.bm-label{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px;}
+#bmLink{
+  display:inline-block;
+  background:linear-gradient(135deg,#ffd700,#ff8c00);
+  color:#1a0a00;font-size:15px;font-weight:900;
+  padding:12px 28px;border-radius:30px;
+  text-decoration:none;cursor:pointer;
+  letter-spacing:1px;
+  box-shadow:0 4px 20px rgba(255,200,0,0.3);
 }
-.ibtn:active{transform:scale(.97);}
+.bm-hint{font-size:9px;color:rgba(255,255,255,.35);margin-top:8px;}
 
-.foot{
-  display:flex;justify-content:space-between;
-  padding-top:7px;margin-top:6px;
-  border-top:1px solid rgba(255,255,255,.06);
-  font-size:8px;
+/* COPY BTN */
+.copy-btn{
+  width:100%;padding:12px;
+  background:rgba(255,200,0,0.1);
+  border:1px solid rgba(255,200,0,0.3);
+  color:#ffd700;font-size:12px;font-weight:bold;
+  border-radius:12px;cursor:pointer;margin-bottom:12px;
+  letter-spacing:1px;
 }
-.ftime{color:rgba(255,200,0,.4);}
-.fver{color:rgba(255,255,255,.18);}
+.copy-btn:active{transform:scale(.98);}
+
+.note{
+  font-size:9px;color:rgba(255,255,255,.3);
+  line-height:1.6;padding:10px;
+  background:rgba(255,255,255,.03);border-radius:8px;
+}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="logo">🎲</div>
+  <h1>SUNWIN AI TOOL</h1>
+  <p class="sub">Inject trực tiếp vào web.sunwin.qa • Không cần app</p>
 
-<iframe id="swFrame" src="https://web.sunwin.qa"
-  allow="accelerometer;autoplay;encrypted-media;gyroscope"
-  allowfullscreen></iframe>
-
-<div class="tool" id="tool">
-  <div class="hdr" id="hdr">
-    <div class="htitle">
-      <span class="ico">🎲</span>
-      <span class="nm">SUNWIN AI</span>
+  <div class="steps">
+    <div class="step">
+      <div class="snum">1</div>
+      <div class="stxt">Nhấn và giữ nút <b>🎲 SUNWIN AI</b> bên dưới → chọn <b>"Thêm vào Dấu trang"</b> (Add Bookmark)</div>
     </div>
-    <div class="hbtns">
-      <button id="mbtn">−</button>
-      <button id="cbtn">✕</button>
+    <div class="step">
+      <div class="snum">2</div>
+      <div class="stxt">Đặt tên tuỳ ý (vd: <b>SW AI</b>) → nhấn <b>Lưu</b></div>
+    </div>
+    <div class="step">
+      <div class="snum">3</div>
+      <div class="stxt">Vào <b>web.sunwin.qa</b> → mở Bookmark → nhấn <b>SW AI</b> → menu hiện ra ngay!</div>
     </div>
   </div>
 
-  <div class="body">
-    <div class="srow">
-      <div>
-        <span class="sdot" id="sdot"></span>
-        <span class="stxt" id="stxt">Đang kết nối...</span>
-      </div>
-      <span class="sessid" id="sessid">#------</span>
-    </div>
+  <div class="bm-wrap">
+    <div class="bm-label">GIỮ VÀ LƯU BOOKMARK NÀY 👇</div>
+    <a id="bmLink" href="#">🎲 SUNWIN AI</a>
+    <div class="bm-hint">Nhấn giữ → "Thêm vào Dấu trang"</div>
+  </div>
 
-    <div class="drow">
-      <div class="dbox" id="d1">?</div>
-      <div class="dbox" id="d2">?</div>
-      <div class="dbox" id="d3">?</div>
-    </div>
+  <button class="copy-btn" onclick="copyCode()">📋 COPY CODE (dán vào URL bookmark thủ công)</button>
 
-    <div class="trow">Tổng: <span class="tval" id="tval">--</span></div>
-
-    <span class="rbadge rempty" id="rbadge">---</span>
-
-    <div class="pbox">
-      <div class="plbl">🤖 DỰ ĐOÁN TIẾP THEO</div>
-      <div class="pval pwait" id="pval">--</div>
-      <div class="cbar"><div class="cfill" id="cfill"></div></div>
-      <div class="ctxt" id="ctxt">Độ tin cậy: --%</div>
-    </div>
-
-    <div class="strow">
-      <div class="stcard"><div class="stlbl">🟢 Tài</div><div class="stval" id="sc-tai">0</div></div>
-      <div class="stcard"><div class="stlbl">🔴 Xỉu</div><div class="stval" id="sc-xiu">0</div></div>
-      <div class="stcard"><div class="stlbl">🔥 Chuỗi</div><div class="stval" id="sc-str">0</div></div>
-    </div>
-
-    <div class="logbox" id="logbox">⚡ Đang khởi động...</div>
-
-    <div class="hrow" id="hrow"></div>
-
-    <div class="btnrow">
-      <button class="rbtn" onclick="manualRefresh()">⟳ LÀM MỚI</button>
-      <button class="ibtn" onclick="injectNow()">🔌 INJECT</button>
-    </div>
-
-    <div class="foot">
-      <span class="ftime" id="ftime">--:--:--</span>
-      <span class="fver">v6.0 · WS-HOOK</span>
-    </div>
+  <div class="note">
+    ⚠️ Nếu Safari không cho lưu trực tiếp:<br>
+    1. Nhấn "COPY CODE" ở trên<br>
+    2. Tạo bookmark bất kỳ trang nào<br>
+    3. Sửa URL bookmark → paste code vào<br>
+    4. Lưu lại → dùng được!
   </div>
 </div>
 
 <script>
-(function(){
+// ════════════════════════════════════════
+//  TOÀN BỘ CODE MENU — inject vào sunwin.qa
+// ════════════════════════════════════════
+const MENU_CODE = `(function(){
 'use strict';
-
-// ════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════
-let localHist  = JSON.parse(localStorage.getItem('sw_hist') || '[]');
-let lastSess   = localStorage.getItem('sw_last_sess') || '';
-let taiCount   = 0, xiuCount = 0, streak = 0, lastResult = '';
-let injected   = false;
-let isDrag     = false, ox = 0, oy = 0;
-
-// ════════════════════════════════════════
-//  DOM
-// ════════════════════════════════════════
-const $  = id => document.getElementById(id);
-const log = m  => { $('logbox').textContent = m; console.log('[SW]', m); };
-
-function setDot(on){
-  $('sdot').className = 'sdot' + (on ? ' on' : '');
-  $('stxt').textContent = on ? '✅ Đã kết nối' : '⏳ Đang kết nối...';
+if(window.__SW_AI__){
+  var p=document.getElementById('sw-ai-panel');
+  if(p) p.style.display=p.style.display==='none'?'block':'none';
+  return;
 }
+window.__SW_AI__=true;
 
-// ════════════════════════════════════════
-//  DRAG
-// ════════════════════════════════════════
-const tool = $('tool'), hdr = $('hdr');
-hdr.addEventListener('mousedown', e => {
-  if(e.target.closest('.hbtns')) return;
-  isDrag = true;
-  const r = tool.getBoundingClientRect();
-  ox = e.clientX - r.left; oy = e.clientY - r.top;
-  tool.style.right = 'auto'; tool.style.bottom = 'auto';
-  tool.style.left = r.left + 'px'; tool.style.top = r.top + 'px';
+// ── STATE ──
+var hist=JSON.parse(localStorage.getItem('sw_hist')||'[]');
+var lastSess=localStorage.getItem('sw_last_sess')||'';
+var taiC=0,xiuC=0,streak=0,lastR='';
+var drag=false,ox=0,oy=0;
+
+// ── CSS ──
+var css=document.createElement('style');
+css.textContent=\`
+#sw-ai-panel{
+  position:fixed;bottom:20px;right:16px;width:265px;
+  background:linear-gradient(135deg,rgba(18,7,2,.98),rgba(9,3,1,.98));
+  border-radius:18px;border:1px solid rgba(255,200,0,.38);
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+  z-index:2147483647;font-family:monospace;
+  transition:opacity .2s;
+}
+#sw-ai-panel.sw-hide{opacity:0;pointer-events:none;}
+#sw-ai-panel.sw-mini #sw-body{display:none;}
+#sw-ai-panel.sw-mini{width:auto;border-radius:40px;}
+#sw-ai-panel.sw-mini #sw-hdr{border-radius:40px;border-bottom:none;}
+#sw-hdr{
+  padding:10px 13px;cursor:grab;
+  background:linear-gradient(135deg,rgba(255,200,0,.1),rgba(255,120,0,.04));
+  border-radius:18px 18px 0 0;
+  border-bottom:1px solid rgba(255,200,0,.18);
+  display:flex;align-items:center;justify-content:space-between;
+}
+#sw-hdr:active{cursor:grabbing;}
+.sw-nm{
+  font-size:12px;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(135deg,#ffd700,#ff8c00);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.sw-hb{display:flex;gap:5px;}
+.sw-hb button{
+  width:22px;height:22px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.08);color:#ffd700;
+  font-size:12px;cursor:pointer;
+}
+#sw-body{padding:10px;}
+.sw-sr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 9px;background:rgba(0,0,0,.45);
+  border-radius:9px;margin-bottom:8px;
+}
+.sw-dot{
+  width:7px;height:7px;border-radius:50%;background:#f44;
+  display:inline-block;margin-right:5px;
+  animation:sw-blink 1.5s infinite;
+}
+.sw-dot.on{background:#4f4;}
+@keyframes sw-blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sw-st{font-size:9px;color:rgba(255,255,255,.6);}
+.sw-sid{font-size:11px;font-weight:bold;color:#ffd700;}
+.sw-dr{display:flex;justify-content:center;gap:8px;margin-bottom:8px;}
+.sw-dv{
+  width:44px;height:44px;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,200,0,.45);
+  border-radius:9px;font-size:20px;font-weight:bold;
+  color:#ffd700;display:flex;align-items:center;justify-content:center;
+}
+.sw-dv.sw-pop{animation:sw-pop .3s ease-out;}
+@keyframes sw-pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.sw-tr{text-align:center;font-size:10px;color:rgba(255,255,255,.45);margin-bottom:6px;}
+.sw-tv{font-size:19px;font-weight:bold;color:#ff8c00;}
+.sw-rb{
+  display:block;width:100%;text-align:center;
+  padding:5px;border-radius:18px;font-size:12px;
+  font-weight:bold;margin-bottom:8px;
+}
+.sw-tai{background:rgba(76,175,80,.15);color:#4caf50;border:1px solid #4caf5044;}
+.sw-xiu{background:rgba(244,67,54,.15);color:#f44336;border:1px solid #f4433644;}
+.sw-emp{background:rgba(255,255,255,.04);color:#444;border:1px solid #222;}
+.sw-pb{
+  background:linear-gradient(135deg,rgba(255,200,0,.07),rgba(255,120,0,.03));
+  border:1px solid rgba(255,200,0,.18);
+  border-radius:10px;padding:8px;margin-bottom:8px;text-align:center;
+}
+.sw-pl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-bottom:4px;}
+.sw-pv{font-size:25px;font-weight:900;letter-spacing:2px;}
+.sw-pt{color:#4caf50;text-shadow:0 0 10px rgba(76,175,80,.5);}
+.sw-px{color:#f44336;text-shadow:0 0 10px rgba(244,67,54,.5);}
+.sw-pw{color:#333;}
+.sw-cb{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:5px;overflow:hidden;}
+.sw-cf{height:100%;background:linear-gradient(90deg,#ffd700,#ff8c00);transition:width .5s;width:0%;}
+.sw-ct{font-size:8px;color:rgba(255,255,255,.25);margin-top:3px;}
+.sw-sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;}
+.sw-sc{background:rgba(0,0,0,.4);border-radius:7px;padding:5px;text-align:center;}
+.sw-sl{font-size:8px;color:rgba(255,255,255,.35);}
+.sw-sv{font-size:13px;font-weight:bold;color:#ffd700;}
+.sw-log{
+  font-size:8px;color:#f0c420;
+  padding:4px 7px;background:rgba(0,0,0,.5);
+  border-left:2px solid #f0c420;border-radius:4px;
+  margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  min-height:22px;
+}
+.sw-hr{display:flex;gap:3px;justify-content:center;margin-bottom:8px;}
+.sw-hi{
+  width:24px;height:24px;border-radius:5px;
+  font-size:10px;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+}
+.sw-ht{background:rgba(76,175,80,.15);border:1px solid #4caf5044;color:#4caf50;}
+.sw-hx{background:rgba(244,67,54,.15);border:1px solid #f4433644;color:#f44336;}
+.sw-he{background:rgba(255,255,255,.03);border:1px solid #1a1a1a;color:#2a2a2a;}
+.sw-br{display:flex;gap:5px;margin-bottom:0;}
+.sw-b1{
+  flex:1;background:linear-gradient(135deg,#ffd700,#ff8c00);
+  border:none;padding:7px;border-radius:18px;
+  font-size:10px;font-weight:bold;color:#1a0a00;cursor:pointer;
+}
+.sw-b2{
+  flex:1;background:rgba(255,200,0,.1);
+  border:1px solid rgba(255,200,0,.3);color:#ffd700;
+  padding:7px;border-radius:18px;font-size:10px;cursor:pointer;
+}
+.sw-ft{
+  display:flex;justify-content:space-between;
+  padding-top:6px;margin-top:6px;
+  border-top:1px solid rgba(255,255,255,.05);font-size:8px;
+}
+.sw-ft span:first-child{color:rgba(255,200,0,.4);}
+.sw-ft span:last-child{color:rgba(255,255,255,.18);}
+\`;
+document.head.appendChild(css);
+
+// ── HTML ──
+var panel=document.createElement('div');
+panel.id='sw-ai-panel';
+panel.innerHTML=\`
+<div id="sw-hdr">
+  <span class="sw-nm">🎲 SUNWIN AI</span>
+  <div class="sw-hb">
+    <button id="sw-mb">−</button>
+    <button id="sw-cb2">✕</button>
+  </div>
+</div>
+<div id="sw-body">
+  <div class="sw-sr">
+    <div><span class="sw-dot" id="sw-dot"></span><span class="sw-st" id="sw-st">Đang kết nối...</span></div>
+    <span class="sw-sid" id="sw-sid">#------</span>
+  </div>
+  <div class="sw-dr">
+    <div class="sw-dv" id="sw-d1">?</div>
+    <div class="sw-dv" id="sw-d2">?</div>
+    <div class="sw-dv" id="sw-d3">?</div>
+  </div>
+  <div class="sw-tr">Tổng: <span class="sw-tv" id="sw-tv">--</span></div>
+  <span class="sw-rb sw-emp" id="sw-rb">---</span>
+  <div class="sw-pb">
+    <div class="sw-pl">🤖 DỰ ĐOÁN TIẾP THEO</div>
+    <div class="sw-pv sw-pw" id="sw-pv">--</div>
+    <div class="sw-cb"><div class="sw-cf" id="sw-cf"></div></div>
+    <div class="sw-ct" id="sw-ct">Độ tin cậy: --%</div>
+  </div>
+  <div class="sw-sg">
+    <div class="sw-sc"><div class="sw-sl">🟢 Tài</div><div class="sw-sv" id="sw-tai">0</div></div>
+    <div class="sw-sc"><div class="sw-sl">🔴 Xỉu</div><div class="sw-sv" id="sw-xiu">0</div></div>
+    <div class="sw-sc"><div class="sw-sl">🔥 Chuỗi</div><div class="sw-sv" id="sw-str">0</div></div>
+  </div>
+  <div class="sw-log" id="sw-log">⚡ Đang khởi động...</div>
+  <div class="sw-hr" id="sw-hr"></div>
+  <div class="sw-br">
+    <button class="sw-b1" id="sw-ref">⟳ LÀM MỚI</button>
+    <button class="sw-b2" id="sw-rst">🗑 RESET</button>
+  </div>
+  <div class="sw-ft">
+    <span id="sw-time">--:--:--</span>
+    <span>v6.1 · LIVE</span>
+  </div>
+</div>\`;
+document.body.appendChild(panel);
+
+// ── HELPERS ──
+var $=function(id){return document.getElementById(id);};
+var log=function(m){$('sw-log').textContent=m;};
+var setDot=function(on){
+  $('sw-dot').className='sw-dot'+(on?' on':'');
+  $('sw-st').textContent=on?'✅ Đã kết nối':'⏳ Kết nối...';
+};
+
+// ── DRAG ──
+var hdr=$('sw-hdr');
+hdr.addEventListener('mousedown',function(e){
+  if(e.target.closest('.sw-hb'))return;
+  drag=true;
+  var r=panel.getBoundingClientRect();
+  ox=e.clientX-r.left;oy=e.clientY-r.top;
+  panel.style.right='auto';panel.style.bottom='auto';
+  panel.style.left=r.left+'px';panel.style.top=r.top+'px';
   e.preventDefault();
 });
-document.addEventListener('mousemove', e => {
-  if(!isDrag) return;
-  let x = e.clientX-ox, y = e.clientY-oy;
-  x = Math.max(0, Math.min(window.innerWidth - tool.offsetWidth, x));
-  y = Math.max(0, Math.min(window.innerHeight - tool.offsetHeight, y));
-  tool.style.left = x+'px'; tool.style.top = y+'px';
+document.addEventListener('mousemove',function(e){
+  if(!drag)return;
+  var x=e.clientX-ox,y=e.clientY-oy;
+  x=Math.max(4,Math.min(window.innerWidth-panel.offsetWidth-4,x));
+  y=Math.max(4,Math.min(window.innerHeight-panel.offsetHeight-4,y));
+  panel.style.left=x+'px';panel.style.top=y+'px';
 });
-document.addEventListener('mouseup', () => isDrag = false);
-
-hdr.addEventListener('touchstart', e => {
-  if(e.target.closest('.hbtns')) return;
-  const r = tool.getBoundingClientRect(), t = e.touches[0];
-  ox = t.clientX-r.left; oy = t.clientY-r.top;
-  tool.style.right='auto'; tool.style.bottom='auto';
-  tool.style.left=r.left+'px'; tool.style.top=r.top+'px';
+document.addEventListener('mouseup',function(){drag=false;});
+hdr.addEventListener('touchstart',function(e){
+  if(e.target.closest('.sw-hb'))return;
+  var r=panel.getBoundingClientRect(),t=e.touches[0];
+  ox=t.clientX-r.left;oy=t.clientY-r.top;
+  panel.style.right='auto';panel.style.bottom='auto';
+  panel.style.left=r.left+'px';panel.style.top=r.top+'px';
 },{passive:true});
-document.addEventListener('touchmove', e => {
-  if(!isDrag) return;
-  const t = e.touches[0];
-  let x = t.clientX-ox, y = t.clientY-oy;
-  x = Math.max(0, Math.min(window.innerWidth-tool.offsetWidth, x));
-  y = Math.max(0, Math.min(window.innerHeight-tool.offsetHeight, y));
-  tool.style.left=x+'px'; tool.style.top=y+'px';
+document.addEventListener('touchmove',function(e){
+  if(!drag)return;
+  var t=e.touches[0];
+  var x=t.clientX-ox,y=t.clientY-oy;
+  x=Math.max(4,Math.min(window.innerWidth-panel.offsetWidth-4,x));
+  y=Math.max(4,Math.min(window.innerHeight-panel.offsetHeight-4,y));
+  panel.style.left=x+'px';panel.style.top=y+'px';
 },{passive:true});
-document.addEventListener('touchend', () => isDrag = false);
+document.addEventListener('touchend',function(){drag=false;});
 
-// Controls
-$('mbtn').onclick = () => {
-  tool.classList.toggle('mini');
-  $('mbtn').textContent = tool.classList.contains('mini') ? '+' : '−';
+// ── CONTROLS ──
+$('sw-mb').onclick=function(){
+  panel.classList.toggle('sw-mini');
+  $('sw-mb').textContent=panel.classList.contains('sw-mini')?'+':'−';
 };
-$('cbtn').onclick = () => tool.classList.add('hide');
-hdr.addEventListener('dblclick', () => {
-  tool.classList.toggle('mini');
-  $('mbtn').textContent = tool.classList.contains('mini') ? '+' : '−';
+$('sw-cb2').onclick=function(){panel.classList.add('sw-hide');};
+$('sw-ref').onclick=function(){log('🔄 Đang làm mới...');hookWS();};
+$('sw-rst').onclick=function(){
+  hist=[];localStorage.removeItem('sw_hist');
+  localStorage.removeItem('sw_last_sess');
+  lastSess='';taiC=0;xiuC=0;streak=0;lastR='';
+  renderHist();log('🗑 Đã reset dữ liệu');
+};
+hdr.addEventListener('dblclick',function(){
+  panel.classList.toggle('sw-mini');
+  $('sw-mb').textContent=panel.classList.contains('sw-mini')?'+':'−';
 });
 
-// ════════════════════════════════════════
-//  UPDATE UI
-// ════════════════════════════════════════
-function updateUI(session, dice, total, result) {
-  $('sessid').textContent = '#' + session;
-
-  // Dice với animation
-  ['d1','d2','d3'].forEach((id, i) => {
-    const el = $(id);
-    el.classList.remove('pop');
-    void el.offsetWidth;
-    el.textContent = dice[i] || '?';
-    el.classList.add('pop');
-  });
-
-  $('tval').textContent = total || '--';
-
-  const badge = $('rbadge');
-  if(result === 'Tài'){
-    badge.textContent = '🟢 TÀI';
-    badge.className = 'rbadge rtai';
-  } else if(result === 'Xỉu'){
-    badge.textContent = '🔴 XỈU';
-    badge.className = 'rbadge rxiu';
-  }
-
-  // Stats
-  if(result && result !== lastResult){
-    if(result === 'Tài') taiCount++;
-    else xiuCount++;
-    streak = (result === lastResult) ? streak+1 : 1;
-    lastResult = result;
-  }
-  $('sc-tai').textContent = taiCount;
-  $('sc-xiu').textContent = xiuCount;
-  $('sc-str').textContent = streak;
-
-  setDot(true);
-}
-
-// ════════════════════════════════════════
-//  HISTORY
-// ════════════════════════════════════════
-function addToHist(result, dice, total, session){
-  localHist.unshift({r:result, dice, total, s:session, ts:Date.now()});
-  if(localHist.length > 30) localHist.pop();
-  localStorage.setItem('sw_hist', JSON.stringify(localHist));
-  renderHist();
-}
-
+// ── RENDER HISTORY ──
 function renderHist(){
-  const c = $('hrow'); c.innerHTML = '';
-  const arr = localHist.slice(0,8);
-  while(arr.length < 8) arr.push(null);
-  arr.forEach(item => {
-    const d = document.createElement('div');
-    if(!item){ d.className='hitem hempty'; d.textContent='?'; }
-    else if(item.r==='Tài'){ d.className='hitem htai'; d.textContent='T'; }
-    else { d.className='hitem hxiu'; d.textContent='X'; }
+  var c=$('sw-hr');c.innerHTML='';
+  var arr=hist.slice(0,8);
+  while(arr.length<8)arr.push(null);
+  arr.forEach(function(item){
+    var d=document.createElement('div');
+    if(!item){d.className='sw-hi sw-he';d.textContent='?';}
+    else if(item.r==='Tài'){d.className='sw-hi sw-ht';d.textContent='T';}
+    else{d.className='sw-hi sw-hx';d.textContent='X';}
     c.appendChild(d);
   });
 }
 
-// ════════════════════════════════════════
-//  PREDICTION LOCAL (không cần API)
-//  Dùng thuật toán phân tích chuỗi
-// ════════════════════════════════════════
-function calcPrediction(){
-  if(localHist.length < 3) return;
-  const results = localHist.map(h => h.r);
-  let tai=0, xiu=0;
-
-  // Đếm 10 phiên gần nhất
-  const recent = results.slice(0,10);
-  recent.forEach(r => { if(r==='Tài') tai++; else xiu++; });
-
-  // Phân tích chuỗi
-  let streak = 1;
-  for(let i=1; i<Math.min(results.length,5); i++){
-    if(results[i]===results[0]) streak++;
-    else break;
-  }
-
-  // Tính xác suất
-  let pred, conf;
-  if(streak >= 4){
-    // Chuỗi dài → có khả năng đảo chiều
-    pred = results[0]==='Tài' ? 'Xỉu' : 'Tài';
-    conf = Math.min(55 + streak*3, 75);
-  } else if(tai > xiu + 2){
-    pred = 'Xỉu'; conf = 55 + (tai-xiu)*3;
-  } else if(xiu > tai + 2){
-    pred = 'Tài'; conf = 55 + (xiu-tai)*3;
-  } else {
-    // Ngẫu nhiên gần 50/50
-    pred = results[0]==='Tài' ? 'Xỉu' : 'Tài';
-    conf = 52;
-  }
-  conf = Math.min(conf, 82);
-
-  const el = $('pval');
-  el.textContent = pred;
-  el.className = 'pval ' + (pred==='Tài' ? 'ptai' : 'pxiu');
-  $('cfill').style.width = conf + '%';
-  $('ctxt').textContent = 'Độ tin cậy: ' + conf + '%';
+// ── NORMALIZE ──
+function normR(raw){
+  if(!raw)return null;
+  var s=String(raw).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
+  if(/tai/.test(s))return 'Tài';
+  if(/xiu|xu/.test(s))return 'Xỉu';
+  if(/big|over|high/.test(s))return 'Tài';
+  if(/small|under|low/.test(s))return 'Xỉu';
+  return null;
 }
 
-// ════════════════════════════════════════
-//  XỬ LÝ DỮ LIỆU MỚI
-// ════════════════════════════════════════
-function onNewData(session, dice, total, result){
-  const sessStr = String(session);
-  if(sessStr === lastSess) return; // Bỏ qua nếu đã xử lý
-
-  log('📥 #' + session + ': ' + result + ' (' + dice.join(',') + '=' + total + ')');
-  lastSess = sessStr;
-  localStorage.setItem('sw_last_sess', sessStr);
-
-  updateUI(session, dice, total, result);
-  addToHist(result, dice, total, session);
-  calcPrediction();
-}
-
-// ════════════════════════════════════════
-//  PARSE DATA — nhiều định dạng khác nhau
-// ════════════════════════════════════════
+// ── PARSE ──
 function tryParse(raw){
-  try {
-    const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
-
-    // Dạng 1: WebSocket game message
-    // {type:"result", session:123, dice:[1,2,3], total:6, result:"Xỉu"}
-    if(d.type && (d.type.includes('result') || d.type.includes('game') || d.type.includes('round'))){
-      const session = d.session || d.roundId || d.round_id || d.phien;
-      const dice    = d.dice || d.xucxac || d.dices || [d.dice1,d.dice2,d.dice3];
-      const total   = d.total || d.tong || (dice ? dice[0]+dice[1]+dice[2] : 0);
-      const result  = normalizeResult(d.result || d.ketqua || d.winner || (total>=11?'Tài':'Xỉu'));
-      if(session && dice && dice.length===3 && result){
-        return {session, dice, total, result};
-      }
-    }
-
-    // Dạng 2: Generic data object
-    const tryFields = (obj) => {
-      const get = (...names) => {
-        for(const n of names)
-          for(const k of Object.keys(obj||{}))
-            if(k.toLowerCase()===n.toLowerCase()) return obj[k];
-        return undefined;
-      };
-      const session = get('session','phien','roundId','round_id','id','round');
-      const d1 = Number(get('dice1','xuc_xac_1','xucxac1','d1') || 0);
-      const d2 = Number(get('dice2','xuc_xac_2','xucxac2','d2') || 0);
-      const d3 = Number(get('dice3','xuc_xac_3','xucxac3','d3') || 0);
-      const dice = [d1,d2,d3];
-      let total = Number(get('total','tong','sum') || 0);
-      if(!total && d1&&d2&&d3) total = d1+d2+d3;
-      const rawR = get('result','ketqua','ket_qua','winner','outcome');
-      let result = normalizeResult(rawR);
-      if(!result && total>=3) result = total>=11?'Tài':'Xỉu';
-      if(session && (d1||d2||d3) && result) return {session:Number(session),dice,total,result};
-      return null;
-    };
+  try{
+    var d=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!d||typeof d!=='object')return null;
 
     // Thử trực tiếp
-    const r1 = tryFields(d);
-    if(r1) return r1;
+    var r=extractFields(d);
+    if(r)return r;
 
-    // Thử nested: data.result, data.game, data.current, v.v.
-    for(const key of ['result','game','current','data','payload','body','msg']){
-      if(d[key] && typeof d[key]==='object'){
-        const r2 = tryFields(d[key]);
-        if(r2) return r2;
-        // Thử array
-        if(Array.isArray(d[key]) && d[key][0]){
-          const r3 = tryFields(d[key][0]);
-          if(r3) return r3;
+    // Thử nested
+    var keys=['result','game','current','data','payload','body','msg','gameResult','roundResult'];
+    for(var i=0;i<keys.length;i++){
+      var k=keys[i];
+      if(d[k]&&typeof d[k]==='object'){
+        var r2=extractFields(d[k]);
+        if(r2)return r2;
+        if(Array.isArray(d[k])&&d[k][0]){
+          var r3=extractFields(d[k][0]);
+          if(r3)return r3;
         }
       }
     }
-  } catch(_){}
+  }catch(e){}
   return null;
 }
 
-function normalizeResult(raw){
-  if(!raw) return null;
-  const s = String(raw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  if(/tai/.test(s)) return 'Tài';
-  if(/xiu|xu/.test(s)) return 'Xỉu';
-  if(/big|over|high/.test(s)) return 'Tài';
-  if(/small|under|low/.test(s)) return 'Xỉu';
-  return null;
-}
-
-// ════════════════════════════════════════
-//  INJECT VÀO IFRAME
-// ════════════════════════════════════════
-function injectNow(){
-  const frame = $('swFrame');
-  if(!frame){ log('❌ Không tìm thấy iframe'); return; }
-
-  let fw;
-  try { fw = frame.contentWindow; }
-  catch(e){ log('❌ Không truy cập được iframe (CORS)'); return; }
-  if(!fw){ log('⏳ Iframe chưa sẵn sàng, thử lại...'); return; }
-
-  // Dùng postMessage để nhận data từ iframe
-  window.addEventListener('message', e => {
-    if(!e.data) return;
-    const parsed = tryParse(e.data);
-    if(parsed) onNewData(parsed.session, parsed.dice, parsed.total, parsed.result);
-  });
-
-  // Code inject vào iframe — hook WebSocket + XHR + fetch
-  const hookCode = `(function(){
-    if(window.__SW_HOOKED__) return;
-    window.__SW_HOOKED__ = true;
-
-    function relay(data){
-      try{ window.parent.postMessage(data, '*'); } catch(_){}
+function extractFields(obj){
+  if(!obj||typeof obj!=='object')return null;
+  var get=function(){
+    for(var i=0;i<arguments.length;i++){
+      var n=arguments[i];
+      var ks=Object.keys(obj);
+      for(var j=0;j<ks.length;j++){
+        if(ks[j].toLowerCase()===n.toLowerCase())return obj[ks[j]];
+      }
     }
+    return undefined;
+  };
+  var session=get('session','phien','roundId','round_id','id','round','sessionId');
+  if(!session)return null;
+  var d1=Number(get('dice1','xuc_xac_1','xucxac1','d1','Xuc_xac_1')||0);
+  var d2=Number(get('dice2','xuc_xac_2','xucxac2','d2','Xuc_xac_2')||0);
+  var d3=Number(get('dice3','xuc_xac_3','xucxac3','d3','Xuc_xac_3')||0);
 
-    // ── Hook WebSocket ──
-    const _WS = window.WebSocket;
-    window.WebSocket = function(...args){
-      const ws = new _WS(...args);
-      ws.addEventListener('message', function(e){
-        try{ relay(e.data); } catch(_){}
+  // Thử array dice
+  if(!d1&&!d2&&!d3){
+    var da=get('dice','dices','xucxac','Dice');
+    if(Array.isArray(da)&&da.length>=3){d1=Number(da[0]);d2=Number(da[1]);d3=Number(da[2]);}
+  }
+
+  var dice=[d1,d2,d3];
+  var total=Number(get('total','tong','Tong','sum')||0);
+  if(!total&&d1&&d2&&d3)total=d1+d2+d3;
+  var rawR=get('result','ketqua','ket_qua','Ket_qua','winner','outcome','type_result');
+  var result=normR(rawR);
+  if(!result&&total>=3)result=total>=11?'Tài':'Xỉu';
+  if(Number(session)&&(d1||d2||d3)&&result){
+    return{session:Number(session),dice:dice,total:total,result:result};
+  }
+  return null;
+}
+
+// ── UPDATE UI ──
+function updateUI(session,dice,total,result){
+  $('sw-sid').textContent='#'+session;
+  ['sw-d1','sw-d2','sw-d3'].forEach(function(id,i){
+    var el=$(id);
+    el.classList.remove('sw-pop');
+    void el.offsetWidth;
+    el.textContent=dice[i]||'?';
+    el.classList.add('sw-pop');
+  });
+  $('sw-tv').textContent=total||'--';
+  var rb=$('sw-rb');
+  if(result==='Tài'){rb.textContent='🟢 TÀI';rb.className='sw-rb sw-tai';}
+  else if(result==='Xỉu'){rb.textContent='🔴 XỈU';rb.className='sw-rb sw-xiu';}
+  setDot(true);
+}
+
+// ── PREDICTION ──
+function calcPred(){
+  if(hist.length<3)return;
+  var results=hist.map(function(h){return h.r;});
+  var tai=0,xiu=0;
+  var recent=results.slice(0,10);
+  recent.forEach(function(r){if(r==='Tài')tai++;else xiu++;});
+  var sk=1;
+  for(var i=1;i<Math.min(results.length,6);i++){
+    if(results[i]===results[0])sk++;else break;
+  }
+  var pred,conf;
+  if(sk>=4){pred=results[0]==='Tài'?'Xỉu':'Tài';conf=Math.min(58+sk*2,76);}
+  else if(tai>xiu+2){pred='Xỉu';conf=56+(tai-xiu)*2;}
+  else if(xiu>tai+2){pred='Tài';conf=56+(xiu-tai)*2;}
+  else{pred=results[0]==='Tài'?'Xỉu':'Tài';conf=52;}
+  conf=Math.min(conf,80);
+  var el=$('sw-pv');
+  el.textContent=pred;
+  el.className='sw-pv '+(pred==='Tài'?'sw-pt':'sw-px');
+  $('sw-cf').style.width=conf+'%';
+  $('sw-ct').textContent='Độ tin cậy: '+conf+'%';
+  $('sw-tai').textContent=tai;
+  $('sw-xiu').textContent=xiu;
+}
+
+// ── ON NEW DATA ──
+function onData(session,dice,total,result){
+  var ss=String(session);
+  if(ss===lastSess)return;
+  log('📥 #'+session+': '+result+' ('+dice.join(',')+'='+total+')');
+  lastSess=ss;localStorage.setItem('sw_last_sess',ss);
+  if(result!==lastR){
+    streak=1;lastR=result;
+  } else {streak++;}
+  $('sw-str').textContent=streak;
+  updateUI(session,dice,total,result);
+  hist.unshift({r:result,dice:dice,total:total,s:session,ts:Date.now()});
+  if(hist.length>30)hist.pop();
+  localStorage.setItem('sw_hist',JSON.stringify(hist));
+  renderHist();calcPred();
+}
+
+// ── HOOK WEBSOCKET ──
+function hookWS(){
+  // Hook WebSocket
+  if(!window.__SW_WS_HOOKED__){
+    window.__SW_WS_HOOKED__=true;
+    var _WS=window.WebSocket;
+    window.WebSocket=function(){
+      var ws=new(Function.prototype.bind.apply(_WS,[null].concat(Array.from(arguments))))();
+      ws.addEventListener('message',function(e){
+        var p=tryParse(e.data);
+        if(p)onData(p.session,p.dice,p.total,p.result);
       });
       return ws;
     };
-    Object.assign(window.WebSocket, _WS);
+    window.WebSocket.prototype=_WS.prototype;
+    log('✅ WS Hook OK — chờ dữ liệu game...');
+  }
 
-    // ── Hook fetch ──
-    const _fetch = window.fetch;
-    window.fetch = async function(...args){
-      const res = await _fetch(...args);
-      try{
-        const url = String(args[0]||'');
-        if(url.includes('game') || url.includes('round') || url.includes('result') || url.includes('dice') || url.includes('history')){
-          const clone = res.clone();
-          clone.text().then(t => { try{ relay(t); }catch(_){} });
-        }
-      }catch(_){}
-      return res;
-    };
-
-    // ── Hook XMLHttpRequest ──
-    const _XHR = window.XMLHttpRequest;
-    window.XMLHttpRequest = function(){
-      const xhr = new _XHR();
-      const origOpen = xhr.open.bind(xhr);
-      xhr.open = function(method, url, ...rest){
-        xhr._url = url;
-        return origOpen(method, url, ...rest);
-      };
-      xhr.addEventListener('load', function(){
+  // Hook fetch
+  if(!window.__SW_FETCH_HOOKED__){
+    window.__SW_FETCH_HOOKED__=true;
+    var _fetch=window.fetch;
+    window.fetch=function(){
+      var args=arguments;
+      return _fetch.apply(this,args).then(function(res){
         try{
-          const url = String(xhr._url||'');
-          if(url.includes('game')||url.includes('round')||url.includes('result')||url.includes('dice')||url.includes('history')){
-            relay(xhr.responseText);
+          var url=String(args[0]||'');
+          if(url.match(/game|round|result|dice|history|taixiu|sicbo/i)){
+            res.clone().text().then(function(t){
+              var p=tryParse(t);
+              if(p)onData(p.session,p.dice,p.total,p.result);
+            });
           }
-        }catch(_){}
+        }catch(e){}
+        return res;
+      });
+    };
+  }
+
+  // Hook XHR
+  if(!window.__SW_XHR_HOOKED__){
+    window.__SW_XHR_HOOKED__=true;
+    var _XHR=window.XMLHttpRequest;
+    window.XMLHttpRequest=function(){
+      var xhr=new _XHR();
+      var _open=xhr.open.bind(xhr);
+      xhr.open=function(m,u){xhr._u=u;return _open.apply(xhr,arguments);};
+      xhr.addEventListener('load',function(){
+        try{
+          if(String(xhr._u||'').match(/game|round|result|dice|history|taixiu|sicbo/i)){
+            var p=tryParse(xhr.responseText);
+            if(p)onData(p.session,p.dice,p.total,p.result);
+          }
+        }catch(e){}
       });
       return xhr;
     };
-
-    console.log('[SunWin Hook] ✅ Đã inject WS + fetch + XHR hook');
-  })();`;
-
-  try {
-    fw.eval(hookCode);
-    injected = true;
-    setDot(true);
-    log('✅ Inject thành công! Vào bàn Tài Xỉu để bắt dữ liệu');
-  } catch(e) {
-    log('⚠️ Eval thất bại: ' + e.message.slice(0,40));
-    injected = false;
   }
+
+  setDot(true);
 }
 
-// ════════════════════════════════════════
-//  AUTO INJECT KHI IFRAME LOAD
-// ════════════════════════════════════════
-$('swFrame').addEventListener('load', function(){
-  log('📄 Trang SunWin đã tải — đang inject...');
-  setTimeout(() => injectNow(), 2000);
-});
+// ── CLOCK ──
+setInterval(function(){
+  $('sw-time').textContent=new Date().toLocaleTimeString('vi-VN');
+},1000);
 
-// Re-inject định kỳ nếu chưa được
-setInterval(() => {
-  if(!injected) injectNow();
-}, 8000);
+// ── INIT ──
+renderHist();calcPred();
+hookWS();
+log('🚀 SunWin AI v6.1 đã khởi động!');
+})();`;
 
 // ════════════════════════════════════════
-//  MANUAL REFRESH
+//  TẠO BOOKMARKLET URL
 // ════════════════════════════════════════
-window.manualRefresh = function(){
-  log('🔄 Làm mới...');
-  injectNow();
+const bmCode = 'javascript:' + encodeURIComponent(MENU_CODE);
+document.getElementById('bmLink').href = bmCode;
+
+// Copy function
+window.copyCode = function(){
+  navigator.clipboard.writeText(bmCode).then(()=>{
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ ĐÃ COPY! Dán vào URL bookmark';
+    setTimeout(()=>{ btn.textContent = '📋 COPY CODE (dán vào URL bookmark thủ công)'; }, 3000);
+  }).catch(()=>{
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = bmCode;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Đã copy! Tạo bookmark mới và paste vào URL.');
+  });
 };
-window.injectNow = injectNow;
-
-// ════════════════════════════════════════
-//  CLOCK
-// ════════════════════════════════════════
-setInterval(() => {
-  $('ftime').textContent = new Date().toLocaleTimeString('vi-VN');
-}, 1000);
-
-// ════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════
-renderHist();
-calcPrediction();
-log('🚀 Đang tải web.sunwin.qa...');
-
-// Thử inject sau 5 giây
-setTimeout(() => injectNow(), 5000);
-
-})();
 </script>
 </body>
 </html>
