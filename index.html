@@ -6,153 +6,79 @@
    <title>SunWin AI</title>
    <style>
        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+       * { margin:0; padding:0; box-sizing:border-box; }
+       body { background:#080612; font-family:'Rajdhani',sans-serif; width:100vw; height:100vh; overflow:hidden; }
 
-       * { margin: 0; padding: 0; box-sizing: border-box; }
-
-       body {
-           background: #080612;
-           font-family: 'Rajdhani', sans-serif;
-           width: 100vw;
-           height: 100vh;
-           overflow: hidden;
-       }
-
-       #sunwin-frame {
-           position: fixed;
-           inset: 0;
-           width: 100%;
-           height: 100%;
-           border: none;
-           z-index: 1;
-       }
+       #sunwin-frame { position:fixed; inset:0; width:100%; height:100%; border:none; z-index:1; }
 
        .status-bar {
-           position: fixed;
-           top: 12px;
-           left: 50%;
-           transform: translateX(-50%);
-           background: rgba(0,0,0,0.75);
-           border: 1px solid rgba(0,200,255,0.2);
-           padding: 5px 14px;
-           border-radius: 20px;
-           font-size: 10px;
-           color: #00ff88;
-           z-index: 999998;
-           display: flex;
-           align-items: center;
-           gap: 7px;
-           backdrop-filter: blur(10px);
-           font-family: 'Rajdhani', sans-serif;
-           font-weight: 600;
-           letter-spacing: 0.5px;
-           white-space: nowrap;
+           position:fixed; top:12px; left:50%; transform:translateX(-50%);
+           background:rgba(0,0,0,0.82); border:1px solid rgba(0,200,255,0.25);
+           padding:5px 14px; border-radius:20px; font-size:10px; color:#00ff88;
+           z-index:999998; display:flex; align-items:center; gap:7px;
+           backdrop-filter:blur(12px); font-family:'Rajdhani',sans-serif;
+           font-weight:600; letter-spacing:0.5px; white-space:nowrap;
        }
        .live-dot {
-           width: 6px; height: 6px;
-           border-radius: 50%;
-           background: #00ff88;
-           animation: pulse-dot 1.5s ease-in-out infinite;
-           flex-shrink: 0;
+           width:6px; height:6px; border-radius:50%; background:#00ff88; flex-shrink:0;
+           animation:pulse-dot 1.5s ease-in-out infinite;
        }
-       @keyframes pulse-dot {
-           0%,100% { opacity:1; box-shadow: 0 0 4px #00ff88; }
-           50% { opacity:0.3; box-shadow:none; }
-       }
+       @keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 4px #00ff88} 50%{opacity:0.3;box-shadow:none} }
 
        #sw-panel {
-           position: fixed;
-           bottom: 20px;
-           right: 12px;
-           width: 255px;
-           background: rgba(6, 5, 16, 0.94);
-           border: 1px solid rgba(0,200,255,0.28);
-           border-radius: 16px;
-           box-shadow:
-               0 0 40px rgba(0,200,255,0.1),
-               0 20px 60px rgba(0,0,0,0.8),
-               inset 0 1px 0 rgba(255,255,255,0.05);
-           z-index: 999999;
-           backdrop-filter: blur(24px);
-           user-select: none;
-           transition: opacity 0.3s, transform 0.3s;
+           position:fixed; bottom:20px; right:12px; width:258px;
+           background:rgba(6,5,16,0.95); border:1px solid rgba(0,200,255,0.28);
+           border-radius:16px;
+           box-shadow:0 0 40px rgba(0,200,255,0.1),0 20px 60px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.05);
+           z-index:999999; backdrop-filter:blur(24px); user-select:none;
+           transition:opacity 0.3s,transform 0.3s;
        }
        #sw-panel.hidden { opacity:0; pointer-events:none; transform:translateY(10px); }
        #sw-panel.mini .sw-body { display:none; }
 
        #sw-toggle {
-           position: fixed;
-           bottom: 20px;
-           right: 12px;
-           width: 46px; height: 46px;
-           border-radius: 50%;
-           background: linear-gradient(135deg, #00c8ff, #0044aa);
-           border: none;
-           color: #fff;
-           font-size: 20px;
-           cursor: pointer;
-           z-index: 999998;
-           box-shadow: 0 0 20px rgba(0,200,255,0.4), 0 4px 15px rgba(0,0,0,0.5);
-           display: none;
-           align-items: center;
-           justify-content: center;
-           transition: all 0.2s;
+           position:fixed; bottom:20px; right:12px;
+           width:46px; height:46px; border-radius:50%;
+           background:linear-gradient(135deg,#00c8ff,#0044aa);
+           border:none; color:#fff; font-size:20px; cursor:pointer;
+           z-index:999998;
+           box-shadow:0 0 20px rgba(0,200,255,0.4),0 4px 15px rgba(0,0,0,0.5);
+           display:none; align-items:center; justify-content:center; transition:all 0.2s;
        }
-       #sw-toggle:hover { transform: scale(1.08); }
-       #sw-toggle.show { display: flex; }
+       #sw-toggle.show { display:flex; }
 
        .sw-header {
-           padding: 10px 12px;
-           background: rgba(0,200,255,0.06);
-           border-bottom: 1px solid rgba(0,200,255,0.12);
-           border-radius: 16px 16px 0 0;
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           cursor: move;
+           padding:10px 12px;
+           background:rgba(0,200,255,0.06); border-bottom:1px solid rgba(0,200,255,0.12);
+           border-radius:16px 16px 0 0;
+           display:flex; justify-content:space-between; align-items:center; cursor:move;
        }
-       .sw-brand {
-           font-family: 'Orbitron', monospace;
-           font-size: 11px; font-weight: 900;
-           letter-spacing: 2px;
-           color: #00c8ff;
-           text-shadow: 0 0 10px rgba(0,200,255,0.5);
-       }
-       .sw-brand span { color: rgba(255,255,255,0.35); font-weight:400; }
+       .sw-brand { font-family:'Orbitron',monospace; font-size:11px; font-weight:900; letter-spacing:2px; color:#00c8ff; text-shadow:0 0 10px rgba(0,200,255,0.5); }
+       .sw-brand span { color:rgba(255,255,255,0.35); font-weight:400; }
        .sw-controls { display:flex; gap:6px; align-items:center; }
        .sw-ctrl {
-           width:18px; height:18px;
-           border-radius:50%; border:none; cursor:pointer;
-           font-size:9px;
-           display:flex; align-items:center; justify-content:center;
-           background: rgba(255,255,255,0.08);
-           color: rgba(255,255,255,0.5);
-           transition: all 0.15s;
+           width:18px; height:18px; border-radius:50%; border:none; cursor:pointer;
+           font-size:9px; display:flex; align-items:center; justify-content:center;
+           background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); transition:all 0.15s;
        }
        .sw-ctrl:hover { background:rgba(255,255,255,0.18); color:#fff; }
 
-       .sw-body { padding: 11px; }
+       .sw-body { padding:11px; }
 
-       .session-row {
-           display:flex; justify-content:space-between; align-items:center;
-           margin-bottom:9px; padding: 0 2px;
-       }
+       .session-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; padding:0 2px; }
        .session-label { font-size:9px; color:rgba(255,255,255,0.32); letter-spacing:1px; text-transform:uppercase; }
        .session-num { font-family:'Orbitron',monospace; font-size:11px; color:rgba(255,255,255,0.6); letter-spacing:1px; }
 
        .last-result {
            display:flex; align-items:center; gap:5px;
-           background:rgba(255,255,255,0.04);
-           border:1px solid rgba(255,255,255,0.07);
+           background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
            border-radius:8px; padding:6px 9px; margin-bottom:9px;
        }
        .last-result-label { font-size:8px; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:0.5px; flex:1; }
        .last-dice { display:flex; gap:3px; }
        .dice-val {
-           width:17px; height:17px;
-           background:rgba(255,255,255,0.08);
-           border:1px solid rgba(255,255,255,0.12);
-           border-radius:4px;
-           display:flex; align-items:center; justify-content:center;
+           width:17px; height:17px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+           border-radius:4px; display:flex; align-items:center; justify-content:center;
            font-size:10px; font-weight:700; color:#fff;
        }
        .last-total { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:#fff; margin:0 3px; }
@@ -160,23 +86,24 @@
        .tag-tai { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
        .tag-xiu { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
 
+       .log-box {
+           background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,0,0.15);
+           border-radius:6px; padding:5px 7px; margin-bottom:9px;
+           font-size:8px; color:rgba(255,255,0,0.6); font-family:monospace;
+           max-height:36px; overflow:hidden; line-height:1.4;
+       }
+
        .pred-box {
-           background:rgba(0,0,0,0.45);
-           border:1px solid rgba(0,200,255,0.15);
-           border-radius:12px; padding:12px 10px;
-           text-align:center; margin-bottom:9px;
-           position:relative; overflow:hidden;
+           background:rgba(0,0,0,0.45); border:1px solid rgba(0,200,255,0.15);
+           border-radius:12px; padding:12px 10px; text-align:center;
+           margin-bottom:9px; position:relative; overflow:hidden;
        }
        .pred-box::before {
            content:''; position:absolute; top:0; left:0; right:0; height:1px;
            background:linear-gradient(90deg,transparent,rgba(0,200,255,0.5),transparent);
        }
        .pred-label { font-size:8px; color:rgba(255,255,255,0.32); letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; }
-       .pred-value {
-           font-family:'Orbitron',monospace;
-           font-size:26px; font-weight:900; letter-spacing:3px;
-           margin-bottom:4px; transition:all 0.4s;
-       }
+       .pred-value { font-family:'Orbitron',monospace; font-size:26px; font-weight:900; letter-spacing:3px; margin-bottom:4px; transition:all 0.4s; }
        .pred-tai { color:#2ecc71; text-shadow:0 0 20px rgba(46,204,113,0.55); }
        .pred-xiu { color:#e74c3c; text-shadow:0 0 20px rgba(231,76,60,0.55); }
        .pred-waiting { color:rgba(255,255,255,0.18); }
@@ -189,283 +116,303 @@
        .conf-fill { height:100%; border-radius:2px; transition:width 0.6s ease; background:linear-gradient(90deg,#2ecc71,#00c8ff,#e74c3c); }
 
        .stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:9px; }
-       .stat-card {
-           background:rgba(255,255,255,0.03);
-           border:1px solid rgba(255,255,255,0.07);
-           border-radius:8px; padding:6px 4px; text-align:center;
-       }
+       .stat-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:6px 4px; text-align:center; }
        .stat-icon { font-size:10px; margin-bottom:2px; }
        .stat-label { font-size:7px; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.5px; }
        .stat-val { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:#fff; margin-top:2px; }
 
        .history-strip { display:flex; gap:3px; margin-bottom:9px; flex-wrap:wrap; }
-       .hist-dot {
-           width:15px; height:15px; border-radius:4px;
-           font-size:7px; font-weight:700;
-           display:flex; align-items:center; justify-content:center; flex-shrink:0;
-       }
+       .hist-dot { width:15px; height:15px; border-radius:4px; font-size:7px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
        .hist-t { background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
        .hist-x { background:rgba(231,76,60,0.2); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
        .hist-empty { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.07); }
 
-       .sw-footer {
-           border-top:1px solid rgba(255,255,255,0.05);
-           padding-top:7px;
-           display:flex; justify-content:space-between; align-items:center;
-       }
+       .sw-footer { border-top:1px solid rgba(255,255,255,0.05); padding-top:7px; display:flex; justify-content:space-between; align-items:center; }
        .sw-time { font-size:9px; color:rgba(255,255,255,0.2); font-family:'Orbitron',monospace; letter-spacing:1px; }
        .sw-version { font-size:8px; color:rgba(0,200,255,0.3); letter-spacing:1px; }
 
-       @keyframes scan {
-           0% { transform:translateY(-100%); opacity:0.8; }
-           100% { transform:translateY(200%); opacity:0; }
-       }
-       .scan-line {
-           position:absolute; left:0; right:0; height:2px;
-           background:linear-gradient(90deg,transparent,rgba(0,200,255,0.6),transparent);
-           animation:scan 0.8s ease-out forwards;
-           pointer-events:none;
-       }
+       @keyframes scan { 0%{transform:translateY(-100%);opacity:0.8} 100%{transform:translateY(200%);opacity:0} }
+       .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,200,255,0.6),transparent); animation:scan 0.8s ease-out forwards; pointer-events:none; }
    </style>
 </head>
 <body>
 
-   <!-- SunWin toàn màn hình -->
-   <iframe id="sunwin-frame" src="https://web.sunwin.qa" allowfullscreen></iframe>
+<iframe id="sunwin-frame" src="https://web.sunwin.qa" allowfullscreen></iframe>
 
-   <!-- Status -->
-   <div class="status-bar">
-       <div class="live-dot"></div>
-       <span id="status-text">Đang kết nối...</span>
-   </div>
+<div class="status-bar">
+   <div class="live-dot"></div>
+   <span id="status-text">Đang kết nối...</span>
+</div>
 
-   <!-- Nút mở lại panel -->
-   <button id="sw-toggle">🤖</button>
+<button id="sw-toggle">🤖</button>
 
-   <!-- Panel AI -->
-   <div id="sw-panel">
-       <div class="sw-header" id="sw-drag-handle">
-           <div class="sw-brand">SUNWIN <span>AI</span></div>
-           <div class="sw-controls">
-               <button class="sw-ctrl" id="sw-min">−</button>
-               <button class="sw-ctrl" id="sw-close">✕</button>
-           </div>
-       </div>
-
-       <div class="sw-body">
-           <div class="session-row">
-               <span class="session-label">Phiên hiện tại</span>
-               <span class="session-num" id="sw-session">#------</span>
-           </div>
-
-           <div class="last-result">
-               <span class="last-result-label">Phiên trước</span>
-               <div class="last-dice" id="sw-dice">
-                   <div class="dice-val">-</div>
-                   <div class="dice-val">-</div>
-                   <div class="dice-val">-</div>
-               </div>
-               <span class="last-total" id="sw-total">--</span>
-               <span class="last-tag" id="sw-last-tag">---</span>
-           </div>
-
-           <div class="pred-box" id="pred-box">
-               <div class="pred-label">🤖 Dự đoán phiên tiếp theo</div>
-               <div class="pred-value pred-waiting" id="sw-prediction">---</div>
-               <div class="conf-section">
-                   <div class="conf-row">
-                       <span class="conf-label">Độ tin cậy</span>
-                       <span class="conf-pct" id="sw-conf-pct">--%</span>
-                   </div>
-                   <div class="conf-track">
-                       <div class="conf-fill" id="sw-conf-fill" style="width:0%"></div>
-                   </div>
-               </div>
-           </div>
-
-           <div class="stats-grid">
-               <div class="stat-card">
-                   <div class="stat-icon">🟢</div>
-                   <div class="stat-label">Tài (10P)</div>
-                   <div class="stat-val" id="sw-tai-count">--</div>
-               </div>
-               <div class="stat-card">
-                   <div class="stat-icon">🔴</div>
-                   <div class="stat-label">Xỉu (10P)</div>
-                   <div class="stat-val" id="sw-xiu-count">--</div>
-               </div>
-               <div class="stat-card">
-                   <div class="stat-icon">🔥</div>
-                   <div class="stat-label">Chuỗi</div>
-                   <div class="stat-val" id="sw-streak">--</div>
-               </div>
-           </div>
-
-           <div class="history-strip" id="sw-history"></div>
-
-           <div class="sw-footer">
-               <span class="sw-time" id="sw-time">--:--:--</span>
-               <span class="sw-version">v2.1</span>
-           </div>
+<div id="sw-panel">
+   <div class="sw-header" id="sw-drag-handle">
+       <div class="sw-brand">SUNWIN <span>AI</span></div>
+       <div class="sw-controls">
+           <button class="sw-ctrl" id="sw-min">−</button>
+           <button class="sw-ctrl" id="sw-close">✕</button>
        </div>
    </div>
 
-   <script>
-   (function () {
-       const API_BASE   = "https://sunwin-tool.onrender.com";
-       const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+   <div class="sw-body">
+       <div class="session-row">
+           <span class="session-label">Phiên hiện tại</span>
+           <span class="session-num" id="sw-session">#------</span>
+       </div>
 
-       let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
-       let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
+       <div class="last-result">
+           <span class="last-result-label">Phiên trước</span>
+           <div class="last-dice" id="sw-dice">
+               <div class="dice-val">-</div>
+               <div class="dice-val">-</div>
+               <div class="dice-val">-</div>
+           </div>
+           <span class="last-total" id="sw-total">--</span>
+           <span class="last-tag" id="sw-last-tag">---</span>
+       </div>
 
-       function normalizeResult(v) {
-           const t = String(v || "").toLowerCase();
-           if (t.includes("tài") || t.includes("tai")) return "Tài";
-           if (t.includes("xỉu") || t.includes("xiu")) return "Xỉu";
-           return null;
+       <div class="log-box" id="sw-log">Chờ dữ liệu...</div>
+
+       <div class="pred-box" id="pred-box">
+           <div class="pred-label">🤖 Dự đoán phiên tiếp theo</div>
+           <div class="pred-value pred-waiting" id="sw-prediction">---</div>
+           <div class="conf-section">
+               <div class="conf-row">
+                   <span class="conf-label">Độ tin cậy</span>
+                   <span class="conf-pct" id="sw-conf-pct">--%</span>
+               </div>
+               <div class="conf-track">
+                   <div class="conf-fill" id="sw-conf-fill" style="width:0%"></div>
+               </div>
+           </div>
+       </div>
+
+       <div class="stats-grid">
+           <div class="stat-card">
+               <div class="stat-icon">🟢</div>
+               <div class="stat-label">Tài (10P)</div>
+               <div class="stat-val" id="sw-tai-count">--</div>
+           </div>
+           <div class="stat-card">
+               <div class="stat-icon">🔴</div>
+               <div class="stat-label">Xỉu (10P)</div>
+               <div class="stat-val" id="sw-xiu-count">--</div>
+           </div>
+           <div class="stat-card">
+               <div class="stat-icon">🔥</div>
+               <div class="stat-label">Chuỗi</div>
+               <div class="stat-val" id="sw-streak">--</div>
+           </div>
+       </div>
+
+       <div class="history-strip" id="sw-history"></div>
+
+       <div class="sw-footer">
+           <span class="sw-time" id="sw-time">--:--:--</span>
+           <span class="sw-version">v2.2</span>
+       </div>
+   </div>
+</div>
+
+<script>
+(function () {
+   const API_BASE   = "https://sunwin-tool.onrender.com";
+   const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+
+   let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
+   let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
+
+   function log(msg) {
+       const el = document.getElementById("sw-log");
+       if (el) el.textContent = msg;
+       console.log("[SW]", msg);
+   }
+
+   function setStatus(msg, ok = true) {
+       document.getElementById("status-text").textContent = msg;
+       document.querySelector(".live-dot").style.background = ok ? "#00ff88" : "#e74c3c";
+   }
+
+   function normalizeResult(v) {
+       const t = String(v || "").toLowerCase()
+           .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+       if (t.includes("tai")) return "Tài";
+       if (t.includes("xiu") || t.includes("xu")) return "Xỉu";
+       return null;
+   }
+
+   function renderHistory() {
+       const container = document.getElementById("sw-history");
+       container.innerHTML = "";
+       const show = localHistory.slice(-10);
+       while (show.length < 10) show.unshift(null);
+       show.forEach(item => {
+           const dot = document.createElement("div");
+           if (!item)                 { dot.className = "hist-dot hist-empty"; dot.textContent = "·"; }
+           else if (item.r === "Tài") { dot.className = "hist-dot hist-t";     dot.textContent = "T"; }
+           else                       { dot.className = "hist-dot hist-x";     dot.textContent = "X"; }
+           container.appendChild(dot);
+       });
+   }
+
+   function renderLastResult(session, dice, total, result) {
+       document.getElementById("sw-session").textContent = `#${session}`;
+       const diceEls = document.getElementById("sw-dice").querySelectorAll(".dice-val");
+       dice.forEach((v, i) => { if (diceEls[i]) diceEls[i].textContent = v; });
+       document.getElementById("sw-total").textContent = total;
+       const tag = document.getElementById("sw-last-tag");
+       if (result === "Tài") { tag.textContent = "TÀI"; tag.className = "last-tag tag-tai"; }
+       else                  { tag.textContent = "XỈU"; tag.className = "last-tag tag-xiu"; }
+   }
+
+   function scanEffect() {
+       const box  = document.getElementById("pred-box");
+       const line = document.createElement("div");
+       line.className = "scan-line";
+       box.appendChild(line);
+       setTimeout(() => line.remove(), 900);
+   }
+
+   function renderPrediction(pred) {
+       if (!pred || !pred.prediction) return;
+       const el    = document.getElementById("sw-prediction");
+       const isTai = String(pred.prediction).toUpperCase().includes("T");
+       el.textContent = isTai ? "TÀI" : "XỈU";
+       el.className   = `pred-value ${isTai ? "pred-tai" : "pred-xiu"}`;
+       document.getElementById("sw-conf-fill").style.width = `${pred.confidence || 0}%`;
+       document.getElementById("sw-conf-pct").textContent  = `${pred.confidence || 0}%`;
+       if (pred.stats) {
+           document.getElementById("sw-tai-count").textContent = pred.stats.tai    ?? "--";
+           document.getElementById("sw-xiu-count").textContent = pred.stats.xiu    ?? "--";
+           document.getElementById("sw-streak").textContent    = pred.stats.streak ?? "--";
        }
+       document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
+       scanEffect();
+   }
 
-       function setStatus(msg, ok = true) {
-           document.getElementById("status-text").textContent = msg;
-           document.querySelector(".live-dot").style.background = ok ? "#00ff88" : "#e74c3c";
-       }
-
-       function scanEffect() {
-           const box = document.getElementById("pred-box");
-           const line = document.createElement("div");
-           line.className = "scan-line";
-           box.appendChild(line);
-           setTimeout(() => line.remove(), 900);
-       }
-
-       function renderHistory() {
-           const container = document.getElementById("sw-history");
-           container.innerHTML = "";
-           const show = localHistory.slice(-10);
-           while (show.length < 10) show.unshift(null);
-           show.forEach(item => {
-               const dot = document.createElement("div");
-               if (!item) { dot.className = "hist-dot hist-empty"; dot.textContent = "·"; }
-               else if (item.r === "Tài") { dot.className = "hist-dot hist-t"; dot.textContent = "T"; }
-               else { dot.className = "hist-dot hist-x"; dot.textContent = "X"; }
-               container.appendChild(dot);
+   async function sendResult(session, dice, total, result) {
+       try {
+           log(`⬆ Đang gửi phiên #${session}...`);
+           const r  = await fetch(`${API_BASE}/api/result`, {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ session, dice, total, result, ts: Date.now() })
            });
+           const rj = await r.json();
+           log(`📡 Server: ${JSON.stringify(rj)}`);
+           lastSentSession = session;
+           localStorage.setItem("sw_last_session", session);
+           localHistory.push({ r: result, d: dice, total });
+           if (localHistory.length > 50) localHistory.shift();
+           localStorage.setItem("sw_history", JSON.stringify(localHistory));
+           renderHistory();
+           setStatus(`✅ Đã gửi phiên #${session} → ${result}`);
+           return true;
+       } catch (e) {
+           log(`❌ Lỗi gửi: ${e.message}`);
+           return false;
        }
+   }
 
-       function renderLastResult(session, dice, total, result) {
-           document.getElementById("sw-session").textContent = `#${session}`;
-           const diceEls = document.getElementById("sw-dice").querySelectorAll(".dice-val");
-           dice.forEach((v, i) => { if (diceEls[i]) diceEls[i].textContent = v; });
-           document.getElementById("sw-total").textContent = total;
-           const tag = document.getElementById("sw-last-tag");
-           if (result === "Tài") { tag.textContent = "TÀI"; tag.className = "last-tag tag-tai"; }
-           else { tag.textContent = "XỈU"; tag.className = "last-tag tag-xiu"; }
-       }
+   async function collect() {
+       try {
+           const res  = await fetch(`${SOURCE_API}?_=${Date.now()}`);
+           if (!res.ok) { log(`API nguồn lỗi HTTP ${res.status}`); return; }
 
-       function renderPrediction(pred) {
-           if (!pred) return;
-           const el = document.getElementById("sw-prediction");
-           const isTai = pred.prediction === "TÀI";
-           el.textContent = isTai ? "TÀI" : "XỈU";
-           el.className   = `pred-value ${isTai ? "pred-tai" : "pred-xiu"}`;
-           document.getElementById("sw-conf-fill").style.width = `${pred.confidence || 0}%`;
-           document.getElementById("sw-conf-pct").textContent  = `${pred.confidence || 0}%`;
-           if (pred.stats) {
-               document.getElementById("sw-tai-count").textContent = pred.stats.tai    ?? "--";
-               document.getElementById("sw-xiu-count").textContent = pred.stats.xiu    ?? "--";
-               document.getElementById("sw-streak").textContent    = pred.stats.streak ?? "--";
+           const data = await res.json();
+           log(`📥 phiên=${data?.current?.Phien}, kq=${data?.current?.Ket_qua}`);
+
+           if (!data?.current) { log("⚠ Không có data.current"); return; }
+
+           const c       = data.current;
+           const session = Number(c.Phien);
+           const result  = normalizeResult(c.Ket_qua);
+           const dice    = [
+               Number(c.Xuc_xac_1 ?? c.xuc_xac_1 ?? 0),
+               Number(c.Xuc_xac_2 ?? c.xuc_xac_2 ?? 0),
+               Number(c.Xuc_xac_3 ?? c.xuc_xac_3 ?? 0)
+           ];
+           const total = Number(c.Tong ?? c.tong ?? 0);
+
+           if (result) renderLastResult(session, dice, total, result);
+
+           if (!result) {
+               log(`⚠ Kết quả không hợp lệ: "${c.Ket_qua}"`);
+               setStatus("⏳ Chờ kết quả phiên...");
+               return;
            }
-           document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
-           scanEffect();
-       }
 
-       async function collect() {
-           try {
-               const res  = await fetch(`${SOURCE_API}?_=${Date.now()}`);
-               const data = await res.json();
-               if (!data?.current) return;
-               const c       = data.current;
-               const session = Number(c.Phien);
-               const result  = normalizeResult(c.Ket_qua);
-               const dice    = [Number(c.Xuc_xac_1), Number(c.Xuc_xac_2), Number(c.Xuc_xac_3)];
-               const total   = Number(c.Tong);
-
-               if (result) renderLastResult(session, dice, total, result);
-
-               if (session > lastSentSession && result) {
-                   const r = await fetch(`${API_BASE}/api/result`, {
-                       method: "POST",
-                       headers: { "Content-Type": "application/json" },
-                       body: JSON.stringify({ session, dice, total, result, ts: Date.now() })
-                   });
-                   const rj = await r.json();
-                   if (rj.ok) {
-                       lastSentSession = session;
-                       localStorage.setItem("sw_last_session", session);
-                       localHistory.push({ r: result, d: dice, total });
-                       if (localHistory.length > 50) localHistory.shift();
-                       localStorage.setItem("sw_history", JSON.stringify(localHistory));
-                       renderHistory();
-                       setStatus(`✅ Phiên #${session} đã gửi`);
-                   }
-               } else {
-                   setStatus("🔄 Đang theo dõi...");
-               }
-           } catch (e) {
-               setStatus("⚠️ Mất kết nối", false);
+           if (session > lastSentSession) {
+               await sendResult(session, dice, total, result);
+           } else if (session === lastSentSession) {
+               setStatus(`🔄 Chờ phiên mới (hiện #${session})`);
+               log(`Chờ phiên mới hơn #${session}`);
+           } else {
+               // localStorage cao bất thường → reset
+               log(`⚠ Reset: session(${session}) < lastSent(${lastSentSession})`);
+               lastSentSession = session - 1;
+               localStorage.setItem("sw_last_session", lastSentSession);
+               await sendResult(session, dice, total, result);
            }
+       } catch (e) {
+           log(`❌ collect: ${e.message}`);
+           setStatus("⚠️ Mất kết nối nguồn", false);
        }
+   }
 
-       async function refreshPrediction() {
-           try {
-               const res  = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
-               const pred = await res.json();
-               renderPrediction(pred);
-           } catch (e) {}
-       }
+   async function refreshPrediction() {
+       try {
+           const res  = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
+           const pred = await res.json();
+           renderPrediction(pred);
+       } catch (e) {}
+   }
 
-       // Drag & Drop
-       const panel  = document.getElementById("sw-panel");
-       const handle = document.getElementById("sw-drag-handle");
-       let dragging = false, startX, startY, startL, startT;
+   // Drag & Drop
+   const panel  = document.getElementById("sw-panel");
+   const handle = document.getElementById("sw-drag-handle");
+   let dragging = false, startX, startY, startL, startT;
 
-       function startDrag(cx, cy) {
-           dragging = true; startX = cx; startY = cy;
-           const r = panel.getBoundingClientRect();
-           startL = r.left; startT = r.top;
-       }
-       function moveDrag(cx, cy) {
-           if (!dragging) return;
-           let l = Math.max(5, Math.min(window.innerWidth  - panel.offsetWidth  - 5, startL + cx - startX));
-           let t = Math.max(5, Math.min(window.innerHeight - panel.offsetHeight - 5, startT + cy - startY));
-           panel.style.left = l+"px"; panel.style.top = t+"px";
-           panel.style.right = "auto"; panel.style.bottom = "auto";
-       }
+   function startDrag(cx, cy) {
+       dragging = true; startX = cx; startY = cy;
+       const r = panel.getBoundingClientRect();
+       startL = r.left; startT = r.top;
+   }
+   function moveDrag(cx, cy) {
+       if (!dragging) return;
+       let l = Math.max(5, Math.min(window.innerWidth  - panel.offsetWidth  - 5, startL + cx - startX));
+       let t = Math.max(5, Math.min(window.innerHeight - panel.offsetHeight - 5, startT + cy - startY));
+       panel.style.left = l+"px"; panel.style.top = t+"px";
+       panel.style.right = "auto"; panel.style.bottom = "auto";
+   }
 
-       handle.addEventListener("mousedown",  e => { if (!e.target.closest(".sw-controls")) startDrag(e.clientX, e.clientY); });
-       document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
-       document.addEventListener("mouseup",   () => { dragging = false; });
-       handle.addEventListener("touchstart",  e => { if (!e.target.closest(".sw-controls")) { const t=e.touches[0]; startDrag(t.clientX,t.clientY); }}, {passive:true});
-       document.addEventListener("touchmove", e => { const t=e.touches[0]; moveDrag(t.clientX,t.clientY); }, {passive:true});
-       document.addEventListener("touchend",  () => { dragging = false; });
+   handle.addEventListener("mousedown",   e => { if (!e.target.closest(".sw-controls")) startDrag(e.clientX, e.clientY); });
+   document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
+   document.addEventListener("mouseup",   () => { dragging = false; });
+   handle.addEventListener("touchstart",  e => { if (!e.target.closest(".sw-controls")) { const t=e.touches[0]; startDrag(t.clientX,t.clientY); }}, {passive:true});
+   document.addEventListener("touchmove", e => { const t=e.touches[0]; moveDrag(t.clientX,t.clientY); }, {passive:true});
+   document.addEventListener("touchend",  () => { dragging = false; });
 
-       // Controls
-       const toggleBtn = document.getElementById("sw-toggle");
-       document.getElementById("sw-min").onclick   = () => panel.classList.toggle("mini");
-       document.getElementById("sw-close").onclick = () => { panel.classList.add("hidden"); toggleBtn.classList.add("show"); };
-       toggleBtn.onclick = () => { panel.classList.remove("hidden"); toggleBtn.classList.remove("show"); };
+   // Controls
+   const toggleBtn = document.getElementById("sw-toggle");
+   document.getElementById("sw-min").onclick   = () => panel.classList.toggle("mini");
+   document.getElementById("sw-close").onclick = () => { panel.classList.add("hidden"); toggleBtn.classList.add("show"); };
+   toggleBtn.onclick = () => { panel.classList.remove("hidden"); toggleBtn.classList.remove("show"); };
 
-       // Init
-       renderHistory();
-       collect();
-       refreshPrediction();
-       setInterval(collect,           5000);
-       setInterval(refreshPrediction, 5000);
-       setInterval(() => {
-           const el = document.getElementById("sw-time");
-           if (el) el.textContent = new Date().toLocaleTimeString("vi-VN");
-       }, 1000);
-   })();
-   </script>
+   // Init
+   renderHistory();
+   collect();
+   refreshPrediction();
+   setInterval(collect,           3000);
+   setInterval(refreshPrediction, 5000);
+   setInterval(() => {
+       const el = document.getElementById("sw-time");
+       if (el) el.textContent = new Date().toLocaleTimeString("vi-VN");
+   }, 1000);
+
+   log("✅ SunWin AI v2.2 khởi động");
+})();
+</script>
 </body>
 </html>
