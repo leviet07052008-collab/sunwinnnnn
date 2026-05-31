@@ -210,7 +210,7 @@
 
        <div class="sw-footer">
            <span class="sw-time" id="sw-time">--:--:--</span>
-           <span class="sw-version">v2.2</span>
+           <span class="sw-version">v2.5</span>
        </div>
    </div>
 </div>
@@ -222,6 +222,7 @@
 
    let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
    let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
+   let isCollecting    = false;
 
    function log(msg) {
        const el = document.getElementById("sw-log");
@@ -242,16 +243,28 @@
        return null;
    }
 
-   function renderHistory() {
+   function renderHistory(historyData) {
        const container = document.getElementById("sw-history");
        container.innerHTML = "";
-       const show = localHistory.slice(-10);
-       while (show.length < 10) show.unshift(null);
-       show.forEach(item => {
+       
+       const data = historyData || localHistory;
+       const last10 = data.slice(-10);
+       
+       last10.forEach(item => {
            const dot = document.createElement("div");
-           if (!item)                 { dot.className = "hist-dot hist-empty"; dot.textContent = "·"; }
-           else if (item.r === "Tài") { dot.className = "hist-dot hist-t";     dot.textContent = "T"; }
-           else                       { dot.className = "hist-dot hist-x";     dot.textContent = "X"; }
+           const result = item.r || item.result || item.Ket_qua || "";
+           if (result === "Tài") { 
+               dot.className = "hist-dot hist-t"; 
+               dot.textContent = "T"; 
+           }
+           else if (result === "Xỉu") { 
+               dot.className = "hist-dot hist-x"; 
+               dot.textContent = "X"; 
+           }
+           else {
+               dot.className = "hist-dot hist-empty"; 
+               dot.textContent = "·";
+           }
            container.appendChild(dot);
        });
    }
@@ -291,22 +304,152 @@
        scanEffect();
    }
 
+   // LẤY TOÀN BỘ LỊCH SỬ TỪ API VÀ CẮT 10 PHIÊN CUỐI
+   async function fetchLast10Sessions() {
+       try {
+           log("📥 Đang lấy lịch sử từ API...");
+           const res = await fetch(`${SOURCE_API}?_=${Date.now()}`);
+           if (!res.ok) {
+               log(`❌ API lịch sử lỗi HTTP ${res.status}`);
+               // Nếu API lỗi, dùng localStorage
+               const fallback = localHistory.slice(-10).map(item => ({
+                   session: item.session || 0,
+                   result: item.r || "",
+                   dice: item.d || [0,0,0],
+                   total: item.total || 0
+               }));
+               log(`⚠ Dùng dữ liệu dự phòng từ localStorage (${fallback.length} phiên)`);
+               return fallback.length > 0 ? fallback : null;
+           }
+
+           const data = await res.json();
+           console.log("API Response:", data); // Debug
+
+           let historyArray = [];
+
+           // Thử nhiều cấu trúc response khác nhau
+           if (Array.isArray(data)) {
+               historyArray = data;
+           } else if (data.current && data.history) {
+               // Nếu API trả về { current: {...}, history: [...] }
+               historyArray = data.history;
+           } else if (data.data && Array.isArray(data.data)) {
+               historyArray = data.data;
+           } else if (data.history && Array.isArray(data.history)) {
+               historyArray = data.history;
+           } else if (data.items && Array.isArray(data.items)) {
+               historyArray = data.items;
+           } else {
+               // Thử tìm mảng trong object
+               const arrayKey = Object.keys(data).find(key => Array.isArray(data[key]));
+               if (arrayKey) {
+                   historyArray = data[arrayKey];
+               }
+           }
+
+           if (historyArray.length === 0) {
+               log("⚠ Không tìm thấy dữ liệu lịch sử trong response");
+               console.log("Response structure:", JSON.stringify(data).substring(0, 500));
+               return null;
+           }
+
+           // Chuẩn hóa và sắp xếp theo session
+           const normalized = historyArray
+               .map(item => ({
+                   session: Number(item.Phien || item.phien || item.session || 0),
+                   result: normalizeResult(item.Ket_qua || item.ket_qua || item.result || ""),
+                   dice: [
+                       Number(item.Xuc_xac_1 || item.xuc_xac_1 || 0),
+                       Number(item.Xuc_xac_2 || item.xuc_xac_2 || 0),
+                       Number(item.Xuc_xac_3 || item.xuc_xac_3 || 0)
+                   ],
+                   total: Number(item.Tong || item.tong || 0)
+               }))
+               .filter(item => item.session > 0 && item.result)
+               .sort((a, b) => a.session - b.session);
+
+           const last10 = normalized.slice(-10);
+           log(`✅ Đã lấy ${normalized.length} phiên, dùng ${last10.length} phiên cuối`);
+           
+           // Cập nhật localStorage với dữ liệu mới
+           if (normalized.length > 0) {
+               localHistory = normalized.map(item => ({
+                   r: item.result,
+                   d: item.dice,
+                   total: item.total,
+                   session: item.session
+               }));
+               if (localHistory.length > 50) localHistory = localHistory.slice(-50);
+               localStorage.setItem("sw_history", JSON.stringify(localHistory));
+           }
+
+           return last10;
+       } catch (e) {
+           log(`❌ Lỗi fetchLast10Sessions: ${e.message}`);
+           console.error(e);
+           return null;
+       }
+   }
+
+   // GỬI 10 PHIÊN LÊN SERVER AI ĐỂ DỰ ĐOÁN
+   async function refreshPrediction() {
+       try {
+           const last10Sessions = await fetchLast10Sessions();
+           if (!last10Sessions || last10Sessions.length === 0) {
+               log("⚠ Không có dữ liệu để dự đoán");
+               return;
+           }
+
+           // Hiển thị history từ API
+           renderHistory(last10Sessions);
+
+           // Gửi lên server AI
+           log(`🤖 Gửi ${last10Sessions.length} phiên để dự đoán...`);
+           const res = await fetch(`${API_BASE}/api/predict`, {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ 
+                   recentHistory: last10Sessions,
+                   lastSession: last10Sessions[last10Sessions.length - 1]?.session
+               })
+           });
+           
+           if (res.ok) {
+               const pred = await res.json();
+               renderPrediction(pred);
+               log(`✅ Dự đoán: ${pred.prediction} (${pred.confidence}%)`);
+           } else {
+               log(`❌ Server AI lỗi HTTP ${res.status}`);
+           }
+       } catch (e) {
+           log(`⚠ Lỗi refreshPrediction: ${e.message}`);
+           console.error(e);
+       }
+   }
+
    async function sendResult(session, dice, total, result) {
        try {
            log(`⬆ Đang gửi phiên #${session}...`);
+           
+           lastSentSession = session;
+           localStorage.setItem("sw_last_session", session);
+           localHistory.push({ r: result, d: dice, total, session });
+           if (localHistory.length > 50) localHistory.shift();
+           localStorage.setItem("sw_history", JSON.stringify(localHistory));
+
            const r  = await fetch(`${API_BASE}/api/result`, {
                method: "POST",
                headers: { "Content-Type": "application/json" },
-               body: JSON.stringify({ session, dice, total, result, ts: Date.now() })
+               body: JSON.stringify({
+                   session,
+                   dice,
+                   total,
+                   result,
+                   ts: Date.now()
+               })
            });
            const rj = await r.json();
            log(`📡 Server: ${JSON.stringify(rj)}`);
-           lastSentSession = session;
-           localStorage.setItem("sw_last_session", session);
-           localHistory.push({ r: result, d: dice, total });
-           if (localHistory.length > 50) localHistory.shift();
-           localStorage.setItem("sw_history", JSON.stringify(localHistory));
-           renderHistory();
            setStatus(`✅ Đã gửi phiên #${session} → ${result}`);
            return true;
        } catch (e) {
@@ -316,57 +459,85 @@
    }
 
    async function collect() {
+       if (isCollecting) {
+           log("⏳ Đang thu thập, bỏ qua...");
+           return;
+       }
+       isCollecting = true;
+       
        try {
            const res  = await fetch(`${SOURCE_API}?_=${Date.now()}`);
-           if (!res.ok) { log(`API nguồn lỗi HTTP ${res.status}`); return; }
+           if (!res.ok) { 
+               log(`API nguồn lỗi HTTP ${res.status}`); 
+               setStatus("⚠️ API nguồn lỗi", false);
+               return; 
+           }
 
            const data = await res.json();
-           log(`📥 phiên=${data?.current?.Phien}, kq=${data?.current?.Ket_qua}`);
+           console.log("Collect API Response:", data);
 
-           if (!data?.current) { log("⚠ Không có data.current"); return; }
+           let currentData = null;
 
-           const c       = data.current;
-           const session = Number(c.Phien);
-           const result  = normalizeResult(c.Ket_qua);
+           // Tìm current trong nhiều cấu trúc
+           if (data.current) {
+               currentData = data.current;
+           } else if (data.data && data.data.current) {
+               currentData = data.data.current;
+           } else if (Array.isArray(data) && data.length > 0) {
+               // Nếu là mảng, lấy phần tử cuối cùng làm current
+               currentData = data[data.length - 1];
+           }
+
+           if (!currentData) { 
+               log("⚠ Không tìm thấy phiên hiện tại");
+               console.log("Full API response:", data);
+               return; 
+           }
+
+           const session = Number(currentData.Phien || currentData.phien || currentData.session || 0);
+           const result  = normalizeResult(currentData.Ket_qua || currentData.ket_qua || currentData.result || "");
            const dice    = [
-               Number(c.Xuc_xac_1 ?? c.xuc_xac_1 ?? 0),
-               Number(c.Xuc_xac_2 ?? c.xuc_xac_2 ?? 0),
-               Number(c.Xuc_xac_3 ?? c.xuc_xac_3 ?? 0)
+               Number(currentData.Xuc_xac_1 || currentData.xuc_xac_1 || 0),
+               Number(currentData.Xuc_xac_2 || currentData.xuc_xac_2 || 0),
+               Number(currentData.Xuc_xac_3 || currentData.xuc_xac_3 || 0)
            ];
-           const total = Number(c.Tong ?? c.tong ?? 0);
+           const total = Number(currentData.Tong || currentData.tong || 0);
+
+           log(`📥 Phiên #${session}, KQ: ${result}, Xúc xắc: [${dice}], Tổng: ${total}`);
 
            if (result) renderLastResult(session, dice, total, result);
 
-           if (!result) {
-               log(`⚠ Kết quả không hợp lệ: "${c.Ket_qua}"`);
+           if (!result || session === 0) {
+               log(`⚠ Dữ liệu không hợp lệ`);
                setStatus("⏳ Chờ kết quả phiên...");
                return;
            }
 
+           // Xử lý gửi phiên mới
            if (session > lastSentSession) {
+               log(`🆕 Phiên mới #${session} > #${lastSentSession}`);
                await sendResult(session, dice, total, result);
+               setTimeout(() => refreshPrediction(), 1500);
            } else if (session === lastSentSession) {
                setStatus(`🔄 Chờ phiên mới (hiện #${session})`);
                log(`Chờ phiên mới hơn #${session}`);
            } else {
-               // localStorage cao bất thường → reset
-               log(`⚠ Reset: session(${session}) < lastSent(${lastSentSession})`);
-               lastSentSession = session - 1;
-               localStorage.setItem("sw_last_session", lastSentSession);
-               await sendResult(session, dice, total, result);
+               if (session > 0 && lastSentSession - session > 100) {
+                   log(`🔧 Reset lastSentSession về ${session - 1}`);
+                   lastSentSession = session - 1;
+                   localStorage.setItem("sw_last_session", lastSentSession);
+                   await sendResult(session, dice, total, result);
+               } else {
+                   setStatus(`⏭ Bỏ qua phiên cũ #${session}`);
+               }
            }
        } catch (e) {
            log(`❌ collect: ${e.message}`);
+           console.error(e);
            setStatus("⚠️ Mất kết nối nguồn", false);
+       } finally {
+           isCollecting = false;
        }
-   }
-
-   async function refreshPrediction() {
-       try {
-           const res  = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
-           const pred = await res.json();
-           renderPrediction(pred);
-       } catch (e) {}
    }
 
    // Drag & Drop
@@ -401,17 +572,19 @@
    toggleBtn.onclick = () => { panel.classList.remove("hidden"); toggleBtn.classList.remove("show"); };
 
    // Init
+   log("🚀 SunWin AI v2.5 - Lấy toàn bộ lịch sử, cắt 10 phiên cuối");
    renderHistory();
-   collect();
+   
    refreshPrediction();
-   setInterval(collect,           3000);
+   collect();
+   
+   setInterval(collect, 3000);
    setInterval(refreshPrediction, 5000);
    setInterval(() => {
        const el = document.getElementById("sw-time");
        if (el) el.textContent = new Date().toLocaleTimeString("vi-VN");
    }, 1000);
 
-   log("✅ SunWin AI v2.2 khởi động");
 })();
 </script>
 </body>
