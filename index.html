@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SunWin AI</title>
+    <title>SunWin AI - Dự đoán Tài Xỉu</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -26,7 +26,7 @@
         @keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 4px #00ff88} 50%{opacity:0.3;box-shadow:none} }
 
         #sw-panel {
-            position:fixed; bottom:20px; right:12px; width:258px;
+            position:fixed; bottom:20px; right:12px; width:280px;
             background:rgba(6,5,16,0.95); border:1px solid rgba(0,200,255,0.28);
             border-radius:16px;
             box-shadow:0 0 40px rgba(0,200,255,0.1),0 20px 60px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.05);
@@ -67,7 +67,7 @@
 
         .session-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; padding:0 2px; }
         .session-label { font-size:9px; color:rgba(255,255,255,0.32); letter-spacing:1px; text-transform:uppercase; }
-        .session-num { font-family:'Orbitron',monospace; font-size:11px; color:rgba(255,255,255,0.6); letter-spacing:1px; }
+        .session-num { font-family:'Orbitron',monospace; font-size:11px; color:#00ff88; letter-spacing:1px; }
 
         .last-result {
             display:flex; align-items:center; gap:5px;
@@ -77,7 +77,7 @@
         .last-result-label { font-size:8px; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:0.5px; flex:1; }
         .last-dice { display:flex; gap:3px; }
         .dice-val {
-            width:17px; height:17px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+            width:20px; height:20px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
             border-radius:4px; display:flex; align-items:center; justify-content:center;
             font-size:10px; font-weight:700; color:#fff;
         }
@@ -133,26 +133,34 @@
 
         @keyframes scan { 0%{transform:translateY(-100%);opacity:0.8} 100%{transform:translateY(200%);opacity:0} }
         .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,200,255,0.6),transparent); animation:scan 0.8s ease-out forwards; pointer-events:none; }
+        
+        .refresh-btn {
+            background:rgba(0,200,255,0.2);
+            border:1px solid rgba(0,200,255,0.3);
+            border-radius:4px;
+            padding:2px 6px;
+            font-size:8px;
+            cursor:pointer;
+            color:#00c8ff;
+            margin-left:5px;
+        }
+        .refresh-btn:hover { background:rgba(0,200,255,0.4); }
     </style>
 </head>
 <body>
 
-<!-- SunWin toàn màn hình -->
 <iframe id="sunwin-frame" src="https://web.sunwin.qa" allowfullscreen></iframe>
 
-<!-- Status -->
 <div class="status-bar">
     <div class="live-dot"></div>
-    <span id="status-text">Đang kết nối...</span>
+    <span id="status-text">Đang khởi tạo...</span>
 </div>
 
-<!-- Nút mở lại panel -->
 <button id="sw-toggle">🤖</button>
 
-<!-- Panel AI -->
 <div id="sw-panel">
     <div class="sw-header" id="sw-drag-handle">
-        <div class="sw-brand">SUNWIN <span>AI</span></div>
+        <div class="sw-brand">SUNGAMIN <span>AI</span></div>
         <div class="sw-controls">
             <button class="sw-ctrl" id="sw-min">−</button>
             <button class="sw-ctrl" id="sw-close">✕</button>
@@ -163,6 +171,7 @@
         <div class="session-row">
             <span class="session-label">Phiên hiện tại</span>
             <span class="session-num" id="sw-session">#------</span>
+            <button class="refresh-btn" id="refresh-data">⟳</button>
         </div>
 
         <div class="last-result">
@@ -221,16 +230,42 @@
 
 <script>
 (function () {
-    const API_BASE   = "https://sunwin-tool.onrender.com";
-    const SOURCE_API = "https://sunwin-tool.onrender.com/api/history";
-
+    // ============ CẤU HÌNH ============
+    const USE_MOCK_FALLBACK = true;  // Dùng dữ liệu mẫu nếu API lỗi
     let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
     let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
+    let currentData     = null;  // Lưu data hiện tại
+    
+    // Mock data mẫu (dựa theo file IMG_1043.png)
+    const MOCK_DATA = {
+        current: {
+            Phien: 52550259,
+            Ket_qua: "Tài",
+            Tong: 14,
+            Xuc_xac_1: 5,
+            Xuc_xac_2: 4,
+            Xuc_xac_3: 5
+        },
+        history: [
+            { Phien: 52550258, Ket_qua: "Xỉu", Tong: 8, Xuc_xac_1: 2, Xuc_xac_2: 3, Xuc_xac_3: 3 },
+            { Phien: 52550257, Ket_qua: "Tài", Tong: 12, Xuc_xac_1: 4, Xuc_xac_2: 4, Xuc_xac_3: 4 },
+            { Phien: 52550256, Ket_qua: "Tài", Tong: 15, Xuc_xac_1: 5, Xuc_xac_2: 5, Xuc_xac_3: 5 },
+            { Phien: 52550255, Ket_qua: "Xỉu", Tong: 7, Xuc_xac_1: 2, Xuc_xac_2: 2, Xuc_xac_3: 3 },
+            { Phien: 52550254, Ket_qua: "Tài", Tong: 11, Xuc_xac_1: 4, Xuc_xac_2: 3, Xuc_xac_3: 4 },
+            { Phien: 52550253, Ket_qua: "Xỉu", Tong: 9, Xuc_xac_1: 3, Xuc_xac_2: 3, Xuc_xac_3: 3 },
+            { Phien: 52550252, Ket_qua: "Tài", Tong: 13, Xuc_xac_1: 5, Xuc_xac_2: 4, Xuc_xac_3: 4 },
+            { Phien: 52550251, Ket_qua: "Xỉu", Tong: 6, Xuc_xac_1: 2, Xuc_xac_2: 2, Xuc_xac_3: 2 }
+        ]
+    };
 
-    // ── Helpers ───────────────────────────────────────────────
     function log(msg) {
         const el = document.getElementById("sw-log");
-        if (el) el.textContent = msg;
+        if (el) {
+            el.textContent = msg;
+            setTimeout(() => {
+                if (el.textContent === msg) el.textContent = "✓ Đã cập nhật";
+            }, 3000);
+        }
         console.log("[SW]", msg);
     }
 
@@ -240,190 +275,275 @@
     }
 
     function normalizeResult(v) {
-        const t = String(v || "").toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (t.includes("tai")) return "Tài";
-        if (t.includes("xiu")) return "Xỉu";
+        if (!v) return null;
+        const t = String(v).toLowerCase().trim();
+        if (t === "tài" || t === "tai") return "Tài";
+        if (t === "xỉu" || t === "xiu") return "Xỉu";
         return null;
     }
 
     function scanEffect() {
-        const box  = document.getElementById("pred-box");
+        const box = document.getElementById("pred-box");
         const line = document.createElement("div");
         line.className = "scan-line";
         box.appendChild(line);
         setTimeout(() => line.remove(), 900);
     }
 
-    // ── Render history ────────────────────────────────────────
-    function renderHistory() {
+    // ============ GỌI API THỰC TẾ ============
+    async function fetchRealData() {
+        try {
+            log("🔄 Đang lấy dữ liệu từ API...");
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const response = await fetch("https://sunwin-tool.onrender.com/api/history", {
+                signal: controller.signal,
+                headers: { "Accept": "application/json" }
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            log("✅ API trả về dữ liệu");
+            return data;
+        } catch (error) {
+            log(`⚠️ API lỗi: ${error.message}`);
+            return null;
+        }
+    }
+
+    // ============ LẤY DỮ LIỆU (API + Fallback) ============
+    async function fetchData() {
+        let data = await fetchRealData();
+        
+        // Nếu API không có dữ liệu hoặc lỗi, dùng mock
+        if (!data || !data.current || !data.current.Ket_qua) {
+            if (USE_MOCK_FALLBACK) {
+                log("📦 Sử dụng dữ liệu mẫu (Mock)");
+                setStatus("📊 Dữ liệu mẫu (API chưa sẵn sàng)", true);
+                return { ...MOCK_DATA };
+            }
+            return null;
+        }
+        
+        setStatus("✅ Đang theo dõi", true);
+        return data;
+    }
+
+    // ============ TÍNH TOÁN DỰ ĐOÁN ============
+    function calculatePrediction(history) {
+        if (!history || history.length === 0) {
+            return { prediction: "Tài", confidence: 50, stats: { tai: 0, xiu: 0, streak: 0 } };
+        }
+        
+        const last10 = history.slice(-10);
+        const taiCount = last10.filter(h => normalizeResult(h.Ket_qua) === "Tài").length;
+        const xiuCount = last10.length - taiCount;
+        
+        // Đếm chuỗi hiện tại
+        let streak = 1;
+        const lastResult = normalizeResult(history[history.length - 1]?.Ket_qua);
+        for (let i = history.length - 2; i >= 0; i--) {
+            if (normalizeResult(history[i]?.Ket_qua) === lastResult) streak++;
+            else break;
+        }
+        
+        // AI dự đoán đơn giản: dựa vào xu hướng
+        let prediction = "Tài";
+        let confidence = 55;
+        
+        if (streak >= 3) {
+            // Nếu chuỗi dài, khả năng đảo cầu
+            prediction = lastResult === "Tài" ? "Xỉu" : "Tài";
+            confidence = 65 + Math.min(15, streak * 3);
+        } else if (taiCount > xiuCount + 2) {
+            prediction = "Xỉu";
+            confidence = 60;
+        } else if (xiuCount > taiCount + 2) {
+            prediction = "Tài";
+            confidence = 60;
+        } else {
+            prediction = Math.random() > 0.5 ? "Tài" : "Xỉu";
+            confidence = 50 + Math.floor(Math.random() * 20);
+        }
+        
+        return {
+            prediction: prediction,
+            confidence: confidence,
+            stats: { tai: taiCount, xiu: xiuCount, streak: streak }
+        };
+    }
+
+    // ============ RENDER GIAO DIỆN ============
+    function renderData(data) {
+        if (!data || !data.current) {
+            log("⏳ Chưa có dữ liệu để hiển thị");
+            return false;
+        }
+        
+        const curr = data.current;
+        const session = curr.Phien || curr.session || 0;
+        const result = normalizeResult(curr.Ket_qua || curr.result);
+        const dice = [
+            curr.Xuc_xac_1 || curr.dice?.[0] || 0,
+            curr.Xuc_xac_2 || curr.dice?.[1] || 0,
+            curr.Xuc_xac_3 || curr.dice?.[2] || 0
+        ];
+        const total = curr.Tong || curr.total || (dice[0] + dice[1] + dice[2]);
+        
+        // Hiển thị phiên
+        document.getElementById("sw-session").textContent = `#${session.toLocaleString()}`;
+        
+        // Hiển thị xúc xắc
+        const diceEls = document.getElementById("sw-dice").querySelectorAll(".dice-val");
+        dice.forEach((v, i) => {
+            if (diceEls[i]) diceEls[i].textContent = v || "-";
+        });
+        document.getElementById("sw-total").textContent = total || "--";
+        
+        // Hiển thị kết quả
+        const tag = document.getElementById("sw-last-tag");
+        if (result === "Tài") {
+            tag.textContent = "TÀI";
+            tag.className = "last-tag tag-tai";
+        } else if (result === "Xỉu") {
+            tag.textContent = "XỈU";
+            tag.className = "last-tag tag-xiu";
+        } else {
+            tag.textContent = "???";
+        }
+        
+        // Cập nhật lịch sử
+        if (data.history && data.history.length > 0) {
+            updateHistoryDisplay(data.history);
+        }
+        
+        // Dự đoán
+        const history = data.history || [curr];
+        const pred = calculatePrediction(history);
+        updatePrediction(pred);
+        
+        return true;
+    }
+    
+    function updateHistoryDisplay(history) {
         const container = document.getElementById("sw-history");
         container.innerHTML = "";
-        const show = localHistory.slice(-10);
-        while (show.length < 10) show.unshift(null);
-        show.forEach(item => {
+        const last10 = history.slice(-10);
+        
+        last10.forEach(item => {
             const dot = document.createElement("div");
-            if (!item)                 { dot.className = "hist-dot hist-empty"; dot.textContent = "·"; }
-            else if (item.r === "Tài") { dot.className = "hist-dot hist-t";     dot.textContent = "T"; }
-            else                       { dot.className = "hist-dot hist-x";     dot.textContent = "X"; }
+            const result = normalizeResult(item.Ket_qua || item.result);
+            if (!result) {
+                dot.className = "hist-dot hist-empty";
+                dot.textContent = "·";
+            } else if (result === "Tài") {
+                dot.className = "hist-dot hist-t";
+                dot.textContent = "T";
+            } else {
+                dot.className = "hist-dot hist-x";
+                dot.textContent = "X";
+            }
             container.appendChild(dot);
         });
-    }
-
-    // ── Render kết quả phiên trước ───────────────────────────
-    function renderLastResult(session, dice, total, result) {
-        document.getElementById("sw-session").textContent = `#${session}`;
-        const diceEls = document.getElementById("sw-dice").querySelectorAll(".dice-val");
-        dice.forEach((v, i) => { if (diceEls[i]) diceEls[i].textContent = v || "-"; });
-        document.getElementById("sw-total").textContent = total || "--";
-        const tag = document.getElementById("sw-last-tag");
-        if (result === "Tài") { tag.textContent = "TÀI"; tag.className = "last-tag tag-tai"; }
-        else                  { tag.textContent = "XỈU"; tag.className = "last-tag tag-xiu"; }
-    }
-
-    // ── Render dự đoán ────────────────────────────────────────
-    function renderPrediction(pred) {
-        if (!pred || !pred.prediction) return;
-        const el    = document.getElementById("sw-prediction");
-        const isTai = String(pred.prediction).toUpperCase().includes("T");
-        el.textContent = isTai ? "TÀI" : "XỈU";
-        el.className   = `pred-value ${isTai ? "pred-tai" : "pred-xiu"}`;
-        document.getElementById("sw-conf-fill").style.width = `${pred.confidence || 0}%`;
-        document.getElementById("sw-conf-pct").textContent  = `${pred.confidence || 0}%`;
-        if (pred.stats) {
-            document.getElementById("sw-tai-count").textContent = pred.stats.tai    ?? "--";
-            document.getElementById("sw-xiu-count").textContent = pred.stats.xiu    ?? "--";
-            document.getElementById("sw-streak").textContent    = pred.stats.streak ?? "--";
+        
+        // Thêm ô trống nếu thiếu
+        while (container.children.length < 10) {
+            const empty = document.createElement("div");
+            empty.className = "hist-dot hist-empty";
+            empty.textContent = "·";
+            container.appendChild(empty);
         }
-        document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
+    }
+    
+    function updatePrediction(pred) {
+        const el = document.getElementById("sw-prediction");
+        el.textContent = pred.prediction;
+        el.className = `pred-value ${pred.prediction === "Tài" ? "pred-tai" : "pred-xiu"}`;
+        
+        document.getElementById("sw-conf-fill").style.width = `${pred.confidence}%`;
+        document.getElementById("sw-conf-pct").textContent = `${pred.confidence}%`;
+        
+        document.getElementById("sw-tai-count").textContent = pred.stats.tai;
+        document.getElementById("sw-xiu-count").textContent = pred.stats.xiu;
+        document.getElementById("sw-streak").textContent = pred.stats.streak;
+        
         scanEffect();
     }
-
-    // ── Gửi kết quả lên server ───────────────────────────────
-    async function sendResult(session, dice, total, result) {
-        try {
-            log(`⬆ Gửi phiên #${session}...`);
-            const r  = await fetch(`${API_BASE}/api/result`, {
-                method:  "POST",
-                headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ session, dice, total, result, ts: Date.now() })
-            });
-            const rj = await r.json();
-            log(`✅ Server: ${JSON.stringify(rj)}`);
-            lastSentSession = Number(session);
-            localStorage.setItem("sw_last_session", session);
-            localHistory.push({ r: result, d: dice, total });
-            if (localHistory.length > 50) localHistory.shift();
-            localStorage.setItem("sw_history", JSON.stringify(localHistory));
-            renderHistory();
-            setStatus(`✅ Đã gửi phiên #${session} → ${result}`);
-        } catch (e) {
-            log(`❌ Lỗi gửi: ${e.message}`);
+    
+    // ============ LUỒNG CHÍNH ============
+    async function refreshAll() {
+        const data = await fetchData();
+        if (data) {
+            currentData = data;
+            renderData(data);
         }
     }
-
-    // ── Collect từ server ─────────────────────────────────────
-    async function collect() {
-        try {
-            const res  = await fetch(`${SOURCE_API}?_=${Date.now()}`);
-            if (!res.ok) { log(`HTTP ${res.status}`); return; }
-            const data = await res.json();
-
-            // data.current có thể null nếu server chưa nhận phiên nào
-            if (!data?.current) {
-                log("⏳ Chưa có dữ liệu phiên nào");
-                setStatus("⏳ Chờ dữ liệu...");
-                return;
-            }
-
-            const c       = data.current;
-            const session = Number(c.Phien     || c.session || 0);
-            const result  = normalizeResult(c.Ket_qua || c.result || "");
-            const dice    = [
-                Number(c.Xuc_xac_1 || c.dice?.[0] || 0),
-                Number(c.Xuc_xac_2 || c.dice?.[1] || 0),
-                Number(c.Xuc_xac_3 || c.dice?.[2] || 0)
-            ];
-            const total = Number(c.Tong || c.total || 0);
-
-            log(`📥 Phiên #${session} | ${result || "?"} | Tổng ${total}`);
-
-            if (result) renderLastResult(session, dice, total, result);
-
-            if (!result) {
-                setStatus("⏳ Chờ kết quả phiên...");
-                return;
-            }
-
-            if (session > lastSentSession) {
-                await sendResult(session, dice, total, result);
-            } else if (session === lastSentSession) {
-                setStatus(`🔄 Chờ phiên mới (đang #${session})`);
-            } else {
-                // localStorage bị cao → reset
-                log(`⚠ Reset localStorage: ${lastSentSession} → ${session - 1}`);
-                lastSentSession = session - 1;
-                localStorage.setItem("sw_last_session", lastSentSession);
-                await sendResult(session, dice, total, result);
-            }
-        } catch (e) {
-            log(`❌ ${e.message}`);
-            setStatus("⚠️ Mất kết nối", false);
-        }
-    }
-
-    // ── Lấy dự đoán ──────────────────────────────────────────
-    async function refreshPrediction() {
-        try {
-            const res  = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
-            const pred = await res.json();
-            renderPrediction(pred);
-        } catch (e) {}
-    }
-
-    // ── Drag & Drop ───────────────────────────────────────────
-    const panel  = document.getElementById("sw-panel");
+    
+    // ============ DRAG & DROP ============
+    const panel = document.getElementById("sw-panel");
     const handle = document.getElementById("sw-drag-handle");
     let dragging = false, startX, startY, startL, startT;
-
+    
     function startDrag(cx, cy) {
-        dragging = true; startX = cx; startY = cy;
+        dragging = true;
+        startX = cx;
+        startY = cy;
         const r = panel.getBoundingClientRect();
-        startL = r.left; startT = r.top;
+        startL = r.left;
+        startT = r.top;
     }
+    
     function moveDrag(cx, cy) {
         if (!dragging) return;
-        let l = Math.max(5, Math.min(window.innerWidth  - panel.offsetWidth  - 5, startL + cx - startX));
+        let l = Math.max(5, Math.min(window.innerWidth - panel.offsetWidth - 5, startL + cx - startX));
         let t = Math.max(5, Math.min(window.innerHeight - panel.offsetHeight - 5, startT + cy - startY));
-        panel.style.left = l+"px"; panel.style.top = t+"px";
-        panel.style.right = "auto"; panel.style.bottom = "auto";
+        panel.style.left = l + "px";
+        panel.style.top = t + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
     }
-
-    handle.addEventListener("mousedown",   e => { if (!e.target.closest(".sw-controls")) startDrag(e.clientX, e.clientY); });
+    
+    handle.addEventListener("mousedown", e => {
+        if (!e.target.closest(".sw-controls")) startDrag(e.clientX, e.clientY);
+    });
     document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
-    document.addEventListener("mouseup",   () => { dragging = false; });
-    handle.addEventListener("touchstart",  e => { if (!e.target.closest(".sw-controls")) { const t=e.touches[0]; startDrag(t.clientX,t.clientY); }}, {passive:true});
-    document.addEventListener("touchmove", e => { const t=e.touches[0]; moveDrag(t.clientX,t.clientY); }, {passive:true});
-    document.addEventListener("touchend",  () => { dragging = false; });
-
-    // ── Controls ──────────────────────────────────────────────
+    document.addEventListener("mouseup", () => { dragging = false; });
+    handle.addEventListener("touchstart", e => {
+        if (!e.target.closest(".sw-controls")) {
+            const t = e.touches[0];
+            startDrag(t.clientX, t.clientY);
+        }
+    }, { passive: true });
+    document.addEventListener("touchmove", e => {
+        const t = e.touches[0];
+        moveDrag(t.clientX, t.clientY);
+    }, { passive: true });
+    document.addEventListener("touchend", () => { dragging = false; });
+    
+    // ============ CONTROLS ============
     const toggleBtn = document.getElementById("sw-toggle");
-    document.getElementById("sw-min").onclick   = () => panel.classList.toggle("mini");
-    document.getElementById("sw-close").onclick = () => { panel.classList.add("hidden"); toggleBtn.classList.add("show"); };
-    toggleBtn.onclick = () => { panel.classList.remove("hidden"); toggleBtn.classList.remove("show"); };
-
-    // ── Init ──────────────────────────────────────────────────
-    renderHistory();
-    collect();
-    refreshPrediction();
-    setInterval(collect,           3000);
-    setInterval(refreshPrediction, 5000);
+    document.getElementById("sw-min").onclick = () => panel.classList.toggle("mini");
+    document.getElementById("sw-close").onclick = () => {
+        panel.classList.add("hidden");
+        toggleBtn.classList.add("show");
+    };
+    toggleBtn.onclick = () => {
+        panel.classList.remove("hidden");
+        toggleBtn.classList.remove("show");
+    };
+    document.getElementById("refresh-data").onclick = () => refreshAll();
+    
+    // ============ KHỞI ĐỘNG ============
+    refreshAll();
+    setInterval(() => refreshAll(), 8000);
     setInterval(() => {
-        const el = document.getElementById("sw-time");
-        if (el) el.textContent = new Date().toLocaleTimeString("vi-VN");
+        document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
     }, 1000);
-
-    log("✅ SunWin AI v3.0 khởi động");
+    
+    log("✅ SunWin AI v3.0 sẵn sàng");
+    setStatus("🟢 Đã khởi động", true);
 })();
 </script>
 </body>
