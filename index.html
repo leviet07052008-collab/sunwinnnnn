@@ -3,112 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SunWin AI - Tool nhỏ gọn</title>
+    <title>SunWin AI - Tool tự động</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
         
-        /* Tool container - có thể kéo thả */
-        .sunwin-tool {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-            background: linear-gradient(135deg, rgba(26, 10, 5, 0.98), rgba(13, 5, 3, 0.98));
-            border-radius: 20px;
-            border: 1px solid rgba(255, 215, 0, 0.4);
+        body {
+            background: linear-gradient(135deg, #1a0a05 0%, #0d0503 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Layout chia đôi màn hình */
+        .split-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+        
+        /* Panel bên trái - Tool */
+        .tool-panel {
+            width: 320px;
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            z-index: 999999;
-            transition: all 0.3s ease;
-            cursor: move;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-right: 2px solid #ffd700;
+            z-index: 10;
         }
         
-        .sunwin-tool.minimized {
-            width: auto;
-            border-radius: 40px;
+        /* Panel bên phải - Iframe SunWin */
+        .game-panel {
+            flex: 1;
+            position: relative;
+            background: #000;
         }
         
-        .sunwin-tool.minimized .tool-body {
-            display: none;
+        .game-panel iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
         
-        /* Header */
+        /* Scrollbar cho tool */
+        .tool-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        .tool-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tool-panel::-webkit-scrollbar-thumb {
+            background: #ffd700;
+            border-radius: 2px;
+        }
+        
+        /* Tool content */
         .tool-header {
-            padding: 12px 15px;
+            text-align: center;
+            padding: 15px;
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.05));
-            border-radius: 20px 20px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
         }
         
-        .tool-header.minimized {
-            border-radius: 40px;
-            border-bottom: none;
-        }
-        
-        .tool-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .tool-title span:first-child {
-            font-size: 18px;
-        }
-        
-        .tool-title span:last-child {
-            font-size: 13px;
-            font-weight: bold;
+        .tool-header h1 {
+            font-size: 20px;
             background: linear-gradient(135deg, #ffd700, #ff8c00);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
         
-        .tool-controls {
-            display: flex;
-            gap: 8px;
+        .tool-header p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            margin-top: 4px;
         }
         
-        .tool-controls button {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 8px;
-            width: 24px;
-            height: 24px;
-            font-size: 14px;
-            cursor: pointer;
-            color: #ffd700;
-            transition: all 0.2s;
-        }
-        
-        .tool-controls button:hover {
-            background: rgba(255, 215, 0, 0.3);
-        }
-        
-        /* Body */
-        .tool-body {
-            padding: 12px;
-        }
-        
-        /* Trạng thái */
-        .status-row {
+        .status-card {
+            margin: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
         }
         
         .status-dot {
@@ -131,95 +114,96 @@
         }
         
         .status-text {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
         }
         
         .session-id {
-            font-size: 12px;
-            font-weight: bold;
             font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
             color: #ffd700;
         }
         
-        /* Kết quả */
-        .result-row {
+        .result-card {
             background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 10px;
+            margin: 12px;
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
         
-        .dice-mini {
+        .dice-container {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 12px;
+            margin-bottom: 12px;
         }
         
-        .dice-mini-item {
-            width: 40px;
-            height: 40px;
+        .dice {
+            width: 55px;
+            height: 55px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #ffd700;
-            border-radius: 10px;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 28px;
             font-weight: bold;
             color: #ffd700;
         }
         
-        .total-mini {
-            text-align: center;
-            font-size: 11px;
-            margin-bottom: 6px;
+        .total {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.7);
         }
         
-        .total-mini-value {
-            font-size: 18px;
+        .total-value {
+            font-size: 24px;
             font-weight: bold;
             color: #ff8c00;
         }
         
-        .result-badge-mini {
+        .result-badge {
             display: inline-block;
-            width: 100%;
-            text-align: center;
-            padding: 4px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 18px;
             font-weight: bold;
         }
         
         .result-tai {
             background: rgba(76, 175, 80, 0.2);
             color: #4caf50;
+            border: 1px solid #4caf50;
         }
         
         .result-xiu {
             background: rgba(244, 67, 54, 0.2);
             color: #f44336;
+            border: 1px solid #f44336;
         }
         
-        /* Dự đoán mini */
-        .prediction-mini {
+        .prediction-card {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.05));
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 10px;
+            margin: 12px;
+            padding: 12px;
+            border-radius: 16px;
             text-align: center;
         }
         
-        .prediction-label-mini {
-            font-size: 9px;
+        .prediction-label {
+            font-size: 10px;
             color: rgba(255, 255, 255, 0.5);
         }
         
-        .prediction-value-mini {
-            font-size: 22px;
+        .prediction-value {
+            font-size: 32px;
             font-weight: bold;
+            margin: 5px 0;
         }
         
         .prediction-tai {
@@ -230,64 +214,62 @@
             color: #f44336;
         }
         
-        .confidence-mini {
-            height: 3px;
+        .confidence-bar {
+            height: 4px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
-            margin-top: 6px;
             overflow: hidden;
+            margin: 8px 0;
         }
         
-        .confidence-fill-mini {
+        .confidence-fill {
             height: 100%;
             background: linear-gradient(90deg, #ffd700, #ff8c00);
             transition: width 0.3s;
         }
         
-        /* Thống kê mini */
-        .stats-mini {
-            display: flex;
-            justify-content: space-around;
-            gap: 6px;
-            margin-bottom: 10px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 12px;
         }
         
-        .stat-mini {
-            flex: 1;
+        .stat-card {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 10px;
-            padding: 6px;
+            padding: 8px;
             text-align: center;
         }
         
-        .stat-label-mini {
-            font-size: 8px;
+        .stat-label {
+            font-size: 9px;
             color: rgba(255, 255, 255, 0.5);
         }
         
-        .stat-value-mini {
-            font-size: 14px;
+        .stat-value {
+            font-size: 18px;
             font-weight: bold;
             color: #ffd700;
         }
         
-        /* Lịch sử mini */
-        .history-mini {
+        .history-strip {
             display: flex;
-            gap: 5px;
+            gap: 6px;
             justify-content: center;
-            margin-bottom: 10px;
+            flex-wrap: wrap;
+            margin: 12px;
         }
         
-        .history-mini-item {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
+        .history-item {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
             font-weight: bold;
+            font-size: 14px;
         }
         
         .history-tai {
@@ -302,52 +284,90 @@
             color: #f44336;
         }
         
-        /* Nút refresh */
-        .refresh-btn {
-            width: 100%;
+        .log-area {
+            background: rgba(0, 0, 0, 0.5);
+            margin: 12px;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-family: monospace;
+            color: #ffd700;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        
+        .btn {
             background: linear-gradient(135deg, #ffd700, #ff8c00);
             border: none;
-            padding: 8px;
+            padding: 10px;
+            margin: 12px;
             border-radius: 30px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #1a0a05;
             cursor: pointer;
-            margin-top: 5px;
         }
         
-        .refresh-btn:active {
-            transform: scale(0.98);
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #ffd700;
+            color: #ffd700;
         }
         
-        /* Animation dice */
+        .code-box {
+            background: #0a0a0a;
+            margin: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-family: monospace;
+            color: #ffd700;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .info-text {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+            margin: 5px 12px;
+        }
+        
         @keyframes dicePop {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         
-        .dice-mini-item {
+        .dice {
             animation: dicePop 0.3s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tool-panel {
+                width: 280px;
+            }
+            .dice {
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
+            }
+            .prediction-value {
+                font-size: 26px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Tool nhỏ gọn -->
-    <div class="sunwin-tool" id="sunwinTool">
-        <div class="tool-header" id="toolHeader">
-            <div class="tool-title">
-                <span>🎲</span>
-                <span>SUNWIN AI</span>
+    <div class="split-layout">
+        <!-- Tool bên trái -->
+        <div class="tool-panel">
+            <div class="tool-header">
+                <h1>🎲 SUNWIN AI</h1>
+                <p>Tự động quét dữ liệu | Iframe mode</p>
             </div>
-            <div class="tool-controls">
-                <button id="minimizeBtn" title="Thu gọn">−</button>
-                <button id="closeBtn" title="Đóng">✕</button>
-            </div>
-        </div>
-        
-        <div class="tool-body">
-            <!-- Trạng thái -->
-            <div class="status-row">
+            
+            <div class="status-card">
                 <div>
                     <span class="status-dot" id="statusDot"></span>
                     <span class="status-text" id="statusText">Đang kết nối...</span>
@@ -355,146 +375,135 @@
                 <div class="session-id" id="sessionId">#------</div>
             </div>
             
-            <!-- Kết quả -->
-            <div class="result-row">
-                <div class="dice-mini">
-                    <div class="dice-mini-item" id="dice1">?</div>
-                    <div class="dice-mini-item" id="dice2">?</div>
-                    <div class="dice-mini-item" id="dice3">?</div>
+            <div class="result-card">
+                <div class="dice-container">
+                    <div class="dice" id="dice1">?</div>
+                    <div class="dice" id="dice2">?</div>
+                    <div class="dice" id="dice3">?</div>
                 </div>
-                <div class="total-mini">
-                    Tổng: <span class="total-mini-value" id="totalValue">--</span>
+                <div class="total">
+                    Tổng: <span class="total-value" id="totalValue">--</span>
                 </div>
                 <div>
-                    <span class="result-badge-mini" id="resultBadge">---</span>
+                    <span class="result-badge" id="resultBadge">---</span>
                 </div>
             </div>
             
-            <!-- Dự đoán -->
-            <div class="prediction-mini">
-                <div class="prediction-label-mini">🤖 DỰ ĐOÁN TIẾP THEO</div>
-                <div class="prediction-value-mini" id="predictionValue">---</div>
-                <div class="confidence-mini">
-                    <div class="confidence-fill-mini" id="confidenceFill" style="width: 0%"></div>
+            <div class="prediction-card">
+                <div class="prediction-label">🤖 DỰ ĐOÁN TIẾP THEO</div>
+                <div class="prediction-value" id="predictionValue">---</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
                 </div>
-                <div style="font-size: 9px; margin-top: 4px;" id="confidenceText">Độ tin cậy: --%</div>
+                <div id="confidenceText" style="font-size: 10px;">Độ tin cậy: --%</div>
             </div>
             
-            <!-- Thống kê nhanh -->
-            <div class="stats-mini">
-                <div class="stat-mini">
-                    <div class="stat-label-mini">🟢 Tài</div>
-                    <div class="stat-value-mini" id="taiCount">0</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">🟢 TÀI</div>
+                    <div class="stat-value" id="taiCount">0</div>
                 </div>
-                <div class="stat-mini">
-                    <div class="stat-label-mini">🔴 Xỉu</div>
-                    <div class="stat-value-mini" id="xiuCount">0</div>
+                <div class="stat-card">
+                    <div class="stat-label">🔴 XỈU</div>
+                    <div class="stat-value" id="xiuCount">0</div>
                 </div>
-                <div class="stat-mini">
-                    <div class="stat-label-mini">🔥 Chuỗi</div>
-                    <div class="stat-value-mini" id="streakCount">0</div>
+                <div class="stat-card">
+                    <div class="stat-label">🔥 CHUỖI</div>
+                    <div class="stat-value" id="streakCount">0</div>
                 </div>
             </div>
             
-            <!-- Lịch sử 5 phiên gần nhất -->
-            <div class="history-mini" id="historyMini"></div>
+            <div class="history-strip" id="historyStrip"></div>
             
-            <!-- Nút làm mới -->
-            <button class="refresh-btn" onclick="refreshData()">⟳ LÀM MỚI</button>
+            <div class="log-area" id="logArea">
+                [System] Khởi động...
+            </div>
+            
+            <button class="btn" onclick="refreshData()">🔄 LÀM MỚI</button>
+            
+            <!-- Code cần chạy trong iframe -->
+            <div class="code-box" id="codeBox" style="font-size: 8px; margin: 8px;">
+// Auto inject vào iframe
+(function(){
+    const API = 'https://sun-vzic.onrender.com/api/result';
+    let last = localStorage.getItem('sw_last') || '';
+    const origWS = window.WebSocket;
+    window.WebSocket = function(...a){
+        const ws = new origWS(...a);
+        ws.addEventListener('message', e=>{
+            try{
+                const d = JSON.parse(e.data);
+                let s = d.session || d.roundId;
+                let di = d.dice || d.result?.dice;
+                let t = d.total;
+                let r = d.result || d.winner;
+                if(s && di?.length===3 && s!=last){
+                    if(!t) t = di[0]+di[1]+di[2];
+                    if(!r) r = t>=11 ? 'Tài' : 'Xỉu';
+                    fetch(API, {method:'POST',headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({session:parseInt(s), dice:di, total:t, result:r})})
+                    .then(()=>{last=s; localStorage.setItem('sw_last',s);});
+                }
+            }catch(e){}
+        });
+        return ws;
+    };
+    window.WebSocket.prototype = origWS.prototype;
+    console.log('✅ SunWin Hook đã chạy trong iframe!');
+})();
+            </div>
+            
+            <div class="info-text">
+                💡 Tool tự động kết nối với game bên phải<br>
+                ⏱️ Dữ liệu cập nhật mỗi 5 giây
+            </div>
+        </div>
+        
+        <!-- Game bên phải - Iframe SunWin -->
+        <div class="game-panel">
+            <iframe id="sunwinFrame" src="https://web.sunwin.qa" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
     </div>
     
     <script>
         const API_URL = 'https://sun-vzic.onrender.com';
         let autoRefresh = null;
+        let hookInjected = false;
         
-        // ============ KÉO THẢ TOOL ============
-        const tool = document.getElementById('sunwinTool');
-        const header = document.getElementById('toolHeader');
-        let isDragging = false;
-        let dragOffsetX = 0, dragOffsetY = 0;
-        
-        header.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.tool-controls')) return;
-            isDragging = true;
-            const rect = tool.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-            tool.style.cursor = 'grabbing';
-            e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            let x = e.clientX - dragOffsetX;
-            let y = e.clientY - dragOffsetY;
-            x = Math.max(0, Math.min(window.innerWidth - tool.offsetWidth, x));
-            y = Math.max(0, Math.min(window.innerHeight - tool.offsetHeight, y));
-            tool.style.left = x + 'px';
-            tool.style.top = y + 'px';
-            tool.style.right = 'auto';
-            tool.style.bottom = 'auto';
-        });
-        
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            tool.style.cursor = '';
-        });
-        
-        // Touch cho mobile
-        header.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.tool-controls')) return;
-            isDragging = true;
-            const rect = tool.getBoundingClientRect();
-            const touch = e.touches[0];
-            dragOffsetX = touch.clientX - rect.left;
-            dragOffsetY = touch.clientY - rect.top;
-            e.preventDefault();
-        });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const touch = e.touches[0];
-            let x = touch.clientX - dragOffsetX;
-            let y = touch.clientY - dragOffsetY;
-            x = Math.max(0, Math.min(window.innerWidth - tool.offsetWidth, x));
-            y = Math.max(0, Math.min(window.innerHeight - tool.offsetHeight, y));
-            tool.style.left = x + 'px';
-            tool.style.top = y + 'px';
-            tool.style.right = 'auto';
-            tool.style.bottom = 'auto';
-        });
-        
-        document.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-        
-        // ============ THU GỌN / ĐÓNG ============
-        const minimizeBtn = document.getElementById('minimizeBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        const toolHeader = document.querySelector('.tool-header');
-        
-        minimizeBtn.addEventListener('click', () => {
-            tool.classList.toggle('minimized');
-            toolHeader.classList.toggle('minimized');
-            minimizeBtn.textContent = tool.classList.contains('minimized') ? '+' : '−';
-        });
-        
-        closeBtn.addEventListener('click', () => {
-            tool.style.display = 'none';
-        });
-        
-        // Double click để thu gọn
-        toolHeader.addEventListener('dblclick', () => {
-            tool.classList.toggle('minimized');
-            toolHeader.classList.toggle('minimized');
-            minimizeBtn.textContent = tool.classList.contains('minimized') ? '+' : '−';
-        });
-        
-        // ============ CHỨC NĂNG CHÍNH ============
-        function addLog(msg) {
-            console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
+        function addLog(msg, isError = false) {
+            const logEl = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString('vi-VN');
+            const color = isError ? '#ff6666' : '#ffd700';
+            logEl.innerHTML = `<div style="color: ${color};">[${time}] ${msg}</div>` + logEl.innerHTML;
+            if (logEl.children.length > 15) logEl.removeChild(logEl.lastChild);
+            console.log(msg);
         }
+        
+        // Inject hook vào iframe
+        function injectHookToIframe() {
+            const iframe = document.getElementById('sunwinFrame');
+            if (!iframe || !iframe.contentWindow) {
+                addLog('⏳ Đang chờ iframe tải...', true);
+                return false;
+            }
+            
+            try {
+                const code = document.getElementById('codeBox').innerText;
+                iframe.contentWindow.eval(code);
+                addLog('✅ Đã inject hook vào iframe!');
+                hookInjected = true;
+                return true;
+            } catch (e) {
+                addLog('❌ Không thể inject: ' + e.message, true);
+                return false;
+            }
+        }
+        
+        // Tự động inject khi iframe load
+        document.getElementById('sunwinFrame').addEventListener('load', function() {
+            addLog('📄 Iframe SunWin đã tải xong');
+            setTimeout(() => injectHookToIframe(), 2000);
+        });
         
         async function fetchData() {
             try {
@@ -507,9 +516,9 @@
                     document.getElementById('statusText').textContent = 'Đã kết nối';
                     document.getElementById('sessionId').textContent = `#${c.session}`;
                     
-                    // Xúc xắc với animation
-                    const diceEls = [document.getElementById('dice1'), document.getElementById('dice2'), document.getElementById('dice3')];
-                    diceEls.forEach((el, i) => {
+                    const diceEls = ['dice1', 'dice2', 'dice3'];
+                    diceEls.forEach((id, i) => {
+                        const el = document.getElementById(id);
                         if (c.dice && c.dice[i]) {
                             el.style.animation = 'none';
                             el.offsetHeight;
@@ -523,23 +532,24 @@
                     const badge = document.getElementById('resultBadge');
                     if (c.result === 'Tài') {
                         badge.textContent = 'TÀI';
-                        badge.className = 'result-badge-mini result-tai';
+                        badge.className = 'result-badge result-tai';
                     } else if (c.result === 'Xỉu') {
                         badge.textContent = 'XỈU';
-                        badge.className = 'result-badge-mini result-xiu';
+                        badge.className = 'result-badge result-xiu';
                     }
+                    
+                    await renderHistory(data.history);
                 } else {
                     document.getElementById('statusDot').classList.remove('connected');
                     document.getElementById('statusText').textContent = 'Chờ dữ liệu...';
                 }
                 
                 await fetchPrediction();
-                await renderHistory();
                 
             } catch (e) {
                 document.getElementById('statusDot').classList.remove('connected');
                 document.getElementById('statusText').textContent = 'Mất kết nối';
-                addLog('Lỗi: ' + e.message);
+                addLog('Lỗi: ' + e.message, true);
             }
         }
         
@@ -549,7 +559,7 @@
                 const pred = await res.json();
                 const predEl = document.getElementById('predictionValue');
                 predEl.textContent = pred.prediction || '---';
-                predEl.className = `prediction-value-mini prediction-${pred.prediction === 'Tài' ? 'tai' : 'xiu'}`;
+                predEl.className = `prediction-value prediction-${pred.prediction === 'Tài' ? 'tai' : 'xiu'}`;
                 document.getElementById('confidenceFill').style.width = `${pred.confidence || 0}%`;
                 document.getElementById('confidenceText').textContent = `Độ tin cậy: ${pred.confidence || 0}%`;
                 
@@ -561,44 +571,45 @@
             } catch (e) {}
         }
         
-        async function renderHistory() {
-            try {
-                const res = await fetch(`${API_URL}/api/history`);
-                const data = await res.json();
-                const container = document.getElementById('historyMini');
-                container.innerHTML = '';
-                
-                const history = data.history || [];
-                for (let i = 0; i < Math.min(5, history.length); i++) {
-                    const item = history[i];
-                    const div = document.createElement('div');
-                    div.className = `history-mini-item history-${item.result === 'Tài' ? 'tai' : 'xiu'}`;
-                    div.textContent = item.result === 'Tài' ? 'T' : 'X';
-                    container.appendChild(div);
-                }
-                
-                while (container.children.length < 5) {
-                    const empty = document.createElement('div');
-                    empty.className = 'history-mini-item history-tai';
-                    empty.style.opacity = '0.3';
-                    empty.textContent = '?';
-                    container.appendChild(empty);
-                }
-            } catch (e) {}
+        async function renderHistory(history) {
+            const container = document.getElementById('historyStrip');
+            container.innerHTML = '';
+            const hist = history || [];
+            for (let i = 0; i < Math.min(10, hist.length); i++) {
+                const item = hist[i];
+                const div = document.createElement('div');
+                div.className = `history-item history-${item.result === 'Tài' ? 'tai' : 'xiu'}`;
+                div.textContent = item.result === 'Tài' ? 'T' : 'X';
+                container.appendChild(div);
+            }
+            while (container.children.length < 10) {
+                const empty = document.createElement('div');
+                empty.className = 'history-item history-tai';
+                empty.style.opacity = '0.3';
+                empty.textContent = '?';
+                container.appendChild(empty);
+            }
         }
         
         function refreshData() {
+            addLog('🔄 Làm mới dữ liệu...');
             fetchData();
+            if (!hookInjected) {
+                injectHookToIframe();
+            }
         }
         
-        // Khởi tạo
+        // Style animation
+        const style = document.createElement('style');
+        style.textContent = `@keyframes dicePop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`;
+        document.head.appendChild(style);
+        
         function init() {
             addLog('🚀 SunWin Tool khởi động');
+            addLog(`📡 API: ${API_URL}`);
+            addLog('🎮 Đang tải SunWin bên phải màn hình...');
             fetchData();
-            renderHistory();
-            autoRefresh = setInterval(() => {
-                fetchData();
-            }, 5000);
+            autoRefresh = setInterval(() => fetchData(), 5000);
         }
         
         init();
