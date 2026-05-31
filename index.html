@@ -2,11 +2,11 @@
 <html lang="vi">
 <head>
    <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-   <title>SunWin AI · Tài Xỉu Collector</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>SunWin AI - Tài Xỉu Collector</title>
    <style>
        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
-       * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+       * { margin:0; padding:0; box-sizing:border-box; }
        body { background:#080612; font-family:'Rajdhani',sans-serif; width:100vw; height:100vh; overflow:hidden; }
 
        #sunwin-frame { position:fixed; inset:0; width:100%; height:100%; border:none; z-index:1; }
@@ -16,8 +16,8 @@
            background:rgba(0,0,0,0.85); border:1px solid rgba(0,200,255,0.4);
            padding:6px 18px; border-radius:40px; font-size:11px; color:#00ffaa;
            z-index:999998; display:flex; align-items:center; gap:9px;
-           backdrop-filter:blur(16px); font-weight:700; letter-spacing:0.8px;
-           white-space:nowrap; box-shadow:0 0 12px rgba(0,255,170,0.2);
+           backdrop-filter:blur(16px); font-family:'Rajdhani',sans-serif;
+           font-weight:700; white-space:nowrap;
        }
        .live-dot {
            width:8px; height:8px; border-radius:50%; background:#00ff88;
@@ -28,44 +28,36 @@
        #sw-panel {
            position:fixed; bottom:24px; right:16px; width:290px;
            background:rgba(8,6,20,0.96); border:1px solid rgba(0,200,255,0.45);
-           border-radius:20px;
-           box-shadow:0 0 30px rgba(0,200,255,0.15),0 20px 35px rgba(0,0,0,0.8);
-           z-index:999999; backdrop-filter:blur(28px);
-           transition:opacity 0.25s ease, transform 0.2s ease;
+           border-radius:20px; z-index:999999; backdrop-filter:blur(28px);
+           transition:opacity 0.25s ease;
        }
-       #sw-panel.hidden { opacity:0; pointer-events:none; transform:translateY(12px); }
+       #sw-panel.hidden { opacity:0; pointer-events:none; }
        #sw-panel.mini .sw-body { display:none; }
-       #sw-panel.mini { width:auto; border-radius:40px; }
 
        #sw-toggle {
-           position:fixed; bottom:24px; right:16px;
-           width:52px; height:52px; border-radius:50%;
-           background:linear-gradient(145deg,#00c8ff,#0033aa);
+           position:fixed; bottom:24px; right:16px; width:52px; height:52px;
+           border-radius:50%; background:linear-gradient(145deg,#00c8ff,#0033aa);
            border:none; color:#fff; font-size:26px; cursor:pointer;
            z-index:999998; display:none; align-items:center; justify-content:center;
            box-shadow:0 0 18px rgba(0,200,255,0.6);
        }
        #sw-toggle.show { display:flex; }
-       #sw-toggle:active { transform:scale(0.93); }
 
        .sw-header {
-           padding:12px 14px;
-           background:rgba(0,200,255,0.07);
+           padding:12px 14px; background:rgba(0,200,255,0.07);
            border-bottom:1px solid rgba(0,200,255,0.18);
            border-radius:20px 20px 0 0;
            display:flex; justify-content:space-between; align-items:center;
            cursor:grab;
        }
-       .sw-brand { font-family:'Orbitron',monospace; font-size:12px; font-weight:900; letter-spacing:2px; color:#0cf; }
+       .sw-brand { font-family:'Orbitron',monospace; font-size:12px; font-weight:900; color:#0cf; }
        .sw-brand span { color:#bbb; }
        .sw-controls { display:flex; gap:8px; }
        .sw-ctrl {
            width:24px; height:24px; border-radius:30px; border:none;
-           background:rgba(255,255,255,0.08); color:#ccc; font-size:14px;
-           cursor:pointer; display:flex; align-items:center; justify-content:center;
+           background:rgba(255,255,255,0.08); color:#ccc; cursor:pointer;
+           display:flex; align-items:center; justify-content:center;
        }
-       .sw-ctrl:hover { background:#00c8ff40; }
-
        .sw-body { padding:14px; }
 
        .session-row {
@@ -81,7 +73,6 @@
            display:flex; align-items:center; justify-content:space-between;
            flex-wrap:wrap; gap:5px;
        }
-       .last-result-label { font-size:8px; color:#9aa; }
        .last-dice { display:flex; gap:5px; }
        .dice-val {
            width:30px; height:30px; background:#0a0a14; border:1px solid #0cf55a;
@@ -96,7 +87,7 @@
        .log-box {
            background:#00000080; border-left:3px solid #f0c420; border-radius:8px;
            padding:8px 10px; margin-bottom:12px; font-size:9px;
-           color:#ffdd88; font-family: monospace; max-height:45px; overflow-y:auto;
+           color:#ffdd88; font-family: monospace; max-height:50px; overflow-y:auto;
        }
 
        .pred-box {
@@ -145,17 +136,6 @@
        }
        .sw-time { font-size:9px; font-family:monospace; color:#0cf9; }
        .sw-version { font-size:8px; color:#fff6; }
-
-       @keyframes scanline {
-           0% { transform: translateY(-100%); opacity:0.6; }
-           100% { transform: translateY(300%); opacity:0; }
-       }
-       .scan-line {
-           position:absolute; top:0; left:0; right:0; height:3px;
-           background:linear-gradient(90deg, transparent, cyan, transparent);
-           animation: scanline 0.7s ease-out forwards;
-           pointer-events:none;
-       }
    </style>
 </head>
 <body>
@@ -164,7 +144,7 @@
 
 <div class="status-bar">
    <div class="live-dot"></div>
-   <span id="status-text">Đang đồng bộ...</span>
+   <span id="status-text">Đang kết nối...</span>
 </div>
 
 <button id="sw-toggle">🤖</button>
@@ -185,7 +165,7 @@
        </div>
 
        <div class="last-result">
-           <span class="last-result-label">🎲 KẾT QUẢ TRƯỚC</span>
+           <span class="session-label">🎲 KẾT QUẢ TRƯỚC</span>
            <div class="last-dice" id="sw-dice">
                <div class="dice-val">-</div>
                <div class="dice-val">-</div>
@@ -195,9 +175,9 @@
            <span class="last-tag" id="sw-last-tag">---</span>
        </div>
 
-       <div class="log-box" id="sw-log">⚡ Đang kết nối collector...</div>
+       <div class="log-box" id="sw-log">⚡ Đang khởi động CORS Proxy...</div>
 
-       <div class="pred-box" id="pred-box">
+       <div class="pred-box">
            <div class="pred-label">🧠 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
            <div class="pred-value pred-waiting" id="sw-prediction">--</div>
            <div class="conf-section">
@@ -221,17 +201,19 @@
 
        <div class="sw-footer">
            <span class="sw-time" id="sw-time">--:--:--</span>
-           <span class="sw-version">v3.0 · AI CORE</span>
+           <span class="sw-version">v3.1 · CORS FIX</span>
        </div>
    </div>
 </div>
 
 <script>
 (function() {
+    // ===== DÙNG CORS PROXY ĐỂ TRÁNH LỖI =====
+    const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
     const API_BASE = "https://sunwin-tool.onrender.com";
-    const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+    const SOURCE_API_ORIGIN = "https://api-sunwin-urrv.onrender.com/api/history";
+    const SOURCE_API = CORS_PROXY + SOURCE_API_ORIGIN;
     
-    // Lưu phiên đã gửi (dùng localStorage thay vì GM_setValue)
     let lastSentSession = Number(localStorage.getItem("collector_last_session") || 0);
     let localHistory = JSON.parse(localStorage.getItem("sw_history") || "[]");
     
@@ -308,20 +290,14 @@
     
     async function sendResult(session, dice, total, result) {
         try {
-            log(`📡 Gửi phiên #${session} → ${result} (${dice.join(",")} tổng=${total})`);
+            log(`📡 Gửi phiên #${session} → ${result}`);
             const response = await fetch(`${API_BASE}/api/result`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    session: session,
-                    dice: dice,
-                    total: total,
-                    result: result,
-                    ts: Date.now()
-                })
+                body: JSON.stringify({ session, dice, total, result, ts: Date.now() })
             });
             const data = await response.json();
-            log(`✅ Server: ${data.message || "OK"}`);
+            log(`✅ Đã gửi thành công`);
             if(session > lastSentSession) {
                 lastSentSession = session;
                 localStorage.setItem("collector_last_session", session);
@@ -360,23 +336,15 @@
                 if(xiuCount) xiuCount.textContent = pred.stats.xiu ?? "--";
                 if(streakEl) streakEl.textContent = pred.stats.streak ?? "--";
             }
-            
-            // Hiệu ứng scan
-            const box = document.getElementById("pred-box");
-            if(box && !box.querySelector(".scan-line")) {
-                const line = document.createElement("div");
-                line.className = "scan-line";
-                box.appendChild(line);
-                setTimeout(() => line.remove(), 700);
-            }
         } catch(e) {}
     }
     
     async function collect() {
         try {
+            log(`🔄 Đang fetch: ${SOURCE_API_ORIGIN} (qua CORS proxy)...`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            const resp = await fetch(`${SOURCE_API}?_=${Date.now()}`, { signal: controller.signal });
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const resp = await fetch(SOURCE_API, { signal: controller.signal });
             clearTimeout(timeoutId);
             
             if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -401,27 +369,27 @@
             if(isNaN(total) && dice.every(v=>v>=1 && v<=6)) total = dice[0]+dice[1]+dice[2];
             if(isNaN(total)) total = 0;
             
-            // Cập nhật UI luôn
             updateUI(session, dice, total, result);
             
-            if(result && session > lastSentSession) {
-                addToHistory(result, dice, total);
-                await sendResult(session, dice, total, result);
-            } else if(result && session === lastSentSession) {
-                setStatus(`✔️ Phiên #${session} đã xử lý`);
-                log(`Phiên #${session} đã gửi trước đó`);
-            } else if(result && session < lastSentSession) {
-                // Reset nếu phiên bị lùi
-                log(`⚠️ Reset lastSent từ ${lastSentSession} → ${session-1}`);
-                lastSentSession = session - 1;
-                localStorage.setItem("collector_last_session", lastSentSession);
-                addToHistory(result, dice, total);
-                await sendResult(session, dice, total, result);
-            } else if(!result) {
+            if(result) {
+                log(`📥 Phiên #${session}: ${result} (${dice.join(",")} = ${total})`);
+                if(session > lastSentSession) {
+                    addToHistory(result, dice, total);
+                    await sendResult(session, dice, total, result);
+                } else if(session === lastSentSession) {
+                    setStatus(`✔️ Phiên #${session} đã xử lý`);
+                } else if(session < lastSentSession) {
+                    log(`⚠️ Reset lastSent`);
+                    lastSentSession = session - 1;
+                    localStorage.setItem("collector_last_session", lastSentSession);
+                    addToHistory(result, dice, total);
+                    await sendResult(session, dice, total, result);
+                }
+            } else {
                 setStatus(`🔄 Phiên #${session} chờ kết quả...`);
             }
         } catch(err) {
-            log(`❌ Fetch lỗi: ${err.message}`);
+            log(`❌ Lỗi fetch: ${err.message}`);
             setStatus("⚠️ Mất kết nối API", false);
         }
     }
@@ -467,7 +435,6 @@
         toggleBtn.classList.remove("show");
     };
     
-    // Clock
     function updateClock() {
         const timeSpan = document.getElementById("sw-time");
         if(timeSpan) timeSpan.textContent = new Date().toLocaleTimeString("vi-VN");
@@ -475,14 +442,13 @@
     setInterval(updateClock, 1000);
     updateClock();
     
-    // Khởi động
     renderHistoryStrip();
     collect();
     fetchPrediction();
-    setInterval(collect, 2800);
-    setInterval(fetchPrediction, 4500);
+    setInterval(collect, 3000);
+    setInterval(fetchPrediction, 5000);
     
-    log("🚀 Collector AI đã khởi động | API: " + API_BASE);
+    log("🚀 Đã khởi động với CORS Proxy");
     setStatus("✅ Đã sẵn sàng");
 })();
 </script>
