@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SunWin AI - Tool Dự Đoán</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f0c29;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+        }
+        
+        /* Nút mở cửa sổ SunWin */
+        .open-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 999998;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .open-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* ===== MENU NHỎ ===== */
+        #sw-menu {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 220px;
+            background: linear-gradient(135deg, #0f0c29, #1a163f);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 999999;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            backdrop-filter: blur(10px);
+            cursor: move;
+            font-size: 12px;
+        }
+        .sw-head {
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .sw-title {
+            font-weight: 700;
+            font-size: 11px;
+            color: #fff;
+        }
+        .sw-title span {
+            color: #00d2ff;
+        }
+        .sw-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .sw-min, .sw-close {
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .sw-min:hover, .sw-close:hover {
+            opacity: 1;
+        }
+        .sw-body {
+            padding: 10px;
+            display: block;
+        }
+        #sw-menu.mini .sw-body {
+            display: none;
+        }
+        #sw-menu.mini {
+            width: auto;
+        }
+        .sw-pred-box {
+            text-align: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .sw-pred-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.5);
+        }
+        .sw-pred-value {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 5px 0;
+        }
+        .sw-pred-tai { color: #2ecc71; }
+        .sw-pred-xiu { color: #e74c3c; }
+        .sw-conf-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 6px 0;
+        }
+        .sw-conf-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #e74c3c);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        .sw-conf-text {
+            font-size: 9px;
+            color: rgba(255,255,255,0.6);
+        }
+        .sw-stats {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .sw-stat {
+            flex: 1;
+            background: rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 5px;
+            text-align: center;
+        }
+        .sw-stat-label {
+            font-size: 7px;
+            color: rgba(255,255,255,0.5);
+        }
+        .sw-stat-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .sw-time {
+            font-size: 8px;
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            margin-top: 8px;
+            padding-top: 5px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .sw-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2ecc71;
+            display: inline-block;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Trạng thái */
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: #2ecc71;
+            z-index: 999998;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nút mở SunWin -->
+    <button class="open-btn" id="openSunwinBtn">🎲 Mở SUNWIN.QA</button>
+    
+    <!-- Trạng thái -->
+    <div class="status-bar">
+        <div class="sw-dot"></div>
+        <span id="status-text">Đang theo dõi...</span>
+    </div>
+    
+    <!-- Menu nhỏ -->
+    <div id="sw-menu">
+        <div class="sw-head" id="sw-head">
+            <div class="sw-title">🎲 <span>SUNWIN AI</span></div>
+            <div class="sw-btns">
+                <div class="sw-min" id="sw-min">−</div>
+                <div class="sw-close" id="sw-close">✕</div>
+            </div>
+        </div>
+        <div class="sw-body">
+            <div class="sw-pred-box">
+                <div class="sw-pred-label">🤖 DỰ ĐOÁN PHIÊN TIẾP</div>
+                <div class="sw-pred-value" id="sw-prediction">---</div>
+                <div class="sw-conf-bar">
+                    <div class="sw-conf-fill" id="sw-conf-fill" style="width:0%"></div>
+                </div>
+                <div class="sw-conf-text" id="sw-conf-text">Đang tải...</div>
+            </div>
+            <div class="sw-stats">
+                <div class="sw-stat">
+                    <div class="sw-stat-label">📊 T/X (10P)</div>
+                    <div class="sw-stat-value" id="sw-tai10">-/0</div>
+                </div>
+                <div class="sw-stat">
+                    <div class="sw-stat-label">🔥 Chuỗi</div>
+                    <div class="sw-stat-value" id="sw-streak">0</div>
+                </div>
+            </div>
+            <div class="sw-time">
+                <span id="sw-time">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const API_BASE = "https://sunwin-tool.onrender.com";
+            const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+            let lastSentSession = localStorage.getItem("collector_last_session") || 0;
+            let sunwinWindow = null;
+            
+            // Hàm normalize
+            function normalizeResult(v) {
+                const t = String(v || "").toLowerCase();
+                if (t.includes("tài") || t.includes("tai")) return "Tài";
+                if (t.includes("xỉu") || t.includes("xiu")) return "Xỉu";
+                return null;
+            }
+            
+            // Lấy dữ liệu từ API
+            async function fetchSource() {
+                const response = await fetch(`${SOURCE_API}?_=${Date.now()}`);
+                return response.json();
+            }
+            
+            // Gửi kết quả lên server
+            async function sendResult(session, dice, total, result) {
+                const payload = { session, dice, total, result, ts: Date.now() };
+                const response = await fetch(`${API_BASE}/api/result`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                return response.json();
+            }
+            
+            // Lấy dự đoán từ server
+            async function fetchPrediction() {
+                const response = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
+                return response.json();
+            }
+            
+            // Cập nhật menu
+            function updateMenu(prediction) {
+                if (!prediction) return;
+                
+                const predText = prediction.prediction === "TÀI" ? "🟢 TÀI" : "🔴 XỈU";
+                const predClass = prediction.prediction === "TÀI" ? "sw-pred-tai" : "sw-pred-xiu";
+                document.getElementById("sw-prediction").innerHTML = `<span class="${predClass}">${predText}</span>`;
+                document.getElementById("sw-conf-fill").style.width = `${prediction.confidence}%`;
+                document.getElementById("sw-conf-text").innerHTML = `Độ tin cậy: ${prediction.confidence}%`;
+                
+                if (prediction.stats) {
+                    document.getElementById("sw-tai10").textContent = `${prediction.stats.tai || 0}/${prediction.stats.xiu || 0}`;
+                    document.getElementById("sw-streak").textContent = prediction.stats.streak || 0;
+                }
+                document.getElementById("sw-time").textContent = new Date().toLocaleTimeString("vi-VN");
+                document.getElementById("status-text").innerHTML = "✅ Đang theo dõi";
+            }
+            
+            // Collector gửi dữ liệu
+            async function collect() {
+                try {
+                    const data = await fetchSource();
+                    if (!data?.current) return;
+                    const c = data.current;
+                    const session = Number(c.Phien);
+                    const result = normalizeResult(c.Ket_qua);
+                    
+                    if (session > lastSentSession && result) {
+                        const dice = [Number(c.Xuc_xac_1), Number(c.Xuc_xac_2), Number(c.Xuc_xac_3)];
+                        const total = Number(c.Tong);
+                        const res = await sendResult(session, dice, total, result);
+                        if (res.ok) {
+                            lastSentSession = session;
+                            localStorage.setItem("collector_last_session", session);
+                            console.log(`✅ Đã gửi phiên #${session} → ${result}`);
+                        }
+                    }
+                } catch(e) { 
+                    console.error("Collector lỗi:", e);
+                    document.getElementById("status-text").innerHTML = "⚠️ Đang kết nối...";
+                }
+            }
+            
+            // Cập nhật UI
+            async function refreshUI() {
+                try {
+                    const prediction = await fetchPrediction();
+                    updateMenu(prediction);
+                } catch(e) { 
+                    console.error("Lỗi lấy dự đoán:", e);
+                }
+            }
+            
+            // Mở cửa sổ SunWin
+            document.getElementById("openSunwinBtn").onclick = () => {
+                if (sunwinWindow && !sunwinWindow.closed) {
+                    sunwinWindow.focus();
+                } else {
+                    sunwinWindow = window.open("https://web.sunwin.qa", "_blank", "width=400,height=600");
+                }
+            };
+            
+            // Tự động mở khi load trang
+            setTimeout(() => {
+                if (!sunwinWindow || sunwinWindow.closed) {
+                    sunwinWindow = window.open("https://web.sunwin.qa", "_blank");
+                }
+            }, 500);
+            
+            // ========== KÉO THẢ MENU ==========
+            let drag = false, startX, startY, startL, startT;
+            const panel = document.getElementById("sw-menu");
+            const head = document.getElementById("sw-head");
+            
+            head.addEventListener("mousedown", (e) => {
+                if (e.target.closest('.sw-btns')) return;
+                drag = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                startL = rect.left;
+                startT = rect.top;
+                panel.style.cursor = "grabbing";
+            });
+            document.addEventListener("mousemove", (e) => {
+                if (!drag) return;
+                let left = startL + e.clientX - startX;
+                let top = startT + e.clientY - startY;
+                left = Math.max(5, Math.min(window.innerWidth - panel.offsetWidth - 5, left));
+                top = Math.max(5, Math.min(window.innerHeight - panel.offsetHeight - 5, top));
+                panel.style.left = left + "px";
+                panel.style.top = top + "px";
+                panel.style.right = "auto";
+                panel.style.bottom = "auto";
+            });
+            document.addEventListener("mouseup", () => {
+                drag = false;
+                panel.style.cursor = "";
+            });
+            
+            // Nút thu nhỏ / đóng
+            document.getElementById("sw-min").onclick = () => panel.classList.toggle("mini");
+            document.getElementById("sw-close").onclick = () => panel.style.display = "none";
+            
+            // Khởi động collector và menu
+            collect();
+            refreshUI();
+            setInterval(collect, 5000);
+            setInterval(refreshUI, 5000);
+            
+            console.log("[SunWin AI] Đã khởi động");
+        })();
+    </script>
+</body>
+</html>
