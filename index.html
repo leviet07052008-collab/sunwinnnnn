@@ -1,21 +1,16 @@
-以下是您所需的SunWin AI工具的完整HTML代码。它能够自动抓取游戏结果，并通过AI模型预测下一轮“Tài”或“Xỉu”，界面风格为赛博朋克主题。
-
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-   <title>SunWin AI · 智能预测引擎</title>
+   <title>SunWin AI · Tài Xỉu Collector</title>
    <style>
        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
        * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
        body { background:#080612; font-family:'Rajdhani',sans-serif; width:100vw; height:100vh; overflow:hidden; }
 
-       /* 主iframe - 游戏界面 */
        #sunwin-frame { position:fixed; inset:0; width:100%; height:100%; border:none; z-index:1; }
 
-       /* 顶部状态栏 */
        .status-bar {
            position:fixed; top:14px; left:50%; transform:translateX(-50%);
            background:rgba(0,0,0,0.85); border:1px solid rgba(0,200,255,0.4);
@@ -27,16 +22,14 @@
        .live-dot {
            width:8px; height:8px; border-radius:50%; background:#00ff88;
            animation:pulse-dot 1.4s ease-in-out infinite;
-           box-shadow:0 0 6px #00ff88;
        }
        @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-       /* AI 悬浮面板 */
        #sw-panel {
-           position:fixed; bottom:24px; right:16px; width:280px;
-           background:rgba(8,6,20,0.96); border:1px solid rgba(0,200,255,0.4);
+           position:fixed; bottom:24px; right:16px; width:290px;
+           background:rgba(8,6,20,0.96); border:1px solid rgba(0,200,255,0.45);
            border-radius:20px;
-           box-shadow:0 0 30px rgba(0,200,255,0.15),0 20px 35px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.05);
+           box-shadow:0 0 30px rgba(0,200,255,0.15),0 20px 35px rgba(0,0,0,0.8);
            z-index:999999; backdrop-filter:blur(28px);
            transition:opacity 0.25s ease, transform 0.2s ease;
        }
@@ -44,15 +37,13 @@
        #sw-panel.mini .sw-body { display:none; }
        #sw-panel.mini { width:auto; border-radius:40px; }
 
-       /* 悬浮机器人按钮（面板关闭时显示） */
        #sw-toggle {
            position:fixed; bottom:24px; right:16px;
            width:52px; height:52px; border-radius:50%;
            background:linear-gradient(145deg,#00c8ff,#0033aa);
            border:none; color:#fff; font-size:26px; cursor:pointer;
            z-index:999998; display:none; align-items:center; justify-content:center;
-           box-shadow:0 0 18px rgba(0,200,255,0.6),0 6px 14px black;
-           transition:0.2s; font-family: monospace;
+           box-shadow:0 0 18px rgba(0,200,255,0.6);
        }
        #sw-toggle.show { display:flex; }
        #sw-toggle:active { transform:scale(0.93); }
@@ -65,27 +56,24 @@
            display:flex; justify-content:space-between; align-items:center;
            cursor:grab;
        }
-       .sw-header:active { cursor:grabbing; }
-       .sw-brand { font-family:'Orbitron',monospace; font-size:12px; font-weight:900; letter-spacing:2px; color:#0cf; text-shadow:0 0 6px cyan; }
-       .sw-brand span { color:#bbb; font-weight:500; letter-spacing:0; }
+       .sw-brand { font-family:'Orbitron',monospace; font-size:12px; font-weight:900; letter-spacing:2px; color:#0cf; }
+       .sw-brand span { color:#bbb; }
        .sw-controls { display:flex; gap:8px; }
        .sw-ctrl {
            width:24px; height:24px; border-radius:30px; border:none;
            background:rgba(255,255,255,0.08); color:#ccc; font-size:14px;
-           display:flex; align-items:center; justify-content:center;
-           cursor:pointer; transition:0.1s; font-weight:bold;
+           cursor:pointer; display:flex; align-items:center; justify-content:center;
        }
-       .sw-ctrl:hover { background:#00c8ff40; color:white; }
+       .sw-ctrl:hover { background:#00c8ff40; }
 
        .sw-body { padding:14px; }
 
        .session-row {
-           display:flex; justify-content:space-between;
-           background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:12px;
-           margin-bottom:12px;
+           background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:12px;
+           margin-bottom:12px; display:flex; justify-content:space-between;
        }
-       .session-label { font-size:9px; color:#aaa; letter-spacing:1px; text-transform:uppercase; }
-       .session-num { font-family:'Orbitron',monospace; font-size:13px; color:#0cf; font-weight:700; }
+       .session-label { font-size:9px; color:#aaa; text-transform:uppercase; }
+       .session-num { font-family:'Orbitron'; font-size:14px; color:#0cf; font-weight:700; }
 
        .last-result {
            background:rgba(20,20,35,0.7); border:1px solid rgba(0,255,200,0.2);
@@ -93,32 +81,32 @@
            display:flex; align-items:center; justify-content:space-between;
            flex-wrap:wrap; gap:5px;
        }
-       .last-result-label { font-size:8px; color:#9aa; text-transform:uppercase; }
+       .last-result-label { font-size:8px; color:#9aa; }
        .last-dice { display:flex; gap:5px; }
        .dice-val {
-           width:28px; height:28px; background:rgba(0,0,0,0.6); border:1px solid #0cf33a55;
+           width:30px; height:30px; background:#0a0a14; border:1px solid #0cf55a;
            border-radius:8px; display:flex; align-items:center; justify-content:center;
-           font-size:14px; font-weight:800; color:#fff; font-family:monospace;
+           font-size:14px; font-weight:800; color:#fff;
        }
-       .last-total { font-family:'Orbitron',monospace; font-size:18px; font-weight:800; color:#fff; margin:0 4px; }
-       .last-tag { font-size:12px; font-weight:800; padding:4px 12px; border-radius:40px; }
+       .last-total { font-family:'Orbitron'; font-size:18px; font-weight:800; color:#fff; }
+       .last-tag { font-size:11px; font-weight:800; padding:4px 12px; border-radius:40px; }
        .tag-tai { background:#2ecc7122; color:#2ecc71; border:1px solid #2ecc71; }
        .tag-xiu { background:#e74c3c22; color:#e74c3c; border:1px solid #e74c3c; }
 
        .log-box {
-           background:#00000070; border-left:3px solid #f0c420; border-radius:8px;
-           padding:6px 10px; margin-bottom:12px; font-size:9px;
-           color:#ffdd88; font-family: monospace; max-height:40px; overflow:hidden;
+           background:#00000080; border-left:3px solid #f0c420; border-radius:8px;
+           padding:8px 10px; margin-bottom:12px; font-size:9px;
+           color:#ffdd88; font-family: monospace; max-height:45px; overflow-y:auto;
        }
 
        .pred-box {
            background:linear-gradient(135deg, #0a0a1a, #01000c);
            border:1px solid rgba(0,200,255,0.5); border-radius:18px;
            padding:14px 8px; text-align:center; margin-bottom:14px;
-           position:relative; box-shadow:0 0 12px rgba(0,200,255,0.2);
+           position:relative;
        }
        .pred-label { font-size:9px; color:#0cf9; letter-spacing:2px; margin-bottom:6px; }
-       .pred-value { font-family:'Orbitron',monospace; font-size:34px; font-weight:900; letter-spacing:3px; line-height:1.2; margin-bottom:6px; }
+       .pred-value { font-family:'Orbitron'; font-size:34px; font-weight:900; letter-spacing:3px; }
        .pred-tai { color:#2ecc71; text-shadow:0 0 12px #2ecc71; }
        .pred-xiu { color:#e74c3c; text-shadow:0 0 12px #e74c3c; }
        .pred-waiting { color:#aaa; font-size:26px; }
@@ -131,24 +119,21 @@
        .conf-fill { height:100%; width:0%; background:linear-gradient(90deg,#2ecc71,#0cf,#e74c3c); transition:width 0.5s; }
 
        .stats-grid {
-           display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;
-           margin-bottom:12px;
+           display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;
        }
        .stat-card {
            background:#0f0f1a; border:1px solid #2f2f4a; border-radius:12px;
            padding:6px 0; text-align:center;
        }
-       .stat-icon { font-size:14px; }
        .stat-label { font-size:8px; color:#aaa; }
        .stat-val { font-family:'Orbitron'; font-size:15px; font-weight:700; color:#fff; }
 
        .history-strip {
-           display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;
-           justify-content:center;
+           display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap; justify-content:center;
        }
        .hist-dot {
-           width:24px; height:24px; border-radius:6px; font-size:11px;
-           font-weight:800; display:flex; align-items:center; justify-content:center;
+           width:26px; height:26px; border-radius:6px; font-size:11px; font-weight:800;
+           display:flex; align-items:center; justify-content:center;
        }
        .hist-t { background:#1f4a2a; color:#2ecc71; border:1px solid #2ecc71; }
        .hist-x { background:#5a2620; color:#e74c3c; border:1px solid #e74c3c; }
@@ -156,7 +141,7 @@
 
        .sw-footer {
            display:flex; justify-content:space-between; border-top:1px solid #ffffff20;
-           padding-top:8px; margin-top:4px;
+           padding-top:8px;
        }
        .sw-time { font-size:9px; font-family:monospace; color:#0cf9; }
        .sw-version { font-size:8px; color:#fff6; }
@@ -179,14 +164,14 @@
 
 <div class="status-bar">
    <div class="live-dot"></div>
-   <span id="status-text">Đang đồng bộ phiên...</span>
+   <span id="status-text">Đang đồng bộ...</span>
 </div>
 
 <button id="sw-toggle">🤖</button>
 
 <div id="sw-panel">
    <div class="sw-header" id="sw-drag-handle">
-       <div class="sw-brand">SUNWIN <span>· AI NEXUS</span></div>
+       <div class="sw-brand">SUNWIN · <span>AI NEXUS</span></div>
        <div class="sw-controls">
            <button class="sw-ctrl" id="sw-min">−</button>
            <button class="sw-ctrl" id="sw-close">✕</button>
@@ -210,7 +195,7 @@
            <span class="last-tag" id="sw-last-tag">---</span>
        </div>
 
-       <div class="log-box" id="sw-log">⚡ Đang khởi tạo collector...</div>
+       <div class="log-box" id="sw-log">⚡ Đang kết nối collector...</div>
 
        <div class="pred-box" id="pred-box">
            <div class="pred-label">🧠 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
@@ -227,9 +212,9 @@
        </div>
 
        <div class="stats-grid">
-           <div class="stat-card"><div class="stat-icon">🟢 TÀI</div><div class="stat-val" id="sw-tai-count">--</div></div>
-           <div class="stat-card"><div class="stat-icon">🔴 XỈU</div><div class="stat-val" id="sw-xiu-count">--</div></div>
-           <div class="stat-card"><div class="stat-icon">⚡ CHUỖI</div><div class="stat-val" id="sw-streak">--</div></div>
+           <div class="stat-card"><div class="stat-label">🟢 TÀI</div><div class="stat-val" id="sw-tai-count">--</div></div>
+           <div class="stat-card"><div class="stat-label">🔴 XỈU</div><div class="stat-val" id="sw-xiu-count">--</div></div>
+           <div class="stat-card"><div class="stat-label">⚡ CHUỖI</div><div class="stat-val" id="sw-streak">--</div></div>
        </div>
 
        <div class="history-strip" id="sw-history"></div>
@@ -243,29 +228,26 @@
 
 <script>
 (function() {
-    // ========== 配置 ==========
-    const API_BASE   = "https://sunwin-tool.onrender.com";
+    const API_BASE = "https://sunwin-tool.onrender.com";
     const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
-
-    // 关键: 存储已发送的最高phiên (保证只发送新phiên，不会重复)
-    let lastSentSession = Number(localStorage.getItem("sw_last_session") || 0);
-    // 本地存储历史显示 (最多30条)
-    let localHistory    = JSON.parse(localStorage.getItem("sw_history") || "[]");
     
-    // 辅助DOM
-    const statusDiv = document.getElementById("status-text");
-    const logDiv    = document.getElementById("sw-log");
+    // Lưu phiên đã gửi (dùng localStorage thay vì GM_setValue)
+    let lastSentSession = Number(localStorage.getItem("collector_last_session") || 0);
+    let localHistory = JSON.parse(localStorage.getItem("sw_history") || "[]");
+    
     function log(msg) {
-        if(logDiv) logDiv.textContent = msg;
-        console.log("[AI-COLLECTOR]", msg);
+        const el = document.getElementById("sw-log");
+        if(el) el.innerHTML = msg;
+        console.log("[COLLECTOR]", msg);
     }
+    
     function setStatus(msg, isOk = true) {
-        if(statusDiv) statusDiv.textContent = msg;
+        const statusEl = document.getElementById("status-text");
+        if(statusEl) statusEl.textContent = msg;
         const dot = document.querySelector(".live-dot");
         if(dot) dot.style.background = isOk ? "#00ff88" : "#f44";
     }
-
-    // 标准化结果 "Tài" / "Xỉu"
+    
     function normalizeResult(raw) {
         if(!raw) return null;
         const s = String(raw).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -273,14 +255,13 @@
         if(s.includes("xiu") || s.includes("xu") || s === "xỉu") return "Xỉu";
         return null;
     }
-
-    // 渲染历史条 (最近10个)
+    
     function renderHistoryStrip() {
         const container = document.getElementById("sw-history");
         if(!container) return;
         container.innerHTML = "";
-        const recent = localHistory.slice(-10);
-        while(recent.length < 10) recent.unshift(null);
+        const recent = localHistory.slice(-12);
+        while(recent.length < 12) recent.unshift(null);
         recent.forEach(item => {
             const div = document.createElement("div");
             if(!item) {
@@ -296,9 +277,8 @@
             container.appendChild(div);
         });
     }
-
-    // 更新界面上的最后一次结果 (UI)
-    function updateLastResultUI(session, diceArr, total, result) {
+    
+    function updateUI(session, diceArr, total, result) {
         const sessionSpan = document.getElementById("sw-session");
         if(sessionSpan) sessionSpan.textContent = `#${session}`;
         const diceSpans = document.querySelectorAll("#sw-dice .dice-val");
@@ -308,7 +288,7 @@
         const totalSpan = document.getElementById("sw-total");
         if(totalSpan) totalSpan.textContent = total ?? "--";
         const tagSpan = document.getElementById("sw-last-tag");
-        if(tagSpan) {
+        if(tagSpan && result) {
             if(result === "Tài") {
                 tagSpan.textContent = "TÀI";
                 tagSpan.className = "last-tag tag-tai";
@@ -318,19 +298,17 @@
             }
         }
     }
-
-    // 保存历史 & 刷新strip
-    function addToLocalHistory(result, dice, total) {
+    
+    function addToHistory(result, dice, total) {
         localHistory.push({ r: result, dice: dice, total: total, ts: Date.now() });
-        if(localHistory.length > 30) localHistory.shift();
+        if(localHistory.length > 40) localHistory.shift();
         localStorage.setItem("sw_history", JSON.stringify(localHistory));
         renderHistoryStrip();
     }
-
-    // 发送给后端API (核心: 传递正确的 phiên, dice, total, result)
-    async function sendResultToAI(session, dice, total, result) {
+    
+    async function sendResult(session, dice, total, result) {
         try {
-            log(`📡 Gửi phiên #${session} → ${result} | Tổng=${total} | xúc xắc: ${dice.join(",")}`);
+            log(`📡 Gửi phiên #${session} → ${result} (${dice.join(",")} tổng=${total})`);
             const response = await fetch(`${API_BASE}/api/result`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -339,214 +317,157 @@
                     dice: dice,
                     total: total,
                     result: result,
-                    timestamp: Date.now()
+                    ts: Date.now()
                 })
             });
-            const respData = await response.json();
-            log(`✅ Server phản hồi: ${JSON.stringify(respData).substring(0, 100)}`);
-            // 更新本地最后已发送的phiên
+            const data = await response.json();
+            log(`✅ Server: ${data.message || "OK"}`);
             if(session > lastSentSession) {
                 lastSentSession = session;
-                localStorage.setItem("sw_last_session", lastSentSession);
+                localStorage.setItem("collector_last_session", session);
             }
-            setStatus(`✅ Phiên #${session} đã ghi nhận (${result})`);
+            setStatus(`✅ Phiên #${session} (${result})`);
             return true;
         } catch(err) {
-            log(`❌ Gửi thất bại: ${err.message}`);
-            setStatus(`⚠️ Lỗi gửi phiên #${session}`, false);
+            log(`❌ Lỗi gửi: ${err.message}`);
+            setStatus(`⚠️ Lỗi gửi #${session}`, false);
             return false;
         }
     }
-
-    // 核心: 从原始API拉取最新 phiên & kết quả，保证提取"đúng mã phiên"
-    let lastCollectFail = false;
-    async function fetchAndProcess() {
-        try {
-            const resp = await fetch(`${SOURCE_API}?_=${Date.now()}`);
-            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const jsonData = await resp.json();
-            // 数据结构: { current: { Phien, Ket_qua, Xuc_xac_1, Xuc_xac_2, Xuc_xac_3, Tong } , ... }
-            const current = jsonData?.current;
-            if(!current) {
-                log("⚠️ API không có trường 'current'");
-                setStatus("⏳ Chờ cấu trúc dữ liệu...");
-                return;
-            }
-
-            // Lấy chính xác mã phiên (dạng số)
-            let sessionRaw = current.Phien;
-            let sessionNum = Number(sessionRaw);
-            if(isNaN(sessionNum)) {
-                // fallback:  thử chuỗi
-                if(typeof sessionRaw === "string" && sessionRaw.trim() !== "") sessionNum = parseInt(sessionRaw, 10);
-                if(isNaN(sessionNum)) {
-                    log(`⚠️ Không thể chuyển đổi phiên: ${sessionRaw}`);
-                    return;
-                }
-            }
-
-            // Lấy kết quả
-            const resultRaw = current.Ket_qua || "";
-            const resultNorm = normalizeResult(resultRaw);
-            
-            // Lấy 3 mặt xúc xắc (ưu tiên các trường rõ ràng)
-            let dice1 = Number(current.Xuc_xac_1 ?? current.xuc_xac_1 ?? 0);
-            let dice2 = Number(current.Xuc_xac_2 ?? current.xuc_xac_2 ?? 0);
-            let dice3 = Number(current.Xuc_xac_3 ?? current.xuc_xac_3 ?? 0);
-            if(isNaN(dice1)) dice1 = 0; if(isNaN(dice2)) dice2 = 0; if(isNaN(dice3)) dice3 = 0;
-            const diceArr = [dice1, dice2, dice3];
-            
-            let total = Number(current.Tong ?? current.tong ?? 0);
-            if(isNaN(total) && diceArr.every(v=>v>=1 && v<=6)) total = dice1+dice2+dice3;
-            if(isNaN(total)) total = 0;
-
-            // cập nhật UI luôn cho phiên hiện tại (kể cả chưa có kết quả)
-            if(resultNorm) {
-                updateLastResultUI(sessionNum, diceArr, total, resultNorm);
-            } else {
-                // chưa có kết quả nhưng vẫn hiển thị phiên
-                const sessionSpan = document.getElementById("sw-session");
-                if(sessionSpan) sessionSpan.textContent = `#${sessionNum}`;
-                setStatus(`🔄 Phiên #${sessionNum} chưa đổ kết quả...`, true);
-                log(`Phiên #${sessionNum} hiện tại: Ket_qua="${resultRaw}" - chưa xác định`);
-                return;
-            }
-
-            // QUAN TRỌNG: Chỉ gửi lên server khi phiên mới hơn lastSentSession
-            // đồng thời đảm bảo kết quả đã có
-            if(resultNorm && sessionNum > lastSentSession) {
-                // trước khi gửi, thêm vào local history để hiển thị vết
-                addToLocalHistory(resultNorm, diceArr, total);
-                await sendResultToAI(sessionNum, diceArr, total, resultNorm);
-                // sau khi gửi thành công -> cập nhật lại lastSentSession (ở trong hàm đã set)
-                // nhưng đề phòng nếu send lỗi thì không update localStorage, lần sau sẽ gửi lại
-                // mà chúng ta update lastSent chỉ khi gửi thành công trong sendResultToAI
-            } 
-            else if(resultNorm && sessionNum === lastSentSession) {
-                // đã gửi rồi
-                setStatus(`✔️ Phiên #${sessionNum} đã được xử lý. Chờ phiên mới.`, true);
-                log(`Trùng phiên #${sessionNum}, bỏ qua gửi.`);
-            }
-            else if(resultNorm && sessionNum < lastSentSession) {
-                // trường hợp reset localstorage hoặc server reset phiên
-                log(`⚠️ Phát hiện phiên giảm (${sessionNum} < ${lastSentSession}), đồng bộ lại lastSent`);
-                lastSentSession = sessionNum - 1;
-                localStorage.setItem("sw_last_session", lastSentSession);
-                // gửi lại phiên hiện tại luôn
-                addToLocalHistory(resultNorm, diceArr, total);
-                await sendResultToAI(sessionNum, diceArr, total, resultNorm);
-            }
-
-            lastCollectFail = false;
-        } catch(err) {
-            console.error(err);
-            log(`❌ Lỗi collector: ${err.message}`);
-            setStatus("⚠️ Mất kết nối nguồn", false);
-            lastCollectFail = true;
-        }
-    }
-
-    // 定时拉取预测 + 渲染置信度
+    
     async function fetchPrediction() {
         try {
-            const predResp = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
-            if(!predResp.ok) return;
-            const predData = await predResp.json();
-            if(!predData) return;
+            const resp = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
+            if(!resp.ok) return;
+            const pred = await resp.json();
             const predEl = document.getElementById("sw-prediction");
             const confFill = document.getElementById("sw-conf-fill");
             const confPct = document.getElementById("sw-conf-pct");
-            const taiCountSpan = document.getElementById("sw-tai-count");
-            const xiuCountSpan = document.getElementById("sw-xiu-count");
-            const streakSpan = document.getElementById("sw-streak");
+            const taiCount = document.getElementById("sw-tai-count");
+            const xiuCount = document.getElementById("sw-xiu-count");
+            const streakEl = document.getElementById("sw-streak");
             
-            if(predData.prediction) {
-                const isTai = String(predData.prediction).toUpperCase().includes("TÀI") || String(predData.prediction).toUpperCase() === "TÀI";
+            if(pred.prediction) {
+                const isTai = String(pred.prediction).toUpperCase().includes("TÀI");
                 predEl.textContent = isTai ? "TÀI" : "XỈU";
                 predEl.className = `pred-value ${isTai ? "pred-tai" : "pred-xiu"}`;
-                const conf = predData.confidence ?? 0;
+                const conf = pred.confidence ?? 0;
                 if(confFill) confFill.style.width = `${conf}%`;
                 if(confPct) confPct.textContent = `${conf}%`;
-            } else {
-                predEl.textContent = "---";
-                predEl.className = "pred-value pred-waiting";
             }
-            if(predData.stats) {
-                if(taiCountSpan) taiCountSpan.textContent = predData.stats.tai ?? "--";
-                if(xiuCountSpan) xiuCountSpan.textContent = predData.stats.xiu ?? "--";
-                if(streakSpan) streakSpan.textContent = predData.stats.streak ?? "--";
+            if(pred.stats) {
+                if(taiCount) taiCount.textContent = pred.stats.tai ?? "--";
+                if(xiuCount) xiuCount.textContent = pred.stats.xiu ?? "--";
+                if(streakEl) streakEl.textContent = pred.stats.streak ?? "--";
             }
-            // 辅助效果: 扫描线
-            const predBox = document.getElementById("pred-box");
-            if(predBox && !predBox.querySelector(".scan-line")) {
+            
+            // Hiệu ứng scan
+            const box = document.getElementById("pred-box");
+            if(box && !box.querySelector(".scan-line")) {
                 const line = document.createElement("div");
                 line.className = "scan-line";
-                predBox.appendChild(line);
-                setTimeout(() => line.remove(), 800);
+                box.appendChild(line);
+                setTimeout(() => line.remove(), 700);
             }
-        } catch(e) { /* im lặng */ }
+        } catch(e) {}
     }
-
-    // ============ DRAG & DROP (kèm right auto) ============
-    const panel = document.getElementById("sw-panel");
-    const dragHandle = document.getElementById("sw-drag-handle");
-    let isDragging = false, dragStartX=0, dragStartY=0, panelLeft=0, panelTop=0;
     
-    function onDragStart(e) {
+    async function collect() {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const resp = await fetch(`${SOURCE_API}?_=${Date.now()}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            
+            if(!data?.current) {
+                log("⚠️ Không có data.current");
+                return;
+            }
+            
+            const c = data.current;
+            const session = Number(c.Phien);
+            if(isNaN(session)) return;
+            
+            const result = normalizeResult(c.Ket_qua);
+            const dice = [
+                Number(c.Xuc_xac_1 ?? c.xuc_xac_1 ?? 0),
+                Number(c.Xuc_xac_2 ?? c.xuc_xac_2 ?? 0),
+                Number(c.Xuc_xac_3 ?? c.xuc_xac_3 ?? 0)
+            ];
+            let total = Number(c.Tong ?? c.tong ?? 0);
+            if(isNaN(total) && dice.every(v=>v>=1 && v<=6)) total = dice[0]+dice[1]+dice[2];
+            if(isNaN(total)) total = 0;
+            
+            // Cập nhật UI luôn
+            updateUI(session, dice, total, result);
+            
+            if(result && session > lastSentSession) {
+                addToHistory(result, dice, total);
+                await sendResult(session, dice, total, result);
+            } else if(result && session === lastSentSession) {
+                setStatus(`✔️ Phiên #${session} đã xử lý`);
+                log(`Phiên #${session} đã gửi trước đó`);
+            } else if(result && session < lastSentSession) {
+                // Reset nếu phiên bị lùi
+                log(`⚠️ Reset lastSent từ ${lastSentSession} → ${session-1}`);
+                lastSentSession = session - 1;
+                localStorage.setItem("collector_last_session", lastSentSession);
+                addToHistory(result, dice, total);
+                await sendResult(session, dice, total, result);
+            } else if(!result) {
+                setStatus(`🔄 Phiên #${session} chờ kết quả...`);
+            }
+        } catch(err) {
+            log(`❌ Fetch lỗi: ${err.message}`);
+            setStatus("⚠️ Mất kết nối API", false);
+        }
+    }
+    
+    // Drag & Drop
+    const panel = document.getElementById("sw-panel");
+    const handle = document.getElementById("sw-drag-handle");
+    let dragging = false, startX, startY, startL, startT;
+    
+    handle.addEventListener("mousedown", (e) => {
         if(e.target.closest(".sw-controls")) return;
-        e.preventDefault();
-        isDragging = true;
+        dragging = true;
         const rect = panel.getBoundingClientRect();
-        panelLeft = rect.left;
-        panelTop = rect.top;
-        const clientX = e.clientX ?? (e.touches?.[0]?.clientX);
-        const clientY = e.clientY ?? (e.touches?.[0]?.clientY);
-        dragStartX = clientX - panelLeft;
-        dragStartY = clientY - panelTop;
+        startL = rect.left;
+        startT = rect.top;
+        startX = e.clientX - startL;
+        startY = e.clientY - startT;
         panel.style.right = "auto";
-        panel.style.bottom = "auto";
-        panel.style.left = panelLeft + "px";
-        panel.style.top = panelTop + "px";
-    }
-    function onDragMove(e) {
-        if(!isDragging) return;
-        const clientX = e.clientX ?? (e.touches?.[0]?.clientX);
-        const clientY = e.clientY ?? (e.touches?.[0]?.clientY);
-        let newLeft = clientX - dragStartX;
-        let newTop = clientY - dragStartY;
-        newLeft = Math.min(window.innerWidth - panel.offsetWidth - 8, Math.max(8, newLeft));
-        newTop = Math.min(window.innerHeight - panel.offsetHeight - 8, Math.max(8, newTop));
-        panel.style.left = newLeft + "px";
-        panel.style.top = newTop + "px";
-        panel.style.right = "auto";
-        panel.style.bottom = "auto";
-    }
-    function onDragEnd() { isDragging = false; }
-    dragHandle.addEventListener("mousedown", onDragStart);
-    window.addEventListener("mousemove", onDragMove);
-    window.addEventListener("mouseup", onDragEnd);
-    dragHandle.addEventListener("touchstart", onDragStart, {passive:false});
-    window.addEventListener("touchmove", onDragMove, {passive:false});
-    window.addEventListener("touchend", onDragEnd);
-
-    // ============ 面板控制 ============
-    const toggleBtn = document.getElementById("sw-toggle");
-    const minBtn = document.getElementById("sw-min");
-    const closeBtn = document.getElementById("sw-close");
-    minBtn?.addEventListener("click", () => panel.classList.toggle("mini"));
-    closeBtn?.addEventListener("click", () => {
-        panel.classList.add("hidden");
-        if(toggleBtn) toggleBtn.classList.add("show");
+        panel.style.left = startL + "px";
+        panel.style.top = startT + "px";
+        e.preventDefault();
     });
-    toggleBtn?.addEventListener("click", () => {
+    window.addEventListener("mousemove", (e) => {
+        if(!dragging) return;
+        let left = e.clientX - startX;
+        let top = e.clientY - startY;
+        left = Math.min(window.innerWidth - panel.offsetWidth - 8, Math.max(8, left));
+        top = Math.min(window.innerHeight - panel.offsetHeight - 8, Math.max(8, top));
+        panel.style.left = left + "px";
+        panel.style.top = top + "px";
+    });
+    window.addEventListener("mouseup", () => { dragging = false; });
+    
+    // Controls
+    const toggleBtn = document.getElementById("sw-toggle");
+    document.getElementById("sw-min").onclick = () => panel.classList.toggle("mini");
+    document.getElementById("sw-close").onclick = () => {
+        panel.classList.add("hidden");
+        toggleBtn.classList.add("show");
+    };
+    toggleBtn.onclick = () => {
         panel.classList.remove("hidden");
         toggleBtn.classList.remove("show");
-    });
-
-    // 初始渲染历史
-    renderHistoryStrip();
+    };
     
-    // 同步实时时间显示
+    // Clock
     function updateClock() {
         const timeSpan = document.getElementById("sw-time");
         if(timeSpan) timeSpan.textContent = new Date().toLocaleTimeString("vi-VN");
@@ -554,20 +475,16 @@
     setInterval(updateClock, 1000);
     updateClock();
     
-    // 启动核心：采集结果（每2.5秒一次保证实时性）&& 预测每4秒刷新
-    fetchAndProcess();
+    // Khởi động
+    renderHistoryStrip();
+    collect();
     fetchPrediction();
-    setInterval(() => fetchAndProcess(), 2500);
-    setInterval(() => fetchPrediction(), 4200);
+    setInterval(collect, 2800);
+    setInterval(fetchPrediction, 4500);
     
-    // 额外同步确保第一次加载完成后主动刷新状态
-    setTimeout(() => {
-        if(localHistory.length) renderHistoryStrip();
-        log("🚀 AI引擎已激活 | 自动捕获 phiên chính xác 100%");
-        setStatus("✅ Sẵn sàng · AI theo dõi phiên");
-    }, 800);
+    log("🚀 Collector AI đã khởi động | API: " + API_BASE);
+    setStatus("✅ Đã sẵn sàng");
 })();
 </script>
 </body>
 </html>
-```
