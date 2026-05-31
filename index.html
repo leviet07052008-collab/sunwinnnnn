@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SunWin AI - Tool dự đoán Tài Xỉu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #1a163f);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            padding: 16px;
+        }
+        .container {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 340px;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #fff;
+        }
+        .header h1 span {
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .status {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #2ecc71;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #2ecc71;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .current-box {
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .session-num {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .dice {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .dice span {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            text-align: center;
+        }
+        .result-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .result-tai { background: #2ecc71; color: #000; }
+        .result-xiu { background: #e74c3c; color: #fff; }
+        
+        .predict-box {
+            background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 16px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .predict-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+        .predict-value {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+        .predict-tai { color: #2ecc71; text-shadow: 0 0 10px rgba(46,204,113,0.5); }
+        .predict-xiu { color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.5); }
+        
+        .conf-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .conf-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #e74c3c);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .conf-text {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .models {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .model {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+        }
+        .model-name {
+            font-size: 9px;
+            color: rgba(255,255,255,0.5);
+        }
+        .model-pred {
+            font-size: 13px;
+            font-weight: 700;
+            margin: 4px 0;
+        }
+        .model-tai { color: #2ecc71; }
+        .model-xiu { color: #e74c3c; }
+        
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+        }
+        .stat {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.5);
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 4px;
+        }
+        
+        .footer {
+            font-size: 9px;
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .watermark {
+            font-size: 8px;
+            text-align: center;
+            color: rgba(255,255,255,0.15);
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 <span>SUNWIN AI</span></h1>
+        </div>
+        
+        <div class="status">
+            <div class="dot"></div>
+            <span id="status-text">Đang kết nối...</span>
+        </div>
+        
+        <div class="current-box">
+            <div class="label">📌 PHIÊN HIỆN TẠI</div>
+            <div class="session-num" id="session-num">#------</div>
+            <div class="dice" id="dice">
+                <span>0</span><span>0</span><span>0</span>
+            </div>
+            <div id="result-badge"></div>
+        </div>
+        
+        <div class="predict-box">
+            <div class="predict-label">🤖 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
+            <div class="predict-value" id="prediction">---</div>
+            <div class="conf-bar">
+                <div class="conf-fill" id="conf-fill" style="width:0%"></div>
+            </div>
+            <div class="conf-text" id="conf-text">Đang tải...</div>
+        </div>
+        
+        <div class="models" id="models"></div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">📊 Tài/Xỉu (10P)</div>
+                <div class="stat-value" id="tai10">-/0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">🔥 Chuỗi hiện tại</div>
+                <div class="stat-value" id="streak">0</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <span id="time">--:--:--</span>
+        </div>
+        <div class="watermark">
+            SunWin AI Bot
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            const API_BASE = "https://sunwin-tool.onrender.com";
+            const SOURCE_API = "https://api-sunwin-urrv.onrender.com/api/history";
+            
+            let lastSentSession = localStorage.getItem("collector_last_session") || 0;
+            
+            // Hàm normalize
+            function normalizeResult(v) {
+                const t = String(v || "").toLowerCase();
+                if (t.includes("tài") || t.includes("tai")) return "Tài";
+                if (t.includes("xỉu") || t.includes("xiu")) return "Xỉu";
+                return null;
+            }
+            
+            // Lấy dữ liệu từ API SunWin
+            async function fetchSource() {
+                const response = await fetch(`${SOURCE_API}?_=${Date.now()}`);
+                return response.json();
+            }
+            
+            // Gửi kết quả lên server
+            async function sendResult(session, dice, total, result) {
+                const payload = { session, dice, total, result, ts: Date.now() };
+                const response = await fetch(`${API_BASE}/api/result`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                return response.json();
+            }
+            
+            // Lấy dự đoán từ server
+            async function fetchPrediction() {
+                const response = await fetch(`${API_BASE}/api/predict?_=${Date.now()}`);
+                return response.json();
+            }
+            
+            // Cập nhật giao diện
+            function updateUI(current, prediction) {
+                // Cập nhật phiên hiện tại
+                if (current) {
+                    document.getElementById("session-num").textContent = `#${current.session}`;
+                    const diceHtml = current.dice.map(d => `<span>${d}</span>`).join("");
+                    document.getElementById("dice").innerHTML = diceHtml;
+                    
+                    const resultBadge = document.getElementById("result-badge");
+                    if (current.result === "Tài") {
+                        resultBadge.innerHTML = '<div class="result-badge result-tai">🟢 TÀI</div>';
+                    } else if (current.result === "Xỉu") {
+                        resultBadge.innerHTML = '<div class="result-badge result-xiu">🔴 XỈU</div>';
+                    } else {
+                        resultBadge.innerHTML = '<div class="result-badge">---</div>';
+                    }
+                }
+                
+                // Cập nhật dự đoán
+                if (prediction) {
+                    const predText = prediction.prediction === "TÀI" ? "🟢 TÀI" : "🔴 XỈU";
+                    const predClass = prediction.prediction === "TÀI" ? "predict-tai" : "predict-xiu";
+                    document.getElementById("prediction").innerHTML = `<span class="${predClass}">${predText}</span>`;
+                    document.getElementById("conf-fill").style.width = `${prediction.confidence}%`;
+                    document.getElementById("conf-text").innerHTML = `Độ tin cậy: ${prediction.confidence}%`;
+                    
+                    // Các mô hình
+                    if (prediction.votes && prediction.votes.length) {
+                        const modelsHtml = prediction.votes.slice(0, 3).map(v => `
+                            <div class="model">
+                                <div class="model-name">${v.label}</div>
+                                <div class="model-pred ${v.pred === "Tài" ? "model-tai" : "model-xiu"}">${v.pred}</div>
+                                <div class="model-name" style="font-size:7px">${v.conf}%</div>
+                            </div>
+                        `).join("");
+                        document.getElementById("models").innerHTML = modelsHtml;
+                    }
+                    
+                    // Thống kê
+                    if (prediction.stats) {
+                        document.getElementById("tai10").textContent = `${prediction.stats.tai || 0}/${prediction.stats.xiu || 0}`;
+                        document.getElementById("streak").textContent = prediction.stats.streak || 0;
+                    }
+                }
+                
+                document.getElementById("time").textContent = new Date().toLocaleTimeString("vi-VN");
+                document.getElementById("status-text").innerHTML = "Đang theo dõi...";
+            }
+            
+            // Collector: gửi kết quả lên server
+            async function collect() {
+                try {
+                    const data = await fetchSource();
+                    if (!data?.current) return;
+                    
+                    const c = data.current;
+                    const session = Number(c.Phien);
+                    const result = normalizeResult(c.Ket_qua);
+                    
+                    if (session > lastSentSession && result) {
+                        const dice = [Number(c.Xuc_xac_1), Number(c.Xuc_xac_2), Number(c.Xuc_xac_3)];
+                        const total = Number(c.Tong);
+                        const res = await sendResult(session, dice, total, result);
+                        if (res.ok) {
+                            lastSentSession = session;
+                            localStorage.setItem("collector_last_session", session);
+                            console.log(`✅ Đã gửi phiên #${session} → ${result}`);
+                        }
+                    }
+                } catch(e) {
+                    console.error("Collector error:", e);
+                }
+            }
+            
+            // Cập nhật toàn bộ UI
+            async function refreshUI() {
+                try {
+                    const [data, prediction] = await Promise.all([
+                        fetchSource(),
+                        fetchPrediction().catch(() => null)
+                    ]);
+                    
+                    if (data?.current) {
+                        const current = {
+                            session: Number(data.current.Phien),
+                            dice: [Number(data.current.Xuc_xac_1), Number(data.current.Xuc_xac_2), Number(data.current.Xuc_xac_3)],
+                            total: Number(data.current.Tong),
+                            result: normalizeResult(data.current.Ket_qua)
+                        };
+                        updateUI(current, prediction);
+                    } else {
+                        updateUI(null, prediction);
+                    }
+                } catch(e) {
+                    console.error("Refresh error:", e);
+                    document.getElementById("status-text").innerHTML = "Lỗi kết nối";
+                }
+            }
+            
+            // Khởi động
+            collect();
+            refreshUI();
+            setInterval(collect, 5000);
+            setInterval(refreshUI, 5000);
+            
+            console.log(`[SunWin AI] Đã khởi động - Server: ${API_BASE}`);
+        })();
+    </script>
+</body>
+</html>
