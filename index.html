@@ -1,4 +1,3 @@
-<!-- Деобфусцированный HTML-файл -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -52,33 +51,31 @@
     </style>
 </head>
 <body>
-    <!-- Экран загрузки -->
     <div id="loading-screen">
         <div class="loader"></div>
     </div>
 
-    <!-- Основной iframe для загрузки игрового контента -->
     <iframe id="main-frame" name="game_frame" src="" style="display:none;"></iframe>
 
     <script>
-    // Деобфусцированный JavaScript код
     (function() {
         var BASE_URL = 'https://sunwin.qa';
         var GAME_ID = '777';
         var MODE = 'live';
-
-        // Формирование URL для загрузки игры
         var gameUrl = BASE_URL + '/api/game/load?game_id=' + GAME_ID + '&mode=' + MODE;
 
-        // Функция отправки данных отслеживания
         function sendTrackData(data) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', BASE_URL + '/api/track', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', BASE_URL + '/api/track', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
+            } catch(e) {
+                // Игнорировать ошибки CORS на GitHub Pages
+                console.log('Tracking blocked by CORS');
+            }
         }
 
-        // Работа с куки
         function setCookie(name, value, days) {
             var expires = '';
             if (days) {
@@ -101,12 +98,10 @@
             return null;
         }
 
-        // Генерация ID посетителя
         function generateVisitorId() {
             return 'v_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
         }
 
-        // Инициализация отслеживания
         function initTracking() {
             var visitorId = getCookie('visitor_id');
             if (!visitorId) {
@@ -129,7 +124,6 @@
             sendTrackData(deviceInfo);
         }
 
-        // Загрузка игры в iframe
         function loadGame() {
             var frame = document.getElementById('main-frame');
             var loading = document.getElementById('loading-screen');
@@ -139,13 +133,11 @@
                 frame.style.display = 'block';
             };
 
-            // Задержка для эффекта загрузки
             setTimeout(function() {
                 frame.src = gameUrl;
             }, 1500);
         }
 
-        // Отслеживание кликов
         function trackClicks() {
             document.addEventListener('click', function(event) {
                 var clickData = {
@@ -161,23 +153,23 @@
             });
         }
 
-        // Перенаправление на основной домен
         function redirectCheck() {
             var host = window.location.hostname;
-            if (host !== 'sunwin.qa' && host.indexOf('sunwin') === -1) {
+            if (host !== 'sunwin.qa' && host.indexOf('sunwin') === -1 && host.indexOf('github') === -1) {
                 window.location.href = BASE_URL + '/landing';
             }
         }
 
-        // Загрузка внешнего скрипта
         function loadExternalScript() {
             var script = document.createElement('script');
             script.src = BASE_URL + '/static/js/main.js?v=' + Date.now();
             script.async = true;
+            script.onerror = function() {
+                console.log('External script blocked');
+            };
             document.head.appendChild(script);
         }
 
-        // Запуск при загрузке страницы
         function onLoad() {
             initTracking();
             trackClicks();
@@ -191,7 +183,6 @@
         } else {
             onLoad();
         }
-
     })();
     </script>
 </body>
