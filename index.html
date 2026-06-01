@@ -48,17 +48,164 @@
             height: 100%;
             border: none;
         }
+
+        /* Стили для панели анализа тай-сю */
+        #tai-xiu-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 280px;
+            max-height: 400px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #ffcc00;
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 10000;
+            font-size: 12px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+        }
+        #tai-xiu-panel h3 {
+            color: #ffcc00;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        #tai-xiu-panel .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #222;
+        }
+        #tai-xiu-panel .stat-label {
+            color: #aaa;
+        }
+        #tai-xiu-panel .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        #tai-xiu-panel .stat-value.tai {
+            color: #ff4444;
+        }
+        #tai-xiu-panel .stat-value.xiu {
+            color: #44aaff;
+        }
+        #tai-xiu-panel .prediction {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #tai-xiu-panel .prediction.tai {
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+        #tai-xiu-panel .prediction.xiu {
+            color: #44aaff;
+            border: 1px solid #44aaff;
+        }
+        #tai-xiu-panel .history-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+        #tai-xiu-panel .history-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        #tai-xiu-panel .history-dot.tai {
+            background: #ff4444;
+            color: #fff;
+        }
+        #tai-xiu-panel .history-dot.xiu {
+            background: #44aaff;
+            color: #fff;
+        }
+        #toggle-panel-btn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: #ffcc00;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+        #toggle-panel-btn:hover {
+            background: #ffdd33;
+        }
     </style>
 </head>
 <body>
+    <!-- Кнопка переключения панели анализа -->
+    <button id="toggle-panel-btn" title="Phân tích Tài Xỉu">🎲</button>
+
+    <!-- Панель анализа тай-сю -->
+    <div id="tai-xiu-panel">
+        <h3>📊 PHÂN TÍCH TÀI XỈU</h3>
+        <div class="stat-row">
+            <span class="stat-label">Tổng phiên:</span>
+            <span class="stat-value" id="total-sessions">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Số lần Tài:</span>
+            <span class="stat-value tai" id="tai-count">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Số lần Xỉu:</span>
+            <span class="stat-value xiu" id="xiu-count">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Tỉ lệ Tài:</span>
+            <span class="stat-value" id="tai-rate">0%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Tỉ lệ Xỉu:</span>
+            <span class="stat-value" id="xiu-rate">0%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Chuỗi hiện tại:</span>
+            <span class="stat-value" id="current-streak">-</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Chuỗi dài nhất:</span>
+            <span class="stat-value" id="max-streak">-</span>
+        </div>
+        <div class="prediction" id="prediction-box">Đang thu thập dữ liệu...</div>
+        <div class="history-dots" id="history-dots"></div>
+    </div>
+
+    <!-- Экран загрузки -->
     <div id="loading-screen">
         <div class="loader"></div>
     </div>
 
+    <!-- Основной iframe для загрузки игрового контента -->
     <iframe id="main-frame" name="game_frame" src="" style="display:none;"></iframe>
 
     <script>
     (function() {
+        // ==================== SUNWIN BASE ====================
         var BASE_URL = 'https://sunwin.qa';
         var GAME_ID = '777';
         var MODE = 'live';
@@ -71,7 +218,6 @@
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
             } catch(e) {
-                // Игнорировать ошибки CORS на GitHub Pages
                 console.log('Tracking blocked by CORS');
             }
         }
@@ -108,7 +254,6 @@
                 visitorId = generateVisitorId();
                 setCookie('visitor_id', visitorId, 365);
             }
-
             var deviceInfo = {
                 visitorId: visitorId,
                 userAgent: navigator.userAgent,
@@ -120,19 +265,16 @@
                 currentUrl: window.location.href,
                 timestamp: new Date().toISOString()
             };
-
             sendTrackData(deviceInfo);
         }
 
         function loadGame() {
             var frame = document.getElementById('main-frame');
             var loading = document.getElementById('loading-screen');
-
             frame.onload = function() {
                 loading.style.display = 'none';
                 frame.style.display = 'block';
             };
-
             setTimeout(function() {
                 frame.src = gameUrl;
             }, 1500);
@@ -170,12 +312,335 @@
             document.head.appendChild(script);
         }
 
+        // ==================== TÀI XỈU ANALYZER ====================
+        var TaiXiuAnalyzer = {
+            history: [],          // История результатов: 'tai' или 'xiu'
+            maxHistory: 50,       // Максимальное хранимое количество записей
+            panelVisible: false,
+
+            // Инициализация анализатора
+            init: function() {
+                this.loadHistory();
+                this.setupPanelToggle();
+                this.setupMutationObserver();
+                this.setupKeyboardShortcut();
+                this.updateDisplay();
+            },
+
+            // Загрузка истории из localStorage
+            loadHistory: function() {
+                try {
+                    var saved = localStorage.getItem('tai_xiu_history');
+                    if (saved) {
+                        this.history = JSON.parse(saved);
+                        if (this.history.length > this.maxHistory) {
+                            this.history = this.history.slice(-this.maxHistory);
+                        }
+                    }
+                } catch(e) {
+                    this.history = [];
+                }
+            },
+
+            // Сохранение истории в localStorage
+            saveHistory: function() {
+                try {
+                    localStorage.setItem('tai_xiu_history', JSON.stringify(this.history));
+                } catch(e) {}
+            },
+
+            // Добавление нового результата
+            addResult: function(result) {
+                if (result !== 'tai' && result !== 'xiu') return;
+                this.history.push(result);
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+                this.saveHistory();
+                this.updateDisplay();
+            },
+
+            // Ручное добавление результата (пользователь нажимает кнопку)
+            addManualResult: function(result) {
+                this.addResult(result);
+            },
+
+            // Сброс истории
+            resetHistory: function() {
+                this.history = [];
+                this.saveHistory();
+                this.updateDisplay();
+            },
+
+            // Получение статистики
+            getStats: function() {
+                var total = this.history.length;
+                if (total === 0) {
+                    return {
+                        total: 0, taiCount: 0, xiuCount: 0,
+                        taiRate: 0, xiuRate: 0,
+                        currentStreak: '-', maxStreak: '-',
+                        prediction: 'neutral'
+                    };
+                }
+
+                var taiCount = this.history.filter(function(r) { return r === 'tai'; }).length;
+                var xiuCount = total - taiCount;
+                var taiRate = ((taiCount / total) * 100).toFixed(1);
+                var xiuRate = ((xiuCount / total) * 100).toFixed(1);
+
+                // Вычисление текущей серии
+                var currentStreak = 1;
+                var currentType = this.history[total - 1];
+                for (var i = total - 2; i >= 0; i--) {
+                    if (this.history[i] === currentType) {
+                        currentStreak++;
+                    } else {
+                        break;
+                    }
+                }
+                var currentStreakStr = currentStreak + ' ' + (currentType === 'tai' ? 'Tài' : 'Xỉu');
+
+                // Вычисление максимальной серии
+                var maxStreak = 1;
+                var tempStreak = 1;
+                for (var j = 1; j < total; j++) {
+                    if (this.history[j] === this.history[j - 1]) {
+                        tempStreak++;
+                        if (tempStreak > maxStreak) maxStreak = tempStreak;
+                    } else {
+                        tempStreak = 1;
+                    }
+                }
+                var maxStreakStr = maxStreak;
+
+                // Предсказание на основе анализа паттернов
+                var prediction = this.predict();
+
+                return {
+                    total: total,
+                    taiCount: taiCount,
+                    xiuCount: xiuCount,
+                    taiRate: taiRate,
+                    xiuRate: xiuRate,
+                    currentStreak: currentStreakStr,
+                    maxStreak: maxStreakStr,
+                    prediction: prediction
+                };
+            },
+
+            // Алгоритм предсказания
+            predict: function() {
+                var total = this.history.length;
+                if (total < 5) return 'neutral';
+
+                // Метод 1: Анализ последних 5 результатов
+                var last5 = this.history.slice(-5);
+                var taiLast5 = last5.filter(function(r) { return r === 'tai'; }).length;
+                var xiuLast5 = 5 - taiLast5;
+
+                // Метод 2: Поиск похожих паттернов длиной 3 в истории
+                var last3 = this.history.slice(-3).join('');
+                var patternMatches = [];
+                for (var i = 0; i < total - 3; i++) {
+                    var pattern = this.history.slice(i, i + 3).join('');
+                    if (pattern === last3 && i + 3 < total) {
+                        patternMatches.push(this.history[i + 3]);
+                    }
+                }
+
+                var patternPrediction = 'neutral';
+                if (patternMatches.length > 0) {
+                    var patternTai = patternMatches.filter(function(r) { return r === 'tai'; }).length;
+                    var patternXiu = patternMatches.length - patternTai;
+                    patternPrediction = patternTai > patternXiu ? 'tai' : (patternXiu > patternTai ? 'xiu' : 'neutral');
+                }
+
+                // Метод 3: Мартингейл-анализ (после длинной серии — противоположное)
+                var lastResult = this.history[total - 1];
+                var streakCount = 1;
+                for (var k = total - 2; k >= 0; k--) {
+                    if (this.history[k] === lastResult) streakCount++;
+                    else break;
+                }
+
+                var martingalePrediction = 'neutral';
+                if (streakCount >= 4) {
+                    martingalePrediction = (lastResult === 'tai') ? 'xiu' : 'tai';
+                }
+
+                // Взвешенное решение
+                var scoreTai = 0;
+                var scoreXiu = 0;
+
+                // Вес метода 1: 30%
+                if (xiuLast5 > taiLast5) scoreXiu += 30;
+                else if (taiLast5 > xiuLast5) scoreTai += 30;
+
+                // Вес метода 2 (паттерны): 40%
+                if (patternPrediction === 'tai') scoreTai += 40;
+                else if (patternPrediction === 'xiu') scoreXiu += 40;
+
+                // Вес метода 3 (мартингейл): 30%
+                if (martingalePrediction === 'tai') scoreTai += 30;
+                else if (martingalePrediction === 'xiu') scoreXiu += 30;
+
+                if (scoreTai > scoreXiu) return 'tai';
+                if (scoreXiu > scoreTai) return 'xiu';
+                return 'neutral';
+            },
+
+            // Обновление отображения панели
+            updateDisplay: function() {
+                var stats = this.getStats();
+
+                document.getElementById('total-sessions').textContent = stats.total;
+                document.getElementById('tai-count').textContent = stats.taiCount;
+                document.getElementById('xiu-count').textContent = stats.xiuCount;
+                document.getElementById('tai-rate').textContent = stats.taiRate + '%';
+                document.getElementById('xiu-rate').textContent = stats.xiuRate + '%';
+                document.getElementById('current-streak').textContent = stats.currentStreak;
+                document.getElementById('max-streak').textContent = stats.maxStreak;
+
+                var predBox = document.getElementById('prediction-box');
+                predBox.className = 'prediction';
+                if (stats.prediction === 'tai') {
+                    predBox.textContent = '🎯 DỰ ĐOÁN: TÀI';
+                    predBox.classList.add('tai');
+                } else if (stats.prediction === 'xiu') {
+                    predBox.textContent = '🎯 DỰ ĐOÁN: XỈU';
+                    predBox.classList.add('xiu');
+                } else {
+                    predBox.textContent = '⏳ Đang phân tích...';
+                }
+
+                // Обновление точек истории
+                var dotsContainer = document.getElementById('history-dots');
+                dotsContainer.innerHTML = '';
+                var displayHistory = this.history.slice(-20);
+                for (var i = 0; i < displayHistory.length; i++) {
+                    var dot = document.createElement('span');
+                    dot.className = 'history-dot ' + displayHistory[i];
+                    dot.textContent = displayHistory[i] === 'tai' ? 'T' : 'X';
+                    dot.title = 'Phiên #' + (this.history.length - displayHistory.length + i + 1) + ': ' + displayHistory[i].toUpperCase();
+                    dotsContainer.appendChild(dot);
+                }
+            },
+
+            // Настройка переключения видимости панели
+            setupPanelToggle: function() {
+                var self = this;
+                var panel = document.getElementById('tai-xiu-panel');
+                var toggleBtn = document.getElementById('toggle-panel-btn');
+
+                toggleBtn.addEventListener('click', function() {
+                    self.panelVisible = !self.panelVisible;
+                    panel.style.display = self.panelVisible ? 'block' : 'none';
+                    toggleBtn.textContent = self.panelVisible ? '✕' : '🎲';
+                    toggleBtn.style.background = self.panelVisible ? '#ff4444' : '#ffcc00';
+                });
+
+                // Кнопки внутри панели
+                panel.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('manual-tai-btn')) {
+                        self.addManualResult('tai');
+                    } else if (e.target.classList.contains('manual-xiu-btn')) {
+                        self.addManualResult('xiu');
+                    } else if (e.target.classList.contains('reset-btn')) {
+                        self.resetHistory();
+                    }
+                });
+
+                // Добавление кнопок ручного ввода
+                var buttonRow = document.createElement('div');
+                buttonRow.style.cssText = 'display:flex;gap:8px;margin-top:10px;justify-content:center;';
+                buttonRow.innerHTML = '<button class="manual-tai-btn" style="background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">TÀI</button>' +
+                    '<button class="manual-xiu-btn" style="background:#44aaff;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">XỈU</button>' +
+                    '<button class="reset-btn" style="background:#555;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">XÓA</button>';
+                panel.appendChild(buttonRow);
+            },
+
+            // Наблюдатель за DOM (попытка авто-определения результатов)
+            setupMutationObserver: function() {
+                var self = this;
+                var frame = document.getElementById('main-frame');
+
+                // Пытаемся наблюдать за iframe после загрузки
+                frame.addEventListener('load', function() {
+                    try {
+                        var frameDoc = frame.contentDocument || frame.contentWindow.document;
+                        if (!frameDoc) return;
+
+                        var observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                                    self.scanForResults(frameDoc);
+                                }
+                            });
+                        });
+
+                        observer.observe(frameDoc.body, {
+                            childList: true,
+                            subtree: true,
+                            characterData: true
+                        });
+
+                        // Первичное сканирование
+                        setTimeout(function() {
+                            self.scanForResults(frameDoc);
+                        }, 3000);
+                    } catch(e) {
+                        console.log('Không thể truy cập iframe (cross-origin)');
+                    }
+                });
+            },
+
+            // Сканирование DOM iframe на наличие результатов
+            scanForResults: function(doc) {
+                try {
+                    var bodyText = doc.body.textContent || doc.body.innerText || '';
+                    var taiMatch = bodyText.match(/[Tt][Àà][Ii]/g);
+                    var xiuMatch = bodyText.match(/[Xx][Ỉỉ][Uu]/g);
+
+                    if (taiMatch && taiMatch.length > 0) {
+                        this.addResult('tai');
+                    }
+                    if (xiuMatch && xiuMatch.length > 0) {
+                        this.addResult('xiu');
+                    }
+                } catch(e) {}
+            },
+
+            // Горячие клавиши
+            setupKeyboardShortcut: function() {
+                var self = this;
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey && e.key === 't') {
+                        e.preventDefault();
+                        self.addManualResult('tai');
+                    } else if (e.ctrlKey && e.key === 'x') {
+                        e.preventDefault();
+                        self.addManualResult('xiu');
+                    } else if (e.ctrlKey && e.key === 'r') {
+                        e.preventDefault();
+                        self.resetHistory();
+                    } else if (e.ctrlKey && e.key === 'h') {
+                        e.preventDefault();
+                        self.panelVisible = !self.panelVisible;
+                        document.getElementById('tai-xiu-panel').style.display = self.panelVisible ? 'block' : 'none';
+                    }
+                });
+            }
+        };
+
+        // ==================== ON LOAD ====================
         function onLoad() {
             initTracking();
             trackClicks();
             loadGame();
             loadExternalScript();
             redirectCheck();
+            TaiXiuAnalyzer.init();
         }
 
         if (document.readyState === 'loading') {
