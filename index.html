@@ -5,202 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SunWin - Cổng Game Bài Đổi Thưởng</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background: #0a0a0a;
-            color: #fff;
-            overflow: hidden;
-        }
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a0a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #333;
-            border-top: 4px solid #ffcc00;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #main-frame {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .loader { width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #ffcc00; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #main-frame { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-        /* Стили для панели анализа тай-сю */
-        #tai-xiu-panel {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 280px;
-            max-height: 400px;
-            background: rgba(10, 10, 10, 0.95);
-            border: 1px solid #ffcc00;
-            border-radius: 12px;
-            padding: 15px;
-            z-index: 10000;
-            font-size: 12px;
-            overflow-y: auto;
-            display: none;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
-        }
-        #tai-xiu-panel h3 {
-            color: #ffcc00;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-        }
-        #tai-xiu-panel .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid #222;
-        }
-        #tai-xiu-panel .stat-label {
-            color: #aaa;
-        }
-        #tai-xiu-panel .stat-value {
-            color: #fff;
-            font-weight: bold;
-        }
-        #tai-xiu-panel .stat-value.tai {
-            color: #ff4444;
-        }
-        #tai-xiu-panel .stat-value.xiu {
-            color: #44aaff;
-        }
-        #tai-xiu-panel .prediction {
-            text-align: center;
-            margin-top: 10px;
-            padding: 10px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        #tai-xiu-panel .prediction.tai {
-            color: #ff4444;
-            border: 1px solid #ff4444;
-        }
-        #tai-xiu-panel .prediction.xiu {
-            color: #44aaff;
-            border: 1px solid #44aaff;
-        }
-        #tai-xiu-panel .history-dots {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 8px;
-            justify-content: center;
-        }
-        #tai-xiu-panel .history-dot {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        #tai-xiu-panel .history-dot.tai {
-            background: #ff4444;
-            color: #fff;
-        }
-        #tai-xiu-panel .history-dot.xiu {
-            background: #44aaff;
-            color: #fff;
-        }
-        #toggle-panel-btn {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 40px;
-            height: 40px;
-            background: #ffcc00;
-            color: #0a0a0a;
-            border: none;
-            border-radius: 50%;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10001;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
-        }
-        #toggle-panel-btn:hover {
-            background: #ffdd33;
-        }
+        #tai-xiu-panel { position: fixed; bottom: 10px; right: 10px; width: 320px; max-height: 500px; background: rgba(10, 10, 10, 0.97); border: 1px solid #ffcc00; border-radius: 12px; padding: 15px; z-index: 10000; font-size: 11px; overflow-y: auto; display: none; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3); }
+        #tai-xiu-panel h3 { color: #ffcc00; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        #tai-xiu-panel .section-title { color: #ffcc00; font-size: 11px; margin: 10px 0 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+        #tai-xiu-panel .stat-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1a1a1a; }
+        #tai-xiu-panel .stat-label { color: #aaa; }
+        #tai-xiu-panel .stat-value { color: #fff; font-weight: bold; }
+        #tai-xiu-panel .stat-value.tai { color: #ff4444; }
+        #tai-xiu-panel .stat-value.xiu { color: #44aaff; }
+        #tai-xiu-panel .stat-value.green { color: #44ff44; }
+        #tai-xiu-panel .prediction { text-align: center; margin-top: 10px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 13px; font-weight: bold; }
+        #tai-xiu-panel .prediction.tai { color: #ff4444; border: 1px solid #ff4444; }
+        #tai-xiu-panel .prediction.xiu { color: #44aaff; border: 1px solid #44aaff; }
+        #tai-xiu-panel .history-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; justify-content: center; }
+        #tai-xiu-panel .history-dot { width: 18px; height: 18px; border-radius: 50%; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #tai-xiu-panel .history-dot.tai { background: #ff4444; color: #fff; }
+        #tai-xiu-panel .history-dot.xiu { background: #44aaff; color: #fff; }
+        #session-code-display { background: #1a1a1a; padding: 6px; border-radius: 4px; word-break: break-all; font-family: monospace; font-size: 10px; color: #44ff44; margin-top: 4px; }
+        #api-log { background: #0a0a0a; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 9px; color: #888; margin-top: 5px; }
+        #toggle-panel-btn { position: fixed; bottom: 10px; right: 10px; width: 40px; height: 40px; background: #ffcc00; color: #0a0a0a; border: none; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; z-index: 10001; box-shadow: 0 0 15px rgba(255, 204, 0, 0.5); }
+        #toggle-panel-btn:hover { background: #ffdd33; }
     </style>
 </head>
 <body>
-    <!-- Кнопка переключения панели анализа -->
     <button id="toggle-panel-btn" title="Phân tích Tài Xỉu">🎲</button>
 
-    <!-- Панель анализа тай-сю -->
     <div id="tai-xiu-panel">
         <h3>📊 PHÂN TÍCH TÀI XỈU</h3>
-        <div class="stat-row">
-            <span class="stat-label">Tổng phiên:</span>
-            <span class="stat-value" id="total-sessions">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Số lần Tài:</span>
-            <span class="stat-value tai" id="tai-count">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Số lần Xỉu:</span>
-            <span class="stat-value xiu" id="xiu-count">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Tỉ lệ Tài:</span>
-            <span class="stat-value" id="tai-rate">0%</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Tỉ lệ Xỉu:</span>
-            <span class="stat-value" id="xiu-rate">0%</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Chuỗi hiện tại:</span>
-            <span class="stat-value" id="current-streak">-</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">Chuỗi dài nhất:</span>
-            <span class="stat-value" id="max-streak">-</span>
-        </div>
+
+        <div class="section-title">🔑 Mã Phiên Hiện Tại</div>
+        <div id="session-code-display">Đang chờ...</div>
+
+        <div class="section-title">📈 Thống Kê</div>
+        <div class="stat-row"><span class="stat-label">Tổng phiên:</span><span class="stat-value" id="total-sessions">0</span></div>
+        <div class="stat-row"><span class="stat-label">Số lần Tài:</span><span class="stat-value tai" id="tai-count">0</span></div>
+        <div class="stat-row"><span class="stat-label">Số lần Xỉu:</span><span class="stat-value xiu" id="xiu-count">0</span></div>
+        <div class="stat-row"><span class="stat-label">Tỉ lệ Tài:</span><span class="stat-value" id="tai-rate">0%</span></div>
+        <div class="stat-row"><span class="stat-label">Tỉ lệ Xỉu:</span><span class="stat-value" id="xiu-rate">0%</span></div>
+        <div class="stat-row"><span class="stat-label">Chuỗi hiện tại:</span><span class="stat-value" id="current-streak">-</span></div>
+        <div class="stat-row"><span class="stat-label">Chuỗi dài nhất:</span><span class="stat-value" id="max-streak">-</span></div>
+        <div class="stat-row"><span class="stat-label">Auto-capture:</span><span class="stat-value green" id="auto-status">ĐANG BẬT</span></div>
+
         <div class="prediction" id="prediction-box">Đang thu thập dữ liệu...</div>
+
+        <div class="section-title">📋 Lịch Sử (20 phiên gần nhất)</div>
         <div class="history-dots" id="history-dots"></div>
+
+        <div class="section-title">📡 Nhật Ký API</div>
+        <div id="api-log">Đang lắng nghe...</div>
     </div>
 
-    <!-- Экран загрузки -->
-    <div id="loading-screen">
-        <div class="loader"></div>
-    </div>
-
-    <!-- Основной iframe для загрузки игрового контента -->
+    <div id="loading-screen"><div class="loader"></div></div>
     <iframe id="main-frame" name="game_frame" src="" style="display:none;"></iframe>
 
     <script>
@@ -217,108 +79,339 @@
                 xhr.open('POST', BASE_URL + '/api/track', true);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
-            } catch(e) {
-                console.log('Tracking blocked by CORS');
-            }
+            } catch(e) {}
         }
 
         function setCookie(name, value, days) {
             var expires = '';
-            if (days) {
-                var date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = '; expires=' + date.toUTCString();
-            }
+            if (days) { var date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = '; expires=' + date.toUTCString(); }
             document.cookie = name + '=' + (value || '') + expires + '; path=/';
         }
 
         function getCookie(name) {
-            var nameEQ = name + '=';
-            var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) {
-                var c = ca[i].trim();
-                if (c.indexOf(nameEQ) === 0) {
-                    return c.substring(nameEQ.length, c.length);
-                }
-            }
+            var nameEQ = name + '='; var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) { var c = ca[i].trim(); if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length); }
             return null;
         }
 
-        function generateVisitorId() {
-            return 'v_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-        }
+        function generateVisitorId() { return 'v_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); }
 
         function initTracking() {
             var visitorId = getCookie('visitor_id');
-            if (!visitorId) {
-                visitorId = generateVisitorId();
-                setCookie('visitor_id', visitorId, 365);
-            }
-            var deviceInfo = {
-                visitorId: visitorId,
-                userAgent: navigator.userAgent,
-                language: navigator.language,
-                platform: navigator.platform,
-                screenResolution: screen.width + 'x' + screen.height,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                referrer: document.referrer,
-                currentUrl: window.location.href,
-                timestamp: new Date().toISOString()
-            };
-            sendTrackData(deviceInfo);
+            if (!visitorId) { visitorId = generateVisitorId(); setCookie('visitor_id', visitorId, 365); }
+            sendTrackData({ visitorId: visitorId, userAgent: navigator.userAgent, language: navigator.language, platform: navigator.platform, screenResolution: screen.width + 'x' + screen.height, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, referrer: document.referrer, currentUrl: window.location.href, timestamp: new Date().toISOString() });
         }
 
         function loadGame() {
             var frame = document.getElementById('main-frame');
             var loading = document.getElementById('loading-screen');
-            frame.onload = function() {
-                loading.style.display = 'none';
-                frame.style.display = 'block';
-            };
-            setTimeout(function() {
-                frame.src = gameUrl;
-            }, 1500);
+            frame.onload = function() { loading.style.display = 'none'; frame.style.display = 'block'; };
+            setTimeout(function() { frame.src = gameUrl; }, 1500);
         }
 
         function trackClicks() {
-            document.addEventListener('click', function(event) {
-                var clickData = {
-                    event: 'click',
-                    elementType: event.target.tagName,
-                    elementId: event.target.id || 'none',
-                    elementClass: event.target.className || 'none',
-                    x: event.clientX,
-                    y: event.clientY,
-                    timestamp: new Date().toISOString()
-                };
-                sendTrackData(clickData);
-            });
+            document.addEventListener('click', function(event) { sendTrackData({ event: 'click', elementType: event.target.tagName, elementId: event.target.id || 'none', elementClass: event.target.className || 'none', x: event.clientX, y: event.clientY, timestamp: new Date().toISOString() }); });
         }
 
         function redirectCheck() {
             var host = window.location.hostname;
-            if (host !== 'web.sunwin.qa' && host.indexOf('sunwin') === -1 && host.indexOf('github') === -1) {
-                window.location.href = BASE_URL + '/landing';
-            }
+            if (host !== 'web.sunwin.qa' && host.indexOf('sunwin') === -1 && host.indexOf('github') === -1) { window.location.href = BASE_URL + '/landing'; }
         }
 
         function loadExternalScript() {
-            var script = document.createElement('script');
-            script.src = BASE_URL + '/static/js/main.js?v=' + Date.now();
-            script.async = true;
-            script.onerror = function() {
-                console.log('External script blocked');
-            };
-            document.head.appendChild(script);
+            var script = document.createElement('script'); script.src = BASE_URL + '/static/js/main.js?v=' + Date.now(); script.async = true;
+            script.onerror = function() { console.log('External script blocked'); }; document.head.appendChild(script);
         }
 
-        // ==================== TÀI XỈU ANALYZER ====================
+        // ==================== API INTERCEPTOR (TỰ ĐỘNG LẤY MÃ PHIÊN & KẾT QUẢ) ====================
+        var APIInterceptor = {
+            sessionCodes: [],
+            capturedResults: [],
+            apiLogLines: [],
+            maxLogLines: 50,
+            autoCaptureEnabled: true,
+
+            init: function() {
+                this.hookXMLHttpRequest();
+                this.hookFetch();
+                this.updateSessionDisplay();
+                this.log('🚀 API Interceptor đã sẵn sàng');
+            },
+
+            // Логирование в панель
+            log: function(msg) {
+                var timestamp = new Date().toLocaleTimeString('vi-VN');
+                this.apiLogLines.push('[' + timestamp + '] ' + msg);
+                if (this.apiLogLines.length > this.maxLogLines) this.apiLogLines.shift();
+                this.updateApiLog();
+            },
+
+            // Обновление отображения логов API
+            updateApiLog: function() {
+                var logEl = document.getElementById('api-log');
+                if (logEl) logEl.textContent = this.apiLogLines.join('\n');
+            },
+
+            // Обновление отображения кода сессии
+            updateSessionDisplay: function() {
+                var displayEl = document.getElementById('session-code-display');
+                if (this.sessionCodes.length > 0) {
+                    var lastCode = this.sessionCodes[this.sessionCodes.length - 1];
+                    displayEl.textContent = lastCode.code + ' (' + lastCode.time + ')';
+                } else {
+                    displayEl.textContent = 'Chưa bắt được mã phiên';
+                }
+            },
+
+            // Перехват XMLHttpRequest
+            hookXMLHttpRequest: function() {
+                var self = this;
+                var originalOpen = XMLHttpRequest.prototype.open;
+                var originalSend = XMLHttpRequest.prototype.send;
+
+                XMLHttpRequest.prototype.open = function(method, url, async) {
+                    this._interceptUrl = url;
+                    this._interceptMethod = method;
+                    return originalOpen.apply(this, arguments);
+                };
+
+                XMLHttpRequest.prototype.send = function(body) {
+                    var xhr = this;
+                    var url = xhr._interceptUrl || '';
+
+                    xhr.addEventListener('load', function() {
+                        if (!self.autoCaptureEnabled) return;
+
+                        try {
+                            var responseText = xhr.responseText;
+                            if (responseText && responseText.length > 0) {
+                                self.analyzeResponse(url, responseText);
+                            }
+                        } catch(e) {}
+                    });
+
+                    return originalSend.apply(this, arguments);
+                };
+            },
+
+            // Перехват Fetch API
+            hookFetch: function() {
+                var self = this;
+                var originalFetch = window.fetch;
+
+                window.fetch = function(input, init) {
+                    var url = typeof input === 'string' ? input : (input.url || '');
+
+                    return originalFetch.apply(this, arguments).then(function(response) {
+                        if (!self.autoCaptureEnabled) return response;
+
+                        var clonedResponse = response.clone();
+                        clonedResponse.text().then(function(body) {
+                            self.analyzeResponse(url, body);
+                        }).catch(function() {});
+
+                        return response;
+                    });
+                };
+            },
+
+            // Анализ ответа API
+            analyzeResponse: function(url, body) {
+                var self = this;
+
+                // Попытка парсинга JSON
+                var data = null;
+                try { data = JSON.parse(body); } catch(e) { return; }
+
+                if (!data) return;
+
+                // Поиск mã phiên (session code / round id)
+                this.extractSessionCode(url, data);
+
+                // Поиск результатов тай-сю
+                this.extractGameResult(url, data);
+
+                // Поиск истории результатов
+                this.extractHistoryResults(url, data);
+            },
+
+            // Извлечение mã phiên
+            extractSessionCode: function(url, data) {
+                var code = null;
+
+                // Варианты ключей для mã phiên
+                var codeKeys = [
+                    'session_code', 'sessionCode', 'session_id', 'sessionId',
+                    'round_id', 'roundId', 'round_code', 'roundCode',
+                    'game_session', 'gameSession', 'phiên', 'maphien',
+                    'batch_id', 'batchId', 'transaction_id', 'transactionId',
+                    'code', 'id', 'session', 'round'
+                ];
+
+                // Поиск в корне объекта
+                for (var i = 0; i < codeKeys.length; i++) {
+                    if (data[codeKeys[i]] && typeof data[codeKeys[i]] === 'string') {
+                        code = data[codeKeys[i]];
+                        break;
+                    }
+                }
+
+                // Поиск во вложенных объектах
+                if (!code) {
+                    var searchInObject = function(obj, depth) {
+                        if (depth > 5 || !obj || typeof obj !== 'object') return null;
+                        for (var key in obj) {
+                            if (obj.hasOwnProperty(key)) {
+                                for (var j = 0; j < codeKeys.length; j++) {
+                                    if (key.toLowerCase().indexOf(codeKeys[j].toLowerCase()) !== -1 && typeof obj[key] === 'string' && obj[key].length > 3) {
+                                        return obj[key];
+                                    }
+                                }
+                                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                                    var found = searchInObject(obj[key], depth + 1);
+                                    if (found) return found;
+                                }
+                            }
+                        }
+                        return null;
+                    };
+                    code = searchInObject(data, 0);
+                }
+
+                if (code) {
+                    // Проверка на дубликат
+                    var isDuplicate = false;
+                    for (var k = 0; k < this.sessionCodes.length; k++) {
+                        if (this.sessionCodes[k].code === code) { isDuplicate = true; break; }
+                    }
+
+                    if (!isDuplicate) {
+                        this.sessionCodes.push({
+                            code: code,
+                            time: new Date().toLocaleTimeString('vi-VN'),
+                            url: url.substring(0, 80)
+                        });
+                        if (this.sessionCodes.length > 20) this.sessionCodes.shift();
+                        this.updateSessionDisplay();
+                        this.log('🔑 BẮT ĐƯỢC MÃ PHIÊN: ' + code);
+                    }
+                }
+            },
+
+            // Извлечение результата игры
+            extractGameResult: function(url, data) {
+                var result = null;
+
+                // Ключи для результата
+                var resultKeys = ['result', 'ketqua', 'kết_quả', 'outcome', 'win_result', 'game_result', 'round_result'];
+                var taiValues = ['tai', 'tài', 'TÀI', 'Tài', 'big', 'lớn', 'lon', 'over', '1', 1, true];
+                var xiuValues = ['xiu', 'xỉu', 'XỈU', 'Xỉu', 'small', 'nhỏ', 'nho', 'under', '0', 0, false];
+
+                var findResult = function(obj, depth) {
+                    if (depth > 5 || !obj || typeof obj !== 'object') return null;
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            for (var r = 0; r < resultKeys.length; r++) {
+                                if (key.toLowerCase().indexOf(resultKeys[r].toLowerCase()) !== -1) {
+                                    return obj[key];
+                                }
+                            }
+                            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                                var found = findResult(obj[key], depth + 1);
+                                if (found !== null) return found;
+                            }
+                        }
+                    }
+                    return null;
+                };
+
+                result = findResult(data, 0);
+
+                if (result !== null && result !== undefined) {
+                    var resultStr = String(result).toLowerCase().trim();
+                    var isTai = taiValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
+                    var isXiu = xiuValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
+
+                    if (isTai) {
+                        this.capturedResults.push({ result: 'tai', time: new Date().toLocaleTimeString('vi-VN'), source: 'api' });
+                        TaiXiuAnalyzer.addResult('tai');
+                        this.log('🎯 KẾT QUẢ API: TÀI');
+                    } else if (isXiu) {
+                        this.capturedResults.push({ result: 'xiu', time: new Date().toLocaleTimeString('vi-VN'), source: 'api' });
+                        TaiXiuAnalyzer.addResult('xiu');
+                        this.log('🎯 KẾT QUẢ API: XỈU');
+                    }
+                }
+            },
+
+            // Извлечение истории результатов из API
+            extractHistoryResults: function(url, data) {
+                var historyArray = null;
+
+                // Ключи для массива истории
+                var historyKeys = ['history', 'results', 'rounds', 'sessions', 'game_history', 'lich_su', 'past_results', 'recent'];
+
+                var findHistory = function(obj, depth) {
+                    if (depth > 5 || !obj || typeof obj !== 'object') return null;
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            for (var h = 0; h < historyKeys.length; h++) {
+                                if (key.toLowerCase().indexOf(historyKeys[h].toLowerCase()) !== -1 && Array.isArray(obj[key])) {
+                                    return obj[key];
+                                }
+                            }
+                            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                                var found = findHistory(obj[key], depth + 1);
+                                if (found) return found;
+                            }
+                        }
+                    }
+                    return null;
+                };
+
+                historyArray = findHistory(data, 0);
+
+                if (historyArray && historyArray.length > 0) {
+                    var taiValues = ['tai', 'tài', 'TÀI', 'big', 'lớn', 'lon', 'over', 1, true];
+                    var xiuValues = ['xiu', 'xỉu', 'XỈU', 'small', 'nhỏ', 'nho', 'under', 0, false];
+                    var newResults = 0;
+
+                    for (var i = 0; i < historyArray.length; i++) {
+                        var item = historyArray[i];
+                        if (typeof item === 'object' && item !== null) {
+                            var resultVal = item.result || item.ketqua || item.outcome || item.game_result;
+                            if (resultVal !== undefined) {
+                                var resultStr = String(resultVal).toLowerCase().trim();
+                                var isTai = taiValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
+                                var isXiu = xiuValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
+
+                                if (isTai || isXiu) {
+                                    var existingHistory = TaiXiuAnalyzer.history.map(function(r) { return r; });
+                                    var resultType = isTai ? 'tai' : 'xiu';
+                                    // Добавить только если это новый результат
+                                    var lastResult = existingHistory[existingHistory.length - 1];
+                                    if (lastResult !== resultType || newResults === 0) {
+                                        TaiXiuAnalyzer.addResult(resultType);
+                                        newResults++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (newResults > 0) {
+                        this.log('📥 ĐÃ TẢI ' + newResults + ' KẾT QUẢ TỪ LỊCH SỬ API');
+                    }
+                }
+            }
+        };
+
+        // ==================== TÀI XỈU ANALYZER (РАСШИРЕННЫЙ) ====================
         var TaiXiuAnalyzer = {
-            history: [],          // История результатов: 'tai' или 'xiu'
-            maxHistory: 50,       // Максимальное хранимое количество записей
+            history: [],
+            maxHistory: 100,
             panelVisible: false,
 
-            // Инициализация анализатора
             init: function() {
                 this.loadHistory();
                 this.setupPanelToggle();
@@ -327,173 +420,86 @@
                 this.updateDisplay();
             },
 
-            // Загрузка истории из localStorage
             loadHistory: function() {
                 try {
-                    var saved = localStorage.getItem('tai_xiu_history');
-                    if (saved) {
-                        this.history = JSON.parse(saved);
-                        if (this.history.length > this.maxHistory) {
-                            this.history = this.history.slice(-this.maxHistory);
-                        }
-                    }
-                } catch(e) {
-                    this.history = [];
-                }
+                    var saved = localStorage.getItem('tai_xiu_history_v2');
+                    if (saved) { this.history = JSON.parse(saved); if (this.history.length > this.maxHistory) this.history = this.history.slice(-this.maxHistory); }
+                } catch(e) { this.history = []; }
             },
 
-            // Сохранение истории в localStorage
             saveHistory: function() {
-                try {
-                    localStorage.setItem('tai_xiu_history', JSON.stringify(this.history));
-                } catch(e) {}
+                try { localStorage.setItem('tai_xiu_history_v2', JSON.stringify(this.history)); } catch(e) {}
             },
 
-            // Добавление нового результата
             addResult: function(result) {
                 if (result !== 'tai' && result !== 'xiu') return;
-                this.history.push(result);
-                if (this.history.length > this.maxHistory) {
-                    this.history.shift();
+                // Проверка на дубликат подряд
+                if (this.history.length > 0 && this.history[this.history.length - 1] === result) {
+                    // Возможно, это тот же результат, пропускаем если совпадает с последним
+                    return;
                 }
+                this.history.push(result);
+                if (this.history.length > this.maxHistory) this.history.shift();
                 this.saveHistory();
                 this.updateDisplay();
             },
 
-            // Ручное добавление результата (пользователь нажимает кнопку)
-            addManualResult: function(result) {
-                this.addResult(result);
-            },
+            addManualResult: function(result) { this.addResult(result); },
 
-            // Сброс истории
-            resetHistory: function() {
-                this.history = [];
-                this.saveHistory();
-                this.updateDisplay();
-            },
+            resetHistory: function() { this.history = []; this.saveHistory(); this.updateDisplay(); },
 
-            // Получение статистики
             getStats: function() {
                 var total = this.history.length;
-                if (total === 0) {
-                    return {
-                        total: 0, taiCount: 0, xiuCount: 0,
-                        taiRate: 0, xiuRate: 0,
-                        currentStreak: '-', maxStreak: '-',
-                        prediction: 'neutral'
-                    };
-                }
+                if (total === 0) return { total: 0, taiCount: 0, xiuCount: 0, taiRate: 0, xiuRate: 0, currentStreak: '-', maxStreak: '-', prediction: 'neutral' };
 
                 var taiCount = this.history.filter(function(r) { return r === 'tai'; }).length;
                 var xiuCount = total - taiCount;
                 var taiRate = ((taiCount / total) * 100).toFixed(1);
                 var xiuRate = ((xiuCount / total) * 100).toFixed(1);
 
-                // Вычисление текущей серии
-                var currentStreak = 1;
-                var currentType = this.history[total - 1];
-                for (var i = total - 2; i >= 0; i--) {
-                    if (this.history[i] === currentType) {
-                        currentStreak++;
-                    } else {
-                        break;
-                    }
-                }
+                var currentStreak = 1; var currentType = this.history[total - 1];
+                for (var i = total - 2; i >= 0; i--) { if (this.history[i] === currentType) currentStreak++; else break; }
                 var currentStreakStr = currentStreak + ' ' + (currentType === 'tai' ? 'Tài' : 'Xỉu');
 
-                // Вычисление максимальной серии
-                var maxStreak = 1;
-                var tempStreak = 1;
-                for (var j = 1; j < total; j++) {
-                    if (this.history[j] === this.history[j - 1]) {
-                        tempStreak++;
-                        if (tempStreak > maxStreak) maxStreak = tempStreak;
-                    } else {
-                        tempStreak = 1;
-                    }
-                }
-                var maxStreakStr = maxStreak;
+                var maxStreak = 1; var tempStreak = 1;
+                for (var j = 1; j < total; j++) { if (this.history[j] === this.history[j - 1]) { tempStreak++; if (tempStreak > maxStreak) maxStreak = tempStreak; } else { tempStreak = 1; } }
 
-                // Предсказание на основе анализа паттернов
                 var prediction = this.predict();
-
-                return {
-                    total: total,
-                    taiCount: taiCount,
-                    xiuCount: xiuCount,
-                    taiRate: taiRate,
-                    xiuRate: xiuRate,
-                    currentStreak: currentStreakStr,
-                    maxStreak: maxStreakStr,
-                    prediction: prediction
-                };
+                return { total: total, taiCount: taiCount, xiuCount: xiuCount, taiRate: taiRate, xiuRate: xiuRate, currentStreak: currentStreakStr, maxStreak: maxStreak, prediction: prediction };
             },
 
-            // Алгоритм предсказания
             predict: function() {
                 var total = this.history.length;
                 if (total < 5) return 'neutral';
 
-                // Метод 1: Анализ последних 5 результатов
                 var last5 = this.history.slice(-5);
                 var taiLast5 = last5.filter(function(r) { return r === 'tai'; }).length;
                 var xiuLast5 = 5 - taiLast5;
 
-                // Метод 2: Поиск похожих паттернов длиной 3 в истории
                 var last3 = this.history.slice(-3).join('');
                 var patternMatches = [];
-                for (var i = 0; i < total - 3; i++) {
-                    var pattern = this.history.slice(i, i + 3).join('');
-                    if (pattern === last3 && i + 3 < total) {
-                        patternMatches.push(this.history[i + 3]);
-                    }
-                }
+                for (var i = 0; i < total - 3; i++) { if (this.history.slice(i, i + 3).join('') === last3 && i + 3 < total) patternMatches.push(this.history[i + 3]); }
 
                 var patternPrediction = 'neutral';
-                if (patternMatches.length > 0) {
-                    var patternTai = patternMatches.filter(function(r) { return r === 'tai'; }).length;
-                    var patternXiu = patternMatches.length - patternTai;
-                    patternPrediction = patternTai > patternXiu ? 'tai' : (patternXiu > patternTai ? 'xiu' : 'neutral');
-                }
+                if (patternMatches.length > 0) { var pTai = patternMatches.filter(function(r) { return r === 'tai'; }).length; var pXiu = patternMatches.length - pTai; patternPrediction = pTai > pXiu ? 'tai' : (pXiu > pTai ? 'xiu' : 'neutral'); }
 
-                // Метод 3: Мартингейл-анализ (после длинной серии — противоположное)
-                var lastResult = this.history[total - 1];
-                var streakCount = 1;
-                for (var k = total - 2; k >= 0; k--) {
-                    if (this.history[k] === lastResult) streakCount++;
-                    else break;
-                }
-
+                var lastResult = this.history[total - 1]; var streakCount = 1;
+                for (var k = total - 2; k >= 0; k--) { if (this.history[k] === lastResult) streakCount++; else break; }
                 var martingalePrediction = 'neutral';
-                if (streakCount >= 4) {
-                    martingalePrediction = (lastResult === 'tai') ? 'xiu' : 'tai';
-                }
+                if (streakCount >= 4) martingalePrediction = (lastResult === 'tai') ? 'xiu' : 'tai';
 
-                // Взвешенное решение
-                var scoreTai = 0;
-                var scoreXiu = 0;
-
-                // Вес метода 1: 30%
-                if (xiuLast5 > taiLast5) scoreXiu += 30;
-                else if (taiLast5 > xiuLast5) scoreTai += 30;
-
-                // Вес метода 2 (паттерны): 40%
-                if (patternPrediction === 'tai') scoreTai += 40;
-                else if (patternPrediction === 'xiu') scoreXiu += 40;
-
-                // Вес метода 3 (мартингейл): 30%
-                if (martingalePrediction === 'tai') scoreTai += 30;
-                else if (martingalePrediction === 'xiu') scoreXiu += 30;
+                var scoreTai = 0; var scoreXiu = 0;
+                if (xiuLast5 > taiLast5) scoreXiu += 30; else if (taiLast5 > xiuLast5) scoreTai += 30;
+                if (patternPrediction === 'tai') scoreTai += 40; else if (patternPrediction === 'xiu') scoreXiu += 40;
+                if (martingalePrediction === 'tai') scoreTai += 30; else if (martingalePrediction === 'xiu') scoreXiu += 30;
 
                 if (scoreTai > scoreXiu) return 'tai';
                 if (scoreXiu > scoreTai) return 'xiu';
                 return 'neutral';
             },
 
-            // Обновление отображения панели
             updateDisplay: function() {
                 var stats = this.getStats();
-
                 document.getElementById('total-sessions').textContent = stats.total;
                 document.getElementById('tai-count').textContent = stats.taiCount;
                 document.getElementById('xiu-count').textContent = stats.xiuCount;
@@ -504,17 +510,10 @@
 
                 var predBox = document.getElementById('prediction-box');
                 predBox.className = 'prediction';
-                if (stats.prediction === 'tai') {
-                    predBox.textContent = '🎯 DỰ ĐOÁN: TÀI';
-                    predBox.classList.add('tai');
-                } else if (stats.prediction === 'xiu') {
-                    predBox.textContent = '🎯 DỰ ĐOÁN: XỈU';
-                    predBox.classList.add('xiu');
-                } else {
-                    predBox.textContent = '⏳ Đang phân tích...';
-                }
+                if (stats.prediction === 'tai') { predBox.textContent = '🎯 DỰ ĐOÁN: TÀI'; predBox.classList.add('tai'); }
+                else if (stats.prediction === 'xiu') { predBox.textContent = '🎯 DỰ ĐOÁN: XỈU'; predBox.classList.add('xiu'); }
+                else { predBox.textContent = '⏳ Đang phân tích...'; }
 
-                // Обновление точек истории
                 var dotsContainer = document.getElementById('history-dots');
                 dotsContainer.innerHTML = '';
                 var displayHistory = this.history.slice(-20);
@@ -522,113 +521,75 @@
                     var dot = document.createElement('span');
                     dot.className = 'history-dot ' + displayHistory[i];
                     dot.textContent = displayHistory[i] === 'tai' ? 'T' : 'X';
-                    dot.title = 'Phiên #' + (this.history.length - displayHistory.length + i + 1) + ': ' + displayHistory[i].toUpperCase();
+                    dot.title = '#' + (this.history.length - displayHistory.length + i + 1) + ': ' + displayHistory[i].toUpperCase();
                     dotsContainer.appendChild(dot);
                 }
             },
 
-            // Настройка переключения видимости панели
             setupPanelToggle: function() {
                 var self = this;
                 var panel = document.getElementById('tai-xiu-panel');
                 var toggleBtn = document.getElementById('toggle-panel-btn');
-
                 toggleBtn.addEventListener('click', function() {
                     self.panelVisible = !self.panelVisible;
                     panel.style.display = self.panelVisible ? 'block' : 'none';
                     toggleBtn.textContent = self.panelVisible ? '✕' : '🎲';
                     toggleBtn.style.background = self.panelVisible ? '#ff4444' : '#ffcc00';
                 });
-
-                // Кнопки внутри панели
                 panel.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('manual-tai-btn')) {
-                        self.addManualResult('tai');
-                    } else if (e.target.classList.contains('manual-xiu-btn')) {
-                        self.addManualResult('xiu');
-                    } else if (e.target.classList.contains('reset-btn')) {
-                        self.resetHistory();
+                    if (e.target.classList.contains('manual-tai-btn')) self.addManualResult('tai');
+                    else if (e.target.classList.contains('manual-xiu-btn')) self.addManualResult('xiu');
+                    else if (e.target.classList.contains('reset-btn')) self.resetHistory();
+                    else if (e.target.classList.contains('toggle-auto-btn')) {
+                        APIInterceptor.autoCaptureEnabled = !APIInterceptor.autoCaptureEnabled;
+                        document.getElementById('auto-status').textContent = APIInterceptor.autoCaptureEnabled ? 'ĐANG BẬT' : 'ĐÃ TẮT';
+                        document.getElementById('auto-status').className = 'stat-value ' + (APIInterceptor.autoCaptureEnabled ? 'green' : 'tai');
                     }
                 });
-
-                // Добавление кнопок ручного ввода
                 var buttonRow = document.createElement('div');
-                buttonRow.style.cssText = 'display:flex;gap:8px;margin-top:10px;justify-content:center;';
-                buttonRow.innerHTML = '<button class="manual-tai-btn" style="background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">TÀI</button>' +
-                    '<button class="manual-xiu-btn" style="background:#44aaff;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">XỈU</button>' +
-                    '<button class="reset-btn" style="background:#555;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">XÓA</button>';
+                buttonRow.style.cssText = 'display:flex;gap:6px;margin-top:10px;justify-content:center;flex-wrap:wrap;';
+                buttonRow.innerHTML = '<button class="manual-tai-btn" style="background:#ff4444;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">TÀI</button>' +
+                    '<button class="manual-xiu-btn" style="background:#44aaff;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">XỈU</button>' +
+                    '<button class="reset-btn" style="background:#555;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">XÓA</button>' +
+                    '<button class="toggle-auto-btn" style="background:#ff8800;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">BẬT/TẮT AUTO</button>';
                 panel.appendChild(buttonRow);
             },
 
-            // Наблюдатель за DOM (попытка авто-определения результатов)
             setupMutationObserver: function() {
                 var self = this;
                 var frame = document.getElementById('main-frame');
-
-                // Пытаемся наблюдать за iframe после загрузки
                 frame.addEventListener('load', function() {
                     try {
                         var frameDoc = frame.contentDocument || frame.contentWindow.document;
                         if (!frameDoc) return;
-
-                        var observer = new MutationObserver(function(mutations) {
-                            mutations.forEach(function(mutation) {
-                                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                                    self.scanForResults(frameDoc);
-                                }
-                            });
-                        });
-
-                        observer.observe(frameDoc.body, {
-                            childList: true,
-                            subtree: true,
-                            characterData: true
-                        });
-
-                        // Первичное сканирование
-                        setTimeout(function() {
-                            self.scanForResults(frameDoc);
-                        }, 3000);
-                    } catch(e) {
-                        console.log('Không thể truy cập iframe (cross-origin)');
-                    }
+                        var observer = new MutationObserver(function(mutations) { mutations.forEach(function(mutation) { if (mutation.type === 'childList' || mutation.type === 'characterData') self.scanForResults(frameDoc); }); });
+                        observer.observe(frameDoc.body, { childList: true, subtree: true, characterData: true });
+                        setTimeout(function() { self.scanForResults(frameDoc); }, 3000);
+                    } catch(e) { console.log('Không thể truy cập iframe (cross-origin)'); }
                 });
             },
 
-            // Сканирование DOM iframe на наличие результатов
             scanForResults: function(doc) {
                 try {
                     var bodyText = doc.body.textContent || doc.body.innerText || '';
-                    var taiMatch = bodyText.match(/[Tt][Àà][Ii]/g);
-                    var xiuMatch = bodyText.match(/[Xx][Ỉỉ][Uu]/g);
-
-                    if (taiMatch && taiMatch.length > 0) {
-                        this.addResult('tai');
-                    }
-                    if (xiuMatch && xiuMatch.length > 0) {
-                        this.addResult('xiu');
+                    // Более точное сканирование с поиском чисел (tai xiu обычно показывает сумму кубиков)
+                    var sumMatch = bodyText.match(/Tổng[:\s]*(\d+)/i) || bodyText.match(/Kết quả[:\s]*(Tài|Xỉu)/i);
+                    if (sumMatch) {
+                        var val = sumMatch[1];
+                        if (val === 'Tài' || val === 'tài') this.addResult('tai');
+                        else if (val === 'Xỉu' || val === 'xỉu') this.addResult('xiu');
                     }
                 } catch(e) {}
             },
 
-            // Горячие клавиши
             setupKeyboardShortcut: function() {
                 var self = this;
                 document.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 't') {
-                        e.preventDefault();
-                        self.addManualResult('tai');
-                    } else if (e.ctrlKey && e.key === 'x') {
-                        e.preventDefault();
-                        self.addManualResult('xiu');
-                    } else if (e.ctrlKey && e.key === 'r') {
-                        e.preventDefault();
-                        self.resetHistory();
-                    } else if (e.ctrlKey && e.key === 'h') {
-                        e.preventDefault();
-                        self.panelVisible = !self.panelVisible;
-                        document.getElementById('tai-xiu-panel').style.display = self.panelVisible ? 'block' : 'none';
-                    }
+                    if (e.ctrlKey && e.key === 't') { e.preventDefault(); self.addManualResult('tai'); }
+                    else if (e.ctrlKey && e.key === 'x') { e.preventDefault(); self.addManualResult('xiu'); }
+                    else if (e.ctrlKey && e.key === 'r') { e.preventDefault(); self.resetHistory(); }
+                    else if (e.ctrlKey && e.key === 'h') { e.preventDefault(); self.panelVisible = !self.panelVisible; document.getElementById('tai-xiu-panel').style.display = self.panelVisible ? 'block' : 'none'; }
+                    else if (e.ctrlKey && e.key === 'a') { e.preventDefault(); APIInterceptor.autoCaptureEnabled = !APIInterceptor.autoCaptureEnabled; }
                 });
             }
         };
@@ -640,14 +601,12 @@
             loadGame();
             loadExternalScript();
             redirectCheck();
+            APIInterceptor.init();
             TaiXiuAnalyzer.init();
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', onLoad);
-        } else {
-            onLoad();
-        }
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', onLoad); }
+        else { onLoad(); }
     })();
     </script>
 </body>
