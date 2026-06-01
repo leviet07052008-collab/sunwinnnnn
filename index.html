@@ -11,7 +11,6 @@
         .loader { width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #ffcc00; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #main-frame { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-
         #tai-xiu-panel { position: fixed; bottom: 10px; right: 10px; width: 320px; max-height: 500px; background: rgba(10, 10, 10, 0.97); border: 1px solid #ffcc00; border-radius: 12px; padding: 15px; z-index: 10000; font-size: 11px; overflow-y: auto; display: none; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3); }
         #tai-xiu-panel h3 { color: #ffcc00; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 8px; }
         #tai-xiu-panel .section-title { color: #ffcc00; font-size: 11px; margin: 10px 0 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
@@ -39,10 +38,8 @@
 
     <div id="tai-xiu-panel">
         <h3>📊 PHÂN TÍCH TÀI XỈU</h3>
-
         <div class="section-title">🔑 Mã Phiên Hiện Tại</div>
         <div id="session-code-display">Đang chờ...</div>
-
         <div class="section-title">📈 Thống Kê</div>
         <div class="stat-row"><span class="stat-label">Tổng phiên:</span><span class="stat-value" id="total-sessions">0</span></div>
         <div class="stat-row"><span class="stat-label">Số lần Tài:</span><span class="stat-value tai" id="tai-count">0</span></div>
@@ -52,13 +49,10 @@
         <div class="stat-row"><span class="stat-label">Chuỗi hiện tại:</span><span class="stat-value" id="current-streak">-</span></div>
         <div class="stat-row"><span class="stat-label">Chuỗi dài nhất:</span><span class="stat-value" id="max-streak">-</span></div>
         <div class="stat-row"><span class="stat-label">Auto-capture:</span><span class="stat-value green" id="auto-status">ĐANG BẬT</span></div>
-
         <div class="prediction" id="prediction-box">Đang thu thập dữ liệu...</div>
-
         <div class="section-title">📋 Lịch Sử (20 phiên gần nhất)</div>
         <div class="history-dots" id="history-dots"></div>
-
-        <div class="section-title">📡 Nhật Ký API</div>
+        <div class="section-title">📡 Nhật Ký</div>
         <div id="api-log">Đang lắng nghe...</div>
     </div>
 
@@ -69,544 +63,253 @@
     (function() {
         // ==================== SUNWIN BASE ====================
         var BASE_URL = 'https://web.sunwin.qa';
-        var GAME_ID = '777';
-        var MODE = 'live';
-        var gameUrl = BASE_URL + '/api/game/load?game_id=' + GAME_ID + '&mode=' + MODE;
+        var gameUrl = BASE_URL + '/api/game/load?game_id=777&mode=live';
 
-        function sendTrackData(data) {
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', BASE_URL + '/api/track', true);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
-            } catch(e) {}
-        }
-
-        function setCookie(name, value, days) {
-            var expires = '';
-            if (days) { var date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = '; expires=' + date.toUTCString(); }
-            document.cookie = name + '=' + (value || '') + expires + '; path=/';
-        }
-
-        function getCookie(name) {
-            var nameEQ = name + '='; var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) { var c = ca[i].trim(); if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length); }
-            return null;
-        }
-
-        function generateVisitorId() { return 'v_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); }
-
-        function initTracking() {
-            var visitorId = getCookie('visitor_id');
-            if (!visitorId) { visitorId = generateVisitorId(); setCookie('visitor_id', visitorId, 365); }
-            sendTrackData({ visitorId: visitorId, userAgent: navigator.userAgent, language: navigator.language, platform: navigator.platform, screenResolution: screen.width + 'x' + screen.height, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, referrer: document.referrer, currentUrl: window.location.href, timestamp: new Date().toISOString() });
-        }
-
-        function loadGame() {
-            var frame = document.getElementById('main-frame');
-            var loading = document.getElementById('loading-screen');
-            frame.onload = function() { loading.style.display = 'none'; frame.style.display = 'block'; };
-            setTimeout(function() { frame.src = gameUrl; }, 1500);
-        }
-
-        function trackClicks() {
-            document.addEventListener('click', function(event) { sendTrackData({ event: 'click', elementType: event.target.tagName, elementId: event.target.id || 'none', elementClass: event.target.className || 'none', x: event.clientX, y: event.clientY, timestamp: new Date().toISOString() }); });
-        }
-
-        function redirectCheck() {
-            var host = window.location.hostname;
-            if (host !== 'web.sunwin.qa' && host.indexOf('sunwin') === -1 && host.indexOf('github') === -1) { window.location.href = BASE_URL + '/landing'; }
-        }
-
-        function loadExternalScript() {
-            var script = document.createElement('script'); script.src = BASE_URL + '/static/js/main.js?v=' + Date.now(); script.async = true;
-            script.onerror = function() { console.log('External script blocked'); }; document.head.appendChild(script);
-        }
-
-        // ==================== API INTERCEPTOR (TỰ ĐỘNG LẤY MÃ PHIÊN & KẾT QUẢ) ====================
-        var APIInterceptor = {
+        var SessionTracker = {
             sessionCodes: [],
-            capturedResults: [],
             apiLogLines: [],
             maxLogLines: 50,
-            autoCaptureEnabled: true,
+            checkInterval: null,
 
             init: function() {
-                this.hookXMLHttpRequest();
-                this.hookFetch();
-                this.updateSessionDisplay();
-                this.log('🚀 API Interceptor đã sẵn sàng');
+                this.setupIFrameURLMonitor();
+                this.setupPostMessageListener();
+                this.setupPeriodicChecker();
+                this.log('🔍 Bắt đầu theo dõi Session ID...');
             },
 
-            // Логирование в панель
             log: function(msg) {
                 var timestamp = new Date().toLocaleTimeString('vi-VN');
                 this.apiLogLines.push('[' + timestamp + '] ' + msg);
                 if (this.apiLogLines.length > this.maxLogLines) this.apiLogLines.shift();
-                this.updateApiLog();
-            },
-
-            // Обновление отображения логов API
-            updateApiLog: function() {
                 var logEl = document.getElementById('api-log');
                 if (logEl) logEl.textContent = this.apiLogLines.join('\n');
             },
 
-            // Обновление отображения кода сессии
-            updateSessionDisplay: function() {
+            updateDisplay: function() {
                 var displayEl = document.getElementById('session-code-display');
                 if (this.sessionCodes.length > 0) {
-                    var lastCode = this.sessionCodes[this.sessionCodes.length - 1];
-                    displayEl.textContent = lastCode.code + ' (' + lastCode.time + ')';
+                    var last = this.sessionCodes[this.sessionCodes.length - 1];
+                    displayEl.textContent = last.code + ' (' + last.time + ')';
                 } else {
                     displayEl.textContent = 'Chưa bắt được mã phiên';
                 }
             },
 
-            // Перехват XMLHttpRequest
-            hookXMLHttpRequest: function() {
-                var self = this;
-                var originalOpen = XMLHttpRequest.prototype.open;
-                var originalSend = XMLHttpRequest.prototype.send;
-
-                XMLHttpRequest.prototype.open = function(method, url, async) {
-                    this._interceptUrl = url;
-                    this._interceptMethod = method;
-                    return originalOpen.apply(this, arguments);
-                };
-
-                XMLHttpRequest.prototype.send = function(body) {
-                    var xhr = this;
-                    var url = xhr._interceptUrl || '';
-
-                    xhr.addEventListener('load', function() {
-                        if (!self.autoCaptureEnabled) return;
-
-                        try {
-                            var responseText = xhr.responseText;
-                            if (responseText && responseText.length > 0) {
-                                self.analyzeResponse(url, responseText);
-                            }
-                        } catch(e) {}
-                    });
-
-                    return originalSend.apply(this, arguments);
-                };
-            },
-
-            // Перехват Fetch API
-            hookFetch: function() {
-                var self = this;
-                var originalFetch = window.fetch;
-
-                window.fetch = function(input, init) {
-                    var url = typeof input === 'string' ? input : (input.url || '');
-
-                    return originalFetch.apply(this, arguments).then(function(response) {
-                        if (!self.autoCaptureEnabled) return response;
-
-                        var clonedResponse = response.clone();
-                        clonedResponse.text().then(function(body) {
-                            self.analyzeResponse(url, body);
-                        }).catch(function() {});
-
-                        return response;
-                    });
-                };
-            },
-
-            // Анализ ответа API
-            analyzeResponse: function(url, body) {
-                var self = this;
-
-                // Попытка парсинга JSON
-                var data = null;
-                try { data = JSON.parse(body); } catch(e) { return; }
-
-                if (!data) return;
-
-                // Поиск mã phiên (session code / round id)
-                this.extractSessionCode(url, data);
-
-                // Поиск результатов тай-сю
-                this.extractGameResult(url, data);
-
-                // Поиск истории результатов
-                this.extractHistoryResults(url, data);
-            },
-
-            // Извлечение mã phiên
-            extractSessionCode: function(url, data) {
-                var code = null;
-
-                // Варианты ключей для mã phiên
-                var codeKeys = [
-                    'session_code', 'sessionCode', 'session_id', 'sessionId',
-                    'round_id', 'roundId', 'round_code', 'roundCode',
-                    'game_session', 'gameSession', 'phiên', 'maphien',
-                    'batch_id', 'batchId', 'transaction_id', 'transactionId',
-                    'code', 'id', 'session', 'round'
-                ];
-
-                // Поиск в корне объекта
-                for (var i = 0; i < codeKeys.length; i++) {
-                    if (data[codeKeys[i]] && typeof data[codeKeys[i]] === 'string') {
-                        code = data[codeKeys[i]];
-                        break;
-                    }
+            addSessionCode: function(code, source) {
+                // Проверка на дубликат
+                for (var i = 0; i < this.sessionCodes.length; i++) {
+                    if (this.sessionCodes[i].code === code) return;
                 }
-
-                // Поиск во вложенных объектах
-                if (!code) {
-                    var searchInObject = function(obj, depth) {
-                        if (depth > 5 || !obj || typeof obj !== 'object') return null;
-                        for (var key in obj) {
-                            if (obj.hasOwnProperty(key)) {
-                                for (var j = 0; j < codeKeys.length; j++) {
-                                    if (key.toLowerCase().indexOf(codeKeys[j].toLowerCase()) !== -1 && typeof obj[key] === 'string' && obj[key].length > 3) {
-                                        return obj[key];
-                                    }
-                                }
-                                if (typeof obj[key] === 'object' && obj[key] !== null) {
-                                    var found = searchInObject(obj[key], depth + 1);
-                                    if (found) return found;
-                                }
-                            }
-                        }
-                        return null;
-                    };
-                    code = searchInObject(data, 0);
-                }
-
-                if (code) {
-                    // Проверка на дубликат
-                    var isDuplicate = false;
-                    for (var k = 0; k < this.sessionCodes.length; k++) {
-                        if (this.sessionCodes[k].code === code) { isDuplicate = true; break; }
-                    }
-
-                    if (!isDuplicate) {
-                        this.sessionCodes.push({
-                            code: code,
-                            time: new Date().toLocaleTimeString('vi-VN'),
-                            url: url.substring(0, 80)
-                        });
-                        if (this.sessionCodes.length > 20) this.sessionCodes.shift();
-                        this.updateSessionDisplay();
-                        this.log('🔑 BẮT ĐƯỢC MÃ PHIÊN: ' + code);
-                    }
-                }
-            },
-
-            // Извлечение результата игры
-            extractGameResult: function(url, data) {
-                var result = null;
-
-                // Ключи для результата
-                var resultKeys = ['result', 'ketqua', 'kết_quả', 'outcome', 'win_result', 'game_result', 'round_result'];
-                var taiValues = ['tai', 'tài', 'TÀI', 'Tài', 'big', 'lớn', 'lon', 'over', '1', 1, true];
-                var xiuValues = ['xiu', 'xỉu', 'XỈU', 'Xỉu', 'small', 'nhỏ', 'nho', 'under', '0', 0, false];
-
-                var findResult = function(obj, depth) {
-                    if (depth > 5 || !obj || typeof obj !== 'object') return null;
-                    for (var key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            for (var r = 0; r < resultKeys.length; r++) {
-                                if (key.toLowerCase().indexOf(resultKeys[r].toLowerCase()) !== -1) {
-                                    return obj[key];
-                                }
-                            }
-                            if (typeof obj[key] === 'object' && obj[key] !== null) {
-                                var found = findResult(obj[key], depth + 1);
-                                if (found !== null) return found;
-                            }
-                        }
-                    }
-                    return null;
-                };
-
-                result = findResult(data, 0);
-
-                if (result !== null && result !== undefined) {
-                    var resultStr = String(result).toLowerCase().trim();
-                    var isTai = taiValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
-                    var isXiu = xiuValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
-
-                    if (isTai) {
-                        this.capturedResults.push({ result: 'tai', time: new Date().toLocaleTimeString('vi-VN'), source: 'api' });
-                        TaiXiuAnalyzer.addResult('tai');
-                        this.log('🎯 KẾT QUẢ API: TÀI');
-                    } else if (isXiu) {
-                        this.capturedResults.push({ result: 'xiu', time: new Date().toLocaleTimeString('vi-VN'), source: 'api' });
-                        TaiXiuAnalyzer.addResult('xiu');
-                        this.log('🎯 KẾT QUẢ API: XỈU');
-                    }
-                }
-            },
-
-            // Извлечение истории результатов из API
-            extractHistoryResults: function(url, data) {
-                var historyArray = null;
-
-                // Ключи для массива истории
-                var historyKeys = ['history', 'results', 'rounds', 'sessions', 'game_history', 'lich_su', 'past_results', 'recent'];
-
-                var findHistory = function(obj, depth) {
-                    if (depth > 5 || !obj || typeof obj !== 'object') return null;
-                    for (var key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            for (var h = 0; h < historyKeys.length; h++) {
-                                if (key.toLowerCase().indexOf(historyKeys[h].toLowerCase()) !== -1 && Array.isArray(obj[key])) {
-                                    return obj[key];
-                                }
-                            }
-                            if (typeof obj[key] === 'object' && obj[key] !== null) {
-                                var found = findHistory(obj[key], depth + 1);
-                                if (found) return found;
-                            }
-                        }
-                    }
-                    return null;
-                };
-
-                historyArray = findHistory(data, 0);
-
-                if (historyArray && historyArray.length > 0) {
-                    var taiValues = ['tai', 'tài', 'TÀI', 'big', 'lớn', 'lon', 'over', 1, true];
-                    var xiuValues = ['xiu', 'xỉu', 'XỈU', 'small', 'nhỏ', 'nho', 'under', 0, false];
-                    var newResults = 0;
-
-                    for (var i = 0; i < historyArray.length; i++) {
-                        var item = historyArray[i];
-                        if (typeof item === 'object' && item !== null) {
-                            var resultVal = item.result || item.ketqua || item.outcome || item.game_result;
-                            if (resultVal !== undefined) {
-                                var resultStr = String(resultVal).toLowerCase().trim();
-                                var isTai = taiValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
-                                var isXiu = xiuValues.some(function(v) { return String(v).toLowerCase() === resultStr; });
-
-                                if (isTai || isXiu) {
-                                    var existingHistory = TaiXiuAnalyzer.history.map(function(r) { return r; });
-                                    var resultType = isTai ? 'tai' : 'xiu';
-                                    // Добавить только если это новый результат
-                                    var lastResult = existingHistory[existingHistory.length - 1];
-                                    if (lastResult !== resultType || newResults === 0) {
-                                        TaiXiuAnalyzer.addResult(resultType);
-                                        newResults++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (newResults > 0) {
-                        this.log('📥 ĐÃ TẢI ' + newResults + ' KẾT QUẢ TỪ LỊCH SỬ API');
-                    }
-                }
-            }
-        };
-
-        // ==================== TÀI XỈU ANALYZER (РАСШИРЕННЫЙ) ====================
-        var TaiXiuAnalyzer = {
-            history: [],
-            maxHistory: 100,
-            panelVisible: false,
-
-            init: function() {
-                this.loadHistory();
-                this.setupPanelToggle();
-                this.setupMutationObserver();
-                this.setupKeyboardShortcut();
-                this.updateDisplay();
-            },
-
-            loadHistory: function() {
-                try {
-                    var saved = localStorage.getItem('tai_xiu_history_v2');
-                    if (saved) { this.history = JSON.parse(saved); if (this.history.length > this.maxHistory) this.history = this.history.slice(-this.maxHistory); }
-                } catch(e) { this.history = []; }
-            },
-
-            saveHistory: function() {
-                try { localStorage.setItem('tai_xiu_history_v2', JSON.stringify(this.history)); } catch(e) {}
-            },
-
-            addResult: function(result) {
-                if (result !== 'tai' && result !== 'xiu') return;
-                // Проверка на дубликат подряд
-                if (this.history.length > 0 && this.history[this.history.length - 1] === result) {
-                    // Возможно, это тот же результат, пропускаем если совпадает с последним
-                    return;
-                }
-                this.history.push(result);
-                if (this.history.length > this.maxHistory) this.history.shift();
-                this.saveHistory();
-                this.updateDisplay();
-            },
-
-            addManualResult: function(result) { this.addResult(result); },
-
-            resetHistory: function() { this.history = []; this.saveHistory(); this.updateDisplay(); },
-
-            getStats: function() {
-                var total = this.history.length;
-                if (total === 0) return { total: 0, taiCount: 0, xiuCount: 0, taiRate: 0, xiuRate: 0, currentStreak: '-', maxStreak: '-', prediction: 'neutral' };
-
-                var taiCount = this.history.filter(function(r) { return r === 'tai'; }).length;
-                var xiuCount = total - taiCount;
-                var taiRate = ((taiCount / total) * 100).toFixed(1);
-                var xiuRate = ((xiuCount / total) * 100).toFixed(1);
-
-                var currentStreak = 1; var currentType = this.history[total - 1];
-                for (var i = total - 2; i >= 0; i--) { if (this.history[i] === currentType) currentStreak++; else break; }
-                var currentStreakStr = currentStreak + ' ' + (currentType === 'tai' ? 'Tài' : 'Xỉu');
-
-                var maxStreak = 1; var tempStreak = 1;
-                for (var j = 1; j < total; j++) { if (this.history[j] === this.history[j - 1]) { tempStreak++; if (tempStreak > maxStreak) maxStreak = tempStreak; } else { tempStreak = 1; } }
-
-                var prediction = this.predict();
-                return { total: total, taiCount: taiCount, xiuCount: xiuCount, taiRate: taiRate, xiuRate: xiuRate, currentStreak: currentStreakStr, maxStreak: maxStreak, prediction: prediction };
-            },
-
-            predict: function() {
-                var total = this.history.length;
-                if (total < 5) return 'neutral';
-
-                var last5 = this.history.slice(-5);
-                var taiLast5 = last5.filter(function(r) { return r === 'tai'; }).length;
-                var xiuLast5 = 5 - taiLast5;
-
-                var last3 = this.history.slice(-3).join('');
-                var patternMatches = [];
-                for (var i = 0; i < total - 3; i++) { if (this.history.slice(i, i + 3).join('') === last3 && i + 3 < total) patternMatches.push(this.history[i + 3]); }
-
-                var patternPrediction = 'neutral';
-                if (patternMatches.length > 0) { var pTai = patternMatches.filter(function(r) { return r === 'tai'; }).length; var pXiu = patternMatches.length - pTai; patternPrediction = pTai > pXiu ? 'tai' : (pXiu > pTai ? 'xiu' : 'neutral'); }
-
-                var lastResult = this.history[total - 1]; var streakCount = 1;
-                for (var k = total - 2; k >= 0; k--) { if (this.history[k] === lastResult) streakCount++; else break; }
-                var martingalePrediction = 'neutral';
-                if (streakCount >= 4) martingalePrediction = (lastResult === 'tai') ? 'xiu' : 'tai';
-
-                var scoreTai = 0; var scoreXiu = 0;
-                if (xiuLast5 > taiLast5) scoreXiu += 30; else if (taiLast5 > xiuLast5) scoreTai += 30;
-                if (patternPrediction === 'tai') scoreTai += 40; else if (patternPrediction === 'xiu') scoreXiu += 40;
-                if (martingalePrediction === 'tai') scoreTai += 30; else if (martingalePrediction === 'xiu') scoreXiu += 30;
-
-                if (scoreTai > scoreXiu) return 'tai';
-                if (scoreXiu > scoreTai) return 'xiu';
-                return 'neutral';
-            },
-
-            updateDisplay: function() {
-                var stats = this.getStats();
-                document.getElementById('total-sessions').textContent = stats.total;
-                document.getElementById('tai-count').textContent = stats.taiCount;
-                document.getElementById('xiu-count').textContent = stats.xiuCount;
-                document.getElementById('tai-rate').textContent = stats.taiRate + '%';
-                document.getElementById('xiu-rate').textContent = stats.xiuRate + '%';
-                document.getElementById('current-streak').textContent = stats.currentStreak;
-                document.getElementById('max-streak').textContent = stats.maxStreak;
-
-                var predBox = document.getElementById('prediction-box');
-                predBox.className = 'prediction';
-                if (stats.prediction === 'tai') { predBox.textContent = '🎯 DỰ ĐOÁN: TÀI'; predBox.classList.add('tai'); }
-                else if (stats.prediction === 'xiu') { predBox.textContent = '🎯 DỰ ĐOÁN: XỈU'; predBox.classList.add('xiu'); }
-                else { predBox.textContent = '⏳ Đang phân tích...'; }
-
-                var dotsContainer = document.getElementById('history-dots');
-                dotsContainer.innerHTML = '';
-                var displayHistory = this.history.slice(-20);
-                for (var i = 0; i < displayHistory.length; i++) {
-                    var dot = document.createElement('span');
-                    dot.className = 'history-dot ' + displayHistory[i];
-                    dot.textContent = displayHistory[i] === 'tai' ? 'T' : 'X';
-                    dot.title = '#' + (this.history.length - displayHistory.length + i + 1) + ': ' + displayHistory[i].toUpperCase();
-                    dotsContainer.appendChild(dot);
-                }
-            },
-
-            setupPanelToggle: function() {
-                var self = this;
-                var panel = document.getElementById('tai-xiu-panel');
-                var toggleBtn = document.getElementById('toggle-panel-btn');
-                toggleBtn.addEventListener('click', function() {
-                    self.panelVisible = !self.panelVisible;
-                    panel.style.display = self.panelVisible ? 'block' : 'none';
-                    toggleBtn.textContent = self.panelVisible ? '✕' : '🎲';
-                    toggleBtn.style.background = self.panelVisible ? '#ff4444' : '#ffcc00';
+                this.sessionCodes.push({
+                    code: code,
+                    time: new Date().toLocaleTimeString('vi-VN'),
+                    source: source
                 });
-                panel.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('manual-tai-btn')) self.addManualResult('tai');
-                    else if (e.target.classList.contains('manual-xiu-btn')) self.addManualResult('xiu');
-                    else if (e.target.classList.contains('reset-btn')) self.resetHistory();
-                    else if (e.target.classList.contains('toggle-auto-btn')) {
-                        APIInterceptor.autoCaptureEnabled = !APIInterceptor.autoCaptureEnabled;
-                        document.getElementById('auto-status').textContent = APIInterceptor.autoCaptureEnabled ? 'ĐANG BẬT' : 'ĐÃ TẮT';
-                        document.getElementById('auto-status').className = 'stat-value ' + (APIInterceptor.autoCaptureEnabled ? 'green' : 'tai');
-                    }
-                });
-                var buttonRow = document.createElement('div');
-                buttonRow.style.cssText = 'display:flex;gap:6px;margin-top:10px;justify-content:center;flex-wrap:wrap;';
-                buttonRow.innerHTML = '<button class="manual-tai-btn" style="background:#ff4444;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">TÀI</button>' +
-                    '<button class="manual-xiu-btn" style="background:#44aaff;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">XỈU</button>' +
-                    '<button class="reset-btn" style="background:#555;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">XÓA</button>' +
-                    '<button class="toggle-auto-btn" style="background:#ff8800;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:10px;">BẬT/TẮT AUTO</button>';
-                panel.appendChild(buttonRow);
+                if (this.sessionCodes.length > 20) this.sessionCodes.shift();
+                this.updateDisplay();
+                this.log('🔑 BẮT ĐƯỢC MÃ PHIÊN [' + source + ']: ' + code);
             },
 
-            setupMutationObserver: function() {
+            // Метод 1: Мониторинг изменения src iframe
+            setupIFrameURLMonitor: function() {
                 var self = this;
                 var frame = document.getElementById('main-frame');
+
+                // Перехватываем присвоение src через сеттер
+                var originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
+                if (originalSrcDescriptor && originalSrcDescriptor.set) {
+                    var originalSet = originalSrcDescriptor.set;
+                    Object.defineProperty(frame, 'src', {
+                        get: function() { return originalSrcDescriptor.get.call(this); },
+                        set: function(value) {
+                            self.extractSessionFromURL(value);
+                            return originalSet.call(this, value);
+                        }
+                    });
+                }
+
+                // Также слушаем событие load для проверки финального URL
                 frame.addEventListener('load', function() {
                     try {
-                        var frameDoc = frame.contentDocument || frame.contentWindow.document;
-                        if (!frameDoc) return;
-                        var observer = new MutationObserver(function(mutations) { mutations.forEach(function(mutation) { if (mutation.type === 'childList' || mutation.type === 'characterData') self.scanForResults(frameDoc); }); });
-                        observer.observe(frameDoc.body, { childList: true, subtree: true, characterData: true });
-                        setTimeout(function() { self.scanForResults(frameDoc); }, 3000);
-                    } catch(e) { console.log('Không thể truy cập iframe (cross-origin)'); }
-                });
-            },
-
-            scanForResults: function(doc) {
-                try {
-                    var bodyText = doc.body.textContent || doc.body.innerText || '';
-                    // Более точное сканирование с поиском чисел (tai xiu обычно показывает сумму кубиков)
-                    var sumMatch = bodyText.match(/Tổng[:\s]*(\d+)/i) || bodyText.match(/Kết quả[:\s]*(Tài|Xỉu)/i);
-                    if (sumMatch) {
-                        var val = sumMatch[1];
-                        if (val === 'Tài' || val === 'tài') this.addResult('tai');
-                        else if (val === 'Xỉu' || val === 'xỉu') this.addResult('xiu');
+                        var currentURL = frame.contentWindow.location.href;
+                        self.extractSessionFromURL(currentURL);
+                    } catch(e) {
+                        // Cross-origin блокирует доступ к contentWindow.location.href
+                        self.log('⚠️ Không thể đọc URL iframe (cross-origin)');
                     }
-                } catch(e) {}
+                });
             },
 
-            setupKeyboardShortcut: function() {
+            // Метод 2: Прослушивание postMessage
+            setupPostMessageListener: function() {
                 var self = this;
-                document.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 't') { e.preventDefault(); self.addManualResult('tai'); }
-                    else if (e.ctrlKey && e.key === 'x') { e.preventDefault(); self.addManualResult('xiu'); }
-                    else if (e.ctrlKey && e.key === 'r') { e.preventDefault(); self.resetHistory(); }
-                    else if (e.ctrlKey && e.key === 'h') { e.preventDefault(); self.panelVisible = !self.panelVisible; document.getElementById('tai-xiu-panel').style.display = self.panelVisible ? 'block' : 'none'; }
-                    else if (e.ctrlKey && e.key === 'a') { e.preventDefault(); APIInterceptor.autoCaptureEnabled = !APIInterceptor.autoCaptureEnabled; }
+                window.addEventListener('message', function(event) {
+                    // Принимаем сообщения от любого источника (только для отлова session_id)
+                    var data = event.data;
+                    if (typeof data === 'string') {
+                        self.extractSessionFromString(data, 'postMessage(string)');
+                    } else if (typeof data === 'object' && data !== null) {
+                        self.extractSessionFromObject(data, 'postMessage(object)');
+                    }
                 });
+            },
+
+            // Метод 3: Периодическая проверка (если доступ появится позже)
+            setupPeriodicChecker: function() {
+                var self = this;
+                this.checkInterval = setInterval(function() {
+                    var frame = document.getElementById('main-frame');
+                    try {
+                        var currentURL = frame.contentWindow.location.href;
+                        self.extractSessionFromURL(currentURL);
+                    } catch(e) {}
+                }, 2000); // Проверка каждые 2 секунды
+            },
+
+            // Извлечение session_id из URL
+            extractSessionFromURL: function(url) {
+                if (!url || typeof url !== 'string') return;
+                var self = this;
+
+                // Паттерны session_id в URL
+                var patterns = [
+                    /[?&]session_id=([^&?#]+)/i,
+                    /[?&]sessionId=([^&?#]+)/i,
+                    /[?&]sid=([^&?#]+)/i,
+                    /[?&]token=([^&?#]+)/i,
+                    /[?&]round_id=([^&?#]+)/i,
+                    /[?&]roundId=([^&?#]+)/i,
+                    /[?&]game_session=([^&?#]+)/i,
+                    /[?&]batch_id=([^&?#]+)/i,
+                    /\/session\/([^\/\?#]+)/i,
+                    /\/round\/([^\/\?#]+)/i,
+                    /\/game\/([^\/\?#]+)/i,
+                    /[?&]code=([^&?#]+)/i,
+                    /[?&]maphien=([^&?#]+)/i
+                ];
+
+                for (var i = 0; i < patterns.length; i++) {
+                    var match = url.match(patterns[i]);
+                    if (match && match[1] && match[1].length > 3) {
+                        self.addSessionCode(match[1], 'URL');
+                        return;
+                    }
+                }
+            },
+
+            // Извлечение из строки
+            extractSessionFromString: function(str, source) {
+                if (!str || typeof str !== 'string' || str.length < 4) return;
+                var self = this;
+
+                // Ищем JSON в строке
+                try {
+                    var parsed = JSON.parse(str);
+                    self.extractSessionFromObject(parsed, source);
+                    return;
+                } catch(e) {}
+
+                // Ищем ключи session_id прямо в строке
+                var keyPatterns = [
+                    /"session_id"\s*:\s*"([^"]+)"/i,
+                    /"sessionId"\s*:\s*"([^"]+)"/i,
+                    /"round_id"\s*:\s*"([^"]+)"/i,
+                    /"roundId"\s*:\s*"([^"]+)"/i,
+                    /"sid"\s*:\s*"([^"]+)"/i,
+                    /"token"\s*:\s*"([^"]+)"/i,
+                    /"code"\s*:\s*"([^"]+)"/i,
+                    /"maphien"\s*:\s*"([^"]+)"/i,
+                    /session_id=([^\s&"]+)/i,
+                    /sessionId=([^\s&"]+)/i,
+                    /round_id=([^\s&"]+)/i
+                ];
+
+                for (var i = 0; i < keyPatterns.length; i++) {
+                    var match = str.match(keyPatterns[i]);
+                    if (match && match[1] && match[1].length > 3) {
+                        self.addSessionCode(match[1], source);
+                        return;
+                    }
+                }
+            },
+
+            // Извлечение из объекта
+            extractSessionFromObject: function(obj, source) {
+                if (!obj || typeof obj !== 'object') return;
+                var self = this;
+
+                var keyVariants = [
+                    'session_id', 'sessionId', 'session', 'sid',
+                    'round_id', 'roundId', 'round', 'code',
+                    'token', 'maphien', 'phiên', 'game_session',
+                    'gameSession', 'batch_id', 'batchId', 'id'
+                ];
+
+                var searchObj = function(o, depth) {
+                    if (depth > 10 || !o || typeof o !== 'object') return;
+                    if (Array.isArray(o)) {
+                        for (var i = 0; i < o.length; i++) searchObj(o[i], depth + 1);
+                        return;
+                    }
+                    for (var key in o) {
+                        if (o.hasOwnProperty(key)) {
+                            var lowerKey = key.toLowerCase();
+                            for (var j = 0; j < keyVariants.length; j++) {
+                                if (lowerKey.indexOf(keyVariants[j].toLowerCase()) !== -1) {
+                                    var val = o[key];
+                                    if (typeof val === 'string' && val.length > 3 && val.length < 256) {
+                                        self.addSessionCode(val, source + ':' + key);
+                                        return;
+                                    }
+                                }
+                            }
+                            if (typeof o[key] === 'object' && o[key] !== null) {
+                                searchObj(o[key], depth + 1);
+                            }
+                        }
+                    }
+                };
+
+                searchObj(obj, 0);
             }
         };
 
-        // ==================== ON LOAD ====================
+        // ==================== INIT ====================
         function onLoad() {
-            initTracking();
-            trackClicks();
-            loadGame();
-            loadExternalScript();
-            redirectCheck();
-            APIInterceptor.init();
-            TaiXiuAnalyzer.init();
+            var frame = document.getElementById('main-frame');
+            var loading = document.getElementById('loading-screen');
+
+            frame.onload = function() {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+
+            // Загружаем игру в iframe
+            setTimeout(function() {
+                frame.src = gameUrl;
+            }, 1500);
+
+            // Запускаем отслеживание session_id
+            SessionTracker.init();
+
+            // Настройка кнопки панели
+            var panel = document.getElementById('tai-xiu-panel');
+            var toggleBtn = document.getElementById('toggle-panel-btn');
+            var panelVisible = false;
+            toggleBtn.addEventListener('click', function() {
+                panelVisible = !panelVisible;
+                panel.style.display = panelVisible ? 'block' : 'none';
+                toggleBtn.textContent = panelVisible ? '✕' : '🎲';
+                toggleBtn.style.background = panelVisible ? '#ff4444' : '#ffcc00';
+            });
         }
 
-        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', onLoad); }
-        else { onLoad(); }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onLoad);
+        } else {
+            onLoad();
+        }
     })();
     </script>
 </body>
