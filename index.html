@@ -14,7 +14,7 @@
             font-family: 'Segoe UI', Arial, sans-serif;
         }
         
-        /* Trang chủ - hiển thị khi chưa chọn game */
+        /* Trang chủ */
         .home-container {
             width: 100%;
             height: 100%;
@@ -51,7 +51,7 @@
         
         .footer { text-align: center; margin-top: 50px; padding: 20px; color: #666; }
         
-        /* Iframe container - ẩn ban đầu, hiện khi chọn game */
+        /* Iframe container */
         .iframe-container {
             position: fixed;
             top: 0;
@@ -88,7 +88,7 @@
         }
         .back-btn:hover { background: #ffd700; color: #1a1a3a; }
         
-        /* Floating Menu - Hình tròn kéo thả (luôn hiển thị trên iframe) */
+        /* Floating Menu - HÌNH TRÒN NHỎ GỌN */
         .float-menu {
             position: fixed;
             z-index: 10001;
@@ -97,9 +97,9 @@
             backdrop-filter: blur(12px);
             border-radius: 50%;
             border: 2px solid #ffd700;
-            box-shadow: 0 0 20px rgba(255,215,0,0.4);
-            width: 75px;
-            height: 75px;
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+            width: 55px;
+            height: 55px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -107,64 +107,65 @@
             transition: all 0.2s ease;
         }
         .float-menu:active { cursor: grabbing; transform: scale(0.95); }
-        .float-menu:hover { box-shadow: 0 0 30px rgba(255,215,0,0.7); }
-        .float-icon { font-size: 28px; }
-        .float-pred { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 2px 8px; margin-top: 4px; }
-        .float-dot { width: 8px; height: 8px; border-radius: 50%; background: #0f0; position: absolute; bottom: 5px; right: 8px; box-shadow: 0 0 4px #0f0; }
+        .float-menu:hover { box-shadow: 0 0 20px rgba(255,215,0,0.7); width: 58px; height: 58px; }
+        .float-icon { font-size: 22px; }
+        .float-pred { font-size: 9px; font-weight: bold; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 2px 5px; margin-top: 2px; }
+        .float-dot { width: 8px; height: 8px; border-radius: 50%; background: #0f0; position: absolute; bottom: 3px; right: 5px; box-shadow: 0 0 4px #0f0; }
         .float-off { background: #f00; box-shadow: 0 0 4px #f00; }
         
-        /* Panel mở rộng */
+        /* Panel mở rộng - NHỎ HƠN */
         .float-panel {
             position: fixed;
             z-index: 10002;
-            width: 320px;
+            width: 280px;
             background: rgba(10,10,30,0.96);
             backdrop-filter: blur(16px);
-            border-radius: 20px;
+            border-radius: 16px;
             border: 1px solid #ffd700;
             font-family: monospace;
             color: #ffd700;
-            font-size: 12px;
+            font-size: 11px;
             overflow: hidden;
             display: none;
         }
         .panel-header {
             background: #1a1a3a;
-            padding: 10px 14px;
+            padding: 8px 12px;
             font-weight: bold;
+            font-size: 11px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #ffd700;
             cursor: move;
         }
-        .panel-content { padding: 12px; max-height: 450px; overflow-y: auto; }
-        .stat-row { background: rgba(255,255,255,0.05); margin: 8px 0; padding: 8px; border-radius: 12px; border-left: 3px solid #ffd700; }
-        .pred-box { background: rgba(0,0,0,0.3); text-align: center; padding: 12px; border-radius: 15px; margin: 10px 0; }
-        .pred-value { font-size: 28px; font-weight: 800; }
+        .panel-content { padding: 10px; max-height: 400px; overflow-y: auto; }
+        .stat-row { background: rgba(255,255,255,0.05); margin: 6px 0; padding: 6px; border-radius: 10px; border-left: 2px solid #ffd700; font-size: 10px; }
+        .pred-box { background: rgba(0,0,0,0.3); text-align: center; padding: 8px; border-radius: 12px; margin: 8px 0; }
+        .pred-value { font-size: 22px; font-weight: 800; }
         button {
-            background: #ffd700; color: #1a1a3a; border: none; padding: 8px; border-radius: 30px;
-            margin-top: 8px; width: 100%; cursor: pointer; font-weight: bold;
+            background: #ffd700; color: #1a1a3a; border: none; padding: 6px; border-radius: 25px;
+            margin-top: 6px; width: 100%; cursor: pointer; font-weight: bold; font-size: 10px;
         }
         button:hover { background: #ffed4e; }
         .history span {
-            display: inline-block; background: rgba(255,215,0,0.2); margin: 3px;
-            padding: 3px 8px; border-radius: 20px; font-size: 11px;
+            display: inline-block; background: rgba(255,215,0,0.2); margin: 2px;
+            padding: 2px 6px; border-radius: 15px; font-size: 9px;
         }
         .close-btn, .mini-btn {
             background: #333; border: none; color: white; border-radius: 20px;
-            width: 26px; height: 26px; cursor: pointer;
+            width: 22px; height: 22px; font-size: 12px; cursor: pointer;
         }
-        .close-btn { background: #aa3355; margin-left: 8px; }
+        .close-btn { background: #aa3355; margin-left: 6px; }
         .log-area {
-            background: rgba(0,0,0,0.5); border-radius: 8px; padding: 6px; margin-top: 8px;
-            font-size: 9px; color: #aaa; max-height: 100px; overflow-y: auto;
+            background: rgba(0,0,0,0.5); border-radius: 6px; padding: 4px; margin-top: 6px;
+            font-size: 8px; color: #aaa; max-height: 80px; overflow-y: auto;
         }
         
         @media (max-width: 600px) {
             .game-card { padding: 30px 40px; }
             .game-name { font-size: 28px; }
-            .float-panel { width: 300px; }
+            .float-panel { width: 260px; }
         }
     </style>
 </head>
@@ -203,7 +204,7 @@
 <!-- Nút quay lại -->
 <button id="backBtn" class="back-btn">← Quay lại</button>
 
-<!-- Floating Menu -->
+<!-- Floating Menu - NHỎ GỌN -->
 <div id="floatMenu" class="float-menu" style="top: 100px; right: 20px;">
     <div class="float-icon">🎲</div>
     <div class="float-pred" id="miniPred">---</div>
@@ -213,30 +214,27 @@
 <!-- Panel -->
 <div id="floatPanel" class="float-panel" style="top: 100px; right: 110px;">
     <div class="panel-header" id="panelHeader">
-        <span>🎲 AI THOMAS - DỰ ĐOÁN</span>
+        <span>🎲 AI THOMAS</span>
         <div>
             <button class="mini-btn" id="miniBtn">─</button>
             <button class="close-btn" id="closeBtn">✕</button>
         </div>
     </div>
     <div id="panelBody" class="panel-content">
-        <div class="stat-row" id="currentInfo">📡 ĐANG KẾT NỐI WEBSOCKET...</div>
+        <div class="stat-row" id="currentInfo">📡 ĐANG KẾT NỐI...</div>
         <div class="pred-box">
-            <div>🔮 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
+            <div>🔮 DỰ ĐOÁN</div>
             <div class="pred-value" id="nextPred">---</div>
-            <div style="font-size: 9px;">thuật toán: streak + tần suất + tổng điểm</div>
         </div>
         <div class="stat-row">
-            📊 THỐNG KÊ<br>
-            🟢 TÀI: <span id="taiCount">0</span> &nbsp;| 🔴 XỈU: <span id="xiuCount">0</span><br>
+            📊 TÀI: <span id="taiCount">0</span> | XỈU: <span id="xiuCount">0</span><br>
             📜 Tổng: <span id="totalHistory">0</span> | Phiên: <span id="sessionId">---</span>
         </div>
         <button id="refreshBtn">⟳ CẬP NHẬT</button>
-        <hr style="border-color:#333; margin:10px 0">
+        <hr style="border-color:#333; margin:6px 0">
         <div>📜 15 KQ GẦN NHẤT:</div>
-        <div id="miniHistory" class="history" style="margin-top:6px;">--</div>
+        <div id="miniHistory" class="history" style="margin-top:4px;">--</div>
         <div class="log-area" id="logArea"></div>
-        <div style="font-size: 9px; text-align: center; margin-top: 8px;">💡 Kéo thả tiêu đề để di chuyển</div>
     </div>
 </div>
 
@@ -247,7 +245,6 @@
     const gameIframe = document.getElementById('gameIframe');
     const backBtn = document.getElementById('backBtn');
     
-    // Click vào SunWin -> hiển thị iframe với web.sunwin.tg
     document.getElementById('sunwinCard').addEventListener('click', function() {
         homePage.style.display = 'none';
         iframeContainer.style.display = 'block';
@@ -255,7 +252,6 @@
         backBtn.style.display = 'block';
     });
     
-    // Nút quay lại
     backBtn.addEventListener('click', function() {
         homePage.style.display = 'flex';
         iframeContainer.style.display = 'none';
@@ -263,7 +259,7 @@
         backBtn.style.display = 'none';
     });
     
-    // ======================= KÉO THẢ MENU (LUÔN HOẠT ĐỘNG) =======================
+    // ======================= KÉO THẢ MENU =======================
     const floatMenu = document.getElementById('floatMenu');
     const floatPanel = document.getElementById('floatPanel');
     let isDrag = false, dragX, dragY;
@@ -293,8 +289,8 @@
         if (isDrag) return;
         const rect = floatMenu.getBoundingClientRect();
         let left = rect.right + 10, top = rect.top;
-        if (left + 340 > window.innerWidth) left = rect.left - 350;
-        if (top + 500 > window.innerHeight) top = window.innerHeight - 510;
+        if (left + 300 > window.innerWidth) left = rect.left - 290;
+        if (top + 450 > window.innerHeight) top = window.innerHeight - 460;
         if (top < 10) top = 10;
         floatPanel.style.left = left + 'px';
         floatPanel.style.top = top + 'px';
@@ -331,11 +327,10 @@
         const logDiv = document.getElementById('logArea');
         const time = new Date().toLocaleTimeString('vi-VN');
         logDiv.innerHTML = `<div>[${time}] ${msg}</div>` + logDiv.innerHTML;
-        if (logDiv.children.length > 15) logDiv.removeChild(logDiv.lastChild);
+        if (logDiv.children.length > 12) logDiv.removeChild(logDiv.lastChild);
         console.log(msg);
     }
     
-    // --- SỬ DỤNG CLOUDFLARE WORKER CỦA BẠN ---
     const WS_URL = 'wss://sun.leviet07052008.workers.dev';
     
     const INIT_MSGS = [
@@ -344,6 +339,8 @@
             "signature": "66772A1641AA8B18BD99207CE448EA00ECA6D8A4D457C1FF13AB092C22C8DECF0C0014971639A0FBA9984701A91FCCBE3056ABC1BE1541D1C198AA18AF3C45595AF6601F8B048947ADF8F48A9E3E074162F9BA3E6C0F7543D38BD54FD4C0A2C56D19716CC5353BBC73D12C3A92F78C833F4EFFDC4AB99E55C77AD2CDFA91E296"
         }],
         [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
+        [6, "MiniGame", "taixiuPlugin", { cmd: 1006 }],
+        [6, "MiniGame", "taixiuPlugin", { cmd: 1007 }],
         [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
     ];
     
@@ -354,6 +351,11 @@
         document.getElementById('xiuCount').innerText = xiu;
         document.getElementById('totalHistory').innerText = historyData.length;
         document.getElementById('sessionId').innerText = currentSession || '---';
+        
+        if (currentSession) {
+            document.getElementById('currentInfo').innerHTML = `✅ ĐÃ KẾT NỐI<br>🎮 Phiên: ${currentSession}`;
+            document.getElementById('wsDot').classList.remove('float-off');
+        }
         
         if (historyData.length > 0) {
             const last = historyData[0];
@@ -366,6 +368,8 @@
             predElem.innerHTML = pred === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
             predElem.style.color = pred === 'Tài' ? '#88ffcc' : '#ffaa88';
             document.getElementById('miniPred').innerHTML = pred;
+        } else {
+            document.getElementById('miniPred').innerHTML = '---';
         }
         renderHistory();
     }
@@ -396,7 +400,7 @@
     
     function renderHistory() {
         const container = document.getElementById('miniHistory');
-        if (historyData.length === 0) { container.innerHTML = '<span>CHƯA CÓ DỮ LIỆU</span>'; return; }
+        if (historyData.length === 0) { container.innerHTML = '<span>--</span>'; return; }
         let html = '';
         for (let i = 0; i < Math.min(15, historyData.length); i++) {
             let item = historyData[i];
@@ -407,35 +411,29 @@
     
     function connectWS() {
         if (ws && ws.readyState === WebSocket.OPEN) return;
-        addLog(`🔄 Đang kết nối WebSocket qua Worker: ${WS_URL}`);
+        addLog(`🔄 Đang kết nối...`);
         try { 
             ws = new WebSocket(WS_URL); 
         } catch(e) { 
-            addLog(`❌ Lỗi khởi tạo WebSocket: ${e.message}`); 
+            addLog(`❌ Lỗi: ${e.message}`); 
             return; 
         }
         
         ws.onopen = () => {
-            addLog('✅ Kết nối WebSocket thành công!');
-            document.getElementById('wsDot').classList.remove('float-off');
-            
-            // Gửi các tin nhắn khởi tạo với độ trễ phù hợp
+            addLog('✅ Đã kết nối!');
             INIT_MSGS.forEach((msg, i) => {
                 setTimeout(() => { 
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify(msg));
-                        addLog(`📤 Đã gửi gói tin khởi tạo ${i+1}`);
                     }
-                }, i * 800); // Tăng độ trễ lên 800ms
+                }, i * 600);
             });
-            
             if (pingInt) clearInterval(pingInt);
-            // Tăng tần suất ping lên 15 giây để giữ kết nối ổn định hơn
             pingInt = setInterval(() => { 
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
                 }
-            }, 15000);
+            }, 25000);
         };
         
         ws.onmessage = (e) => {
@@ -445,39 +443,36 @@
                 const { cmd, sid, d1, d2, d3, gBB } = data[1];
                 if (cmd === 1008 && sid) { 
                     currentSession = sid; 
-                    addLog(`🎮 Phiên hiện tại: ${sid}`); 
+                    addLog(`🎮 Phiên: ${sid}`);
+                    updateUI();
                 }
                 if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
-                    const total = d1 + d2 + d3;
-                    const result = total > 10 ? "Tài" : "Xỉu";
+                    const total = d1 + d2 + d3, result = total > 10 ? "Tài" : "Xỉu";
                     if (historyData.length === 0 || historyData[0].session !== currentSession) {
                         historyData.unshift({ session: currentSession, dice: [d1, d2, d3], total, result, time: Date.now() });
                         if (historyData.length > 100) historyData.pop();
-                        addLog(`🎲 Kết quả mới: ${d1}-${d2}-${d3} = ${total} (${result})`);
+                        addLog(`🎲 ${d1}-${d2}-${d3} = ${total} (${result})`);
                         updateUI();
                     }
                 }
-            } catch(er) {
-                // Bỏ qua lỗi parse nếu không nghiêm trọng
-            }
+            } catch(er) {}
         };
         
         ws.onclose = (event) => { 
-            addLog(`🔌 Mất kết nối (Code: ${event.code}). Thử kết nối lại sau 5s...`); 
+            addLog(`🔌 Mất kết nối, thử lại sau 5s...`); 
             document.getElementById('wsDot').classList.add('float-off'); 
             clearInterval(pingInt); 
             setTimeout(connectWS, 5000); 
         };
         ws.onerror = (err) => {
-            addLog(`❌ Lỗi WebSocket: ${err.message}`);
+            addLog(`❌ Lỗi: ${err.message}`);
         };
     }
     
     connectWS();
     document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
-    addLog('🚀 AI THOMAS - Dự đoán SunWin');
-    addLog('⚡ Đã cấu hình WebSocket qua Cloudflare Worker');
-    addLog('💡 Click vào SUNWIN để mở game, menu dự đoán vẫn hoạt động');
+    addLog('🚀 AI THOMAS');
+    addLog('💡 Click SUNWIN để mở game');
 </script>
 </body>
 </html>
