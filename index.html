@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AI Thomas - Dự Đoán Tài Xỉu</title>
+    <title>AI Thomas - Dự Đoán SunWin</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -22,19 +22,21 @@
         .status-dot { width: 12px; height: 12px; background: #00ff00; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 5px #00ff00; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
         
-        /* Game Grid */
+        /* Game Grid - Chỉ có SunWin */
         .section-title { text-align: center; margin: 30px 0 20px; font-size: 24px; }
-        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .game-grid { display: flex; justify-content: center; align-items: center; }
         .game-card {
             background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
-            border-radius: 20px; padding: 25px 20px; text-align: center;
+            border-radius: 20px; padding: 40px 60px; text-align: center;
             transition: all 0.3s ease; cursor: pointer;
             border: 1px solid rgba(255,255,255,0.15);
+            max-width: 400px;
+            width: 100%;
         }
         .game-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.15); border-color: #ffd700; }
-        .game-name { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
-        .game-desc { font-size: 12px; color: #ccc; }
-        .game-badge { display: inline-block; background: rgba(0,255,0,0.2); padding: 3px 10px; border-radius: 20px; font-size: 10px; margin-top: 10px; color: #0f0; }
+        .game-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
+        .game-desc { font-size: 14px; color: #ccc; }
+        .game-badge { display: inline-block; background: rgba(0,255,0,0.2); padding: 3px 15px; border-radius: 20px; font-size: 12px; margin-top: 15px; color: #0f0; }
         
         .footer { text-align: center; margin-top: 50px; padding: 20px; color: #666; border-top: 1px solid rgba(255,255,255,0.1); }
         
@@ -89,6 +91,12 @@
             background: rgba(0,0,0,0.5); border-radius: 8px; padding: 6px; margin-top: 8px;
             font-size: 9px; color: #aaa; max-height: 100px; overflow-y: auto;
         }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .game-card { padding: 30px 40px; }
+            .game-name { font-size: 28px; }
+        }
     </style>
 </head>
 <body>
@@ -108,7 +116,13 @@
     </div>
     
     <h2 class="section-title">🎮 Chọn Cổng Game</h2>
-    <div class="game-grid" id="gameGrid"></div>
+    <div class="game-grid">
+        <div class="game-card" id="sunwinCard">
+            <div class="game-name">✨ SUNWIN ✨</div>
+            <div class="game-desc">Tài Xỉu Online - Dự đoán chính xác</div>
+            <div class="game-badge">● ĐANG HOẠT ĐỘNG</div>
+        </div>
+    </div>
     
     <div class="footer">
         <p>© 2025 AI Thomas - Dự đoán chính xác cao | Hỗ trợ 24/7</p>
@@ -136,6 +150,7 @@
         <div class="pred-box">
             <div>🔮 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
             <div class="pred-value" id="nextPred">---</div>
+            <div style="font-size: 9px;">thuật toán: streak + tần suất + tổng điểm</div>
         </div>
         <div class="stat-row">
             📊 THỐNG KÊ<br>
@@ -147,33 +162,14 @@
         <div>📜 15 KQ GẦN NHẤT:</div>
         <div id="miniHistory" class="history" style="margin-top:6px;">--</div>
         <div class="log-area" id="logArea"></div>
+        <div style="font-size: 9px; text-align: center; margin-top: 8px;">💡 Kéo thả tiêu đề để di chuyển</div>
     </div>
 </div>
 
 <script>
-    // ======================= DANH SÁCH GAME =======================
-    const games = [
-        { name: "68 Game Bài", desc: "Dự đoán ổn định", badge: "ACTIVE", gameId: 1 },
-        { name: "Thiên Đường TC", desc: "Dự đoán ổn định", badge: "ACTIVE", gameId: 4 },
-        { name: "LC79", desc: "Dự đoán ổn định", badge: "ACTIVE", gameId: 22 },
-        { name: "Max789", desc: "Dự đoán ổn định", badge: "ACTIVE", gameId: 14 },
-        { name: "Sao 789", desc: "Dự đoán đang nét", badge: "HOT", gameId: 17 },
-        { name: "Son 789", desc: "Dự đoán đang nét", badge: "HOT", gameId: 10 },
-        { name: "Zing 88", desc: "Dự đoán ổn định", badge: "ACTIVE", gameId: 8 },
-        { name: "TA28", desc: "Cổng game quốc tế", badge: "NEW", gameId: 2 }
-    ];
-    
-    const grid = document.getElementById('gameGrid');
-    games.forEach(game => {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-        card.innerHTML = `
-            <div class="game-name">${game.name}</div>
-            <div class="game-desc">${game.desc}</div>
-            <div class="game-badge">● ${game.badge}</div>
-        `;
-        card.onclick = () => alert(`🔮 ${game.name}\n📌 ${game.desc}\n\nTính năng đang phát triển!`);
-        grid.appendChild(card);
+    // ======================= CLICK SUNWIN -> MỞ web.sunwin.tg =======================
+    document.getElementById('sunwinCard').addEventListener('click', function() {
+        window.location.href = 'https://web.sunwin.tg';
     });
     
     // ======================= KÉO THẢ MENU =======================
@@ -353,8 +349,8 @@
     
     connectWS();
     document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
-    addLog('🚀 AI THOMAS - Dự đoán Tài Xỉu');
-    addLog('⚡ WebSocket tự động kết nối SunWin');
+    addLog('🚀 AI THOMAS - Dự đoán SunWin');
+    addLog('⚡ WebSocket tự động kết nối');
 </script>
 </body>
 </html>
