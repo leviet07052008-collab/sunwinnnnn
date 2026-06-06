@@ -1,316 +1,360 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SunWin - Cổng Game Bài Đổi Thưởng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SunWin Predictor + Live Frame</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
-        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .loader { width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #ffcc00; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #main-frame { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        #tai-xiu-panel { position: fixed; bottom: 10px; right: 10px; width: 320px; max-height: 500px; background: rgba(10, 10, 10, 0.97); border: 1px solid #ffcc00; border-radius: 12px; padding: 15px; z-index: 10000; font-size: 11px; overflow-y: auto; display: none; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3); }
-        #tai-xiu-panel h3 { color: #ffcc00; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        #tai-xiu-panel .section-title { color: #ffcc00; font-size: 11px; margin: 10px 0 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-        #tai-xiu-panel .stat-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1a1a1a; }
-        #tai-xiu-panel .stat-label { color: #aaa; }
-        #tai-xiu-panel .stat-value { color: #fff; font-weight: bold; }
-        #tai-xiu-panel .stat-value.tai { color: #ff4444; }
-        #tai-xiu-panel .stat-value.xiu { color: #44aaff; }
-        #tai-xiu-panel .stat-value.green { color: #44ff44; }
-        #tai-xiu-panel .prediction { text-align: center; margin-top: 10px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 13px; font-weight: bold; }
-        #tai-xiu-panel .prediction.tai { color: #ff4444; border: 1px solid #ff4444; }
-        #tai-xiu-panel .prediction.xiu { color: #44aaff; border: 1px solid #44aaff; }
-        #tai-xiu-panel .history-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; justify-content: center; }
-        #tai-xiu-panel .history-dot { width: 18px; height: 18px; border-radius: 50%; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #tai-xiu-panel .history-dot.tai { background: #ff4444; color: #fff; }
-        #tai-xiu-panel .history-dot.xiu { background: #44aaff; color: #fff; }
-        #session-code-display { background: #1a1a1a; padding: 6px; border-radius: 4px; word-break: break-all; font-family: monospace; font-size: 10px; color: #44ff44; margin-top: 4px; }
-        #api-log { background: #0a0a0a; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 9px; color: #888; margin-top: 5px; }
-        #toggle-panel-btn { position: fixed; bottom: 10px; right: 10px; width: 40px; height: 40px; background: #ffcc00; color: #0a0a0a; border: none; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; z-index: 10001; box-shadow: 0 0 15px rgba(255, 204, 0, 0.5); }
-        #toggle-panel-btn:hover { background: #ffdd33; }
+        body {
+            background: #0a0f1e;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            color: #00ffcc;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+        /* MAIN LAYOUT: LEFT MENU (FIXED), RIGHT IFRAME */
+        .app-container {
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 24px);
+        }
+        /* ПАНЕЛЬ ПРЕДСКАЗАНИЙ — FIXED WIDTH, SCROLL */
+        .prediction-panel {
+            width: 320px;
+            background: #101520;
+            border: 1px solid #2a3a4a;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+            overflow-y: auto;
+            flex-shrink: 0;
+            backdrop-filter: blur(2px);
+        }
+        /* ОБЛАСТЬ IFRAME */
+        .iframe-area {
+            flex: 1;
+            background: #000000;
+            border: 1px solid #2a5f6e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 12px rgba(0,255,200,0.2);
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        /* СТИЛИ ДЛЯ МЕНЮ ПРЕДСКАЗАНИЙ */
+        .header-stats {
+            border-bottom: 1px solid #2a5f6e;
+            padding-bottom: 8px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .current-session {
+            background: #0c1422;
+            padding: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #00ffcc;
+            font-size: 0.85rem;
+        }
+        .history-list {
+            list-style: none;
+            max-height: 340px;
+            overflow-y: auto;
+            margin-top: 6px;
+        }
+        .history-list li {
+            background: #111a22;
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            border-right: 2px solid #2c4c5c;
+            display: flex;
+            justify-content: space-between;
+        }
+        .prediction-card {
+            background: #0a1018;
+            border-top: 2px solid #00aa88;
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .prediction-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            background: #00000040;
+        }
+        .prediction-value {
+            font-size: 2rem;
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 800;
+            background: #00000060;
+            border-radius: 20px;
+            padding: 6px;
+        }
+        .algo-note {
+            font-size: 0.65rem;
+            color: #7faaaf;
+            text-align: center;
+        }
+        button {
+            background: #1f3a44;
+            border: none;
+            color: #d0fff0;
+            padding: 8px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s linear;
+            font-family: monospace;
+        }
+        button:hover {
+            background: #2f5a6e;
+            box-shadow: 0 0 6px cyan;
+        }
+        .status {
+            font-size: 0.7rem;
+            color: #aaffdd;
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #1f8a7a; }
+        @media (max-width: 720px) {
+            .app-container { flex-direction: column; height: auto; }
+            .prediction-panel { width: 100%; max-height: 380px; }
+            .iframe-area { min-height: 55vh; }
+        }
     </style>
 </head>
 <body>
-    <button id="toggle-panel-btn" title="Phân tích Tài Xỉu">🎲</button>
+<div class="app-container">
+    <!-- БЛОК ПРЕДСКАЗАНИЙ / МЕНЮ -->
+    <div class="prediction-panel">
+        <div class="header-stats">🔮 SUNWIN PREDICTOR v4.0</div>
+        <div class="status" id="apiStatus">⏳ загрузка данных с API...</div>
+        
+        <div class="current-session" id="currentBlock">
+            <span>⚡ ТЕКУЩАЯ СЕССИЯ:</span><br>
+            <span id="sessionId">—</span> | 🎲 <span id="diceDisplay">0-0-0</span> | СУММА: <span id="totalSum">0</span><br>
+            📊 РЕЗУЛЬТАТ: <strong id="resultText">—</strong>
+        </div>
 
-    <div id="tai-xiu-panel">
-        <h3>📊 PHÂN TÍCH TÀI XỈU</h3>
-        <div class="section-title">🔑 Mã Phiên Hiện Tại</div>
-        <div id="session-code-display">Đang chờ...</div>
-        <div class="section-title">📈 Thống Kê</div>
-        <div class="stat-row"><span class="stat-label">Tổng phiên:</span><span class="stat-value" id="total-sessions">0</span></div>
-        <div class="stat-row"><span class="stat-label">Số lần Tài:</span><span class="stat-value tai" id="tai-count">0</span></div>
-        <div class="stat-row"><span class="stat-label">Số lần Xỉu:</span><span class="stat-value xiu" id="xiu-count">0</span></div>
-        <div class="stat-row"><span class="stat-label">Tỉ lệ Tài:</span><span class="stat-value" id="tai-rate">0%</span></div>
-        <div class="stat-row"><span class="stat-label">Tỉ lệ Xỉu:</span><span class="stat-value" id="xiu-rate">0%</span></div>
-        <div class="stat-row"><span class="stat-label">Chuỗi hiện tại:</span><span class="stat-value" id="current-streak">-</span></div>
-        <div class="stat-row"><span class="stat-label">Chuỗi dài nhất:</span><span class="stat-value" id="max-streak">-</span></div>
-        <div class="stat-row"><span class="stat-label">Auto-capture:</span><span class="stat-value green" id="auto-status">ĐANG BẬT</span></div>
-        <div class="prediction" id="prediction-box">Đang thu thập dữ liệu...</div>
-        <div class="section-title">📋 Lịch Sử (20 phiên gần nhất)</div>
-        <div class="history-dots" id="history-dots"></div>
-        <div class="section-title">📡 Nhật Ký</div>
-        <div id="api-log">Đang lắng nghe...</div>
+        <div class="prediction-card">
+            <div class="prediction-title">📈 ПРОГНОЗ НА СЛЕДУЮЩУЮ СЕССИЮ</div>
+            <div class="prediction-value" id="nextPrediction">---</div>
+            <div class="algo-note">алгоритм: паттерн + тренд + дельта суммы (нейросетевой эмулятор)</div>
+            <button id="refreshBtn">⟳ ОБНОВИТЬ ПРОГНОЗ</button>
+        </div>
+
+        <div>
+            <div>📜 ПОСЛЕДНИЕ 20 ИСТОРИЙ</div>
+            <ul class="history-list" id="historyList">
+                <li>⏳ ожидание истории...</li>
+            </ul>
+        </div>
+        <div class="status">⚙️ автообновление: 12 сек | прогноз на основе весов</div>
     </div>
 
-    <div id="loading-screen"><div class="loader"></div></div>
-    <iframe id="main-frame" name="game_frame" src="" style="display:none;"></iframe>
+    <!-- IFRAME: SUNWIN.QA -->
+    <div class="iframe-area">
+        <iframe id="gameFrame" src="https://web.sunwin.qa" title="SunWin Game" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+    </div>
+</div>
 
-    <script>
+<script>
     (function() {
-        // ==================== SUNWIN BASE ====================
-        var BASE_URL = 'https://web.sunwin.qa';
-        var gameUrl = BASE_URL + '/api/game/load?game_id=777&mode=live';
+        // -------- ЖЕСТКИЙ КОД ПРЕДСКАЗАНИЯ ----------
+        const API_URL = 'https://sun-nvg7.onrender.com/api/history';
+        
+        let currentData = null;          // последний ответ API
+        let lastPrediction = "Tài";       // значение по умолчанию
+        let updateInterval = null;
 
-        var SessionTracker = {
-            sessionCodes: [],
-            apiLogLines: [],
-            maxLogLines: 50,
-            checkInterval: null,
-
-            init: function() {
-                this.setupIFrameURLMonitor();
-                this.setupPostMessageListener();
-                this.setupPeriodicChecker();
-                this.log('🔍 Bắt đầu theo dõi Session ID...');
-            },
-
-            log: function(msg) {
-                var timestamp = new Date().toLocaleTimeString('vi-VN');
-                this.apiLogLines.push('[' + timestamp + '] ' + msg);
-                if (this.apiLogLines.length > this.maxLogLines) this.apiLogLines.shift();
-                var logEl = document.getElementById('api-log');
-                if (logEl) logEl.textContent = this.apiLogLines.join('\n');
-            },
-
-            updateDisplay: function() {
-                var displayEl = document.getElementById('session-code-display');
-                if (this.sessionCodes.length > 0) {
-                    var last = this.sessionCodes[this.sessionCodes.length - 1];
-                    displayEl.textContent = last.code + ' (' + last.time + ')';
-                } else {
-                    displayEl.textContent = 'Chưa bắt được mã phiên';
-                }
-            },
-
-            addSessionCode: function(code, source) {
-                // Проверка на дубликат
-                for (var i = 0; i < this.sessionCodes.length; i++) {
-                    if (this.sessionCodes[i].code === code) return;
-                }
-                this.sessionCodes.push({
-                    code: code,
-                    time: new Date().toLocaleTimeString('vi-VN'),
-                    source: source
-                });
-                if (this.sessionCodes.length > 20) this.sessionCodes.shift();
-                this.updateDisplay();
-                this.log('🔑 BẮT ĐƯỢC MÃ PHIÊN [' + source + ']: ' + code);
-            },
-
-            // Метод 1: Мониторинг изменения src iframe
-            setupIFrameURLMonitor: function() {
-                var self = this;
-                var frame = document.getElementById('main-frame');
-
-                // Перехватываем присвоение src через сеттер
-                var originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
-                if (originalSrcDescriptor && originalSrcDescriptor.set) {
-                    var originalSet = originalSrcDescriptor.set;
-                    Object.defineProperty(frame, 'src', {
-                        get: function() { return originalSrcDescriptor.get.call(this); },
-                        set: function(value) {
-                            self.extractSessionFromURL(value);
-                            return originalSet.call(this, value);
-                        }
-                    });
-                }
-
-                // Также слушаем событие load для проверки финального URL
-                frame.addEventListener('load', function() {
-                    try {
-                        var currentURL = frame.contentWindow.location.href;
-                        self.extractSessionFromURL(currentURL);
-                    } catch(e) {
-                        // Cross-origin блокирует доступ к contentWindow.location.href
-                        self.log('⚠️ Không thể đọc URL iframe (cross-origin)');
-                    }
-                });
-            },
-
-            // Метод 2: Прослушивание postMessage
-            setupPostMessageListener: function() {
-                var self = this;
-                window.addEventListener('message', function(event) {
-                    // Принимаем сообщения от любого источника (только для отлова session_id)
-                    var data = event.data;
-                    if (typeof data === 'string') {
-                        self.extractSessionFromString(data, 'postMessage(string)');
-                    } else if (typeof data === 'object' && data !== null) {
-                        self.extractSessionFromObject(data, 'postMessage(object)');
-                    }
-                });
-            },
-
-            // Метод 3: Периодическая проверка (если доступ появится позже)
-            setupPeriodicChecker: function() {
-                var self = this;
-                this.checkInterval = setInterval(function() {
-                    var frame = document.getElementById('main-frame');
-                    try {
-                        var currentURL = frame.contentWindow.location.href;
-                        self.extractSessionFromURL(currentURL);
-                    } catch(e) {}
-                }, 2000); // Проверка каждые 2 секунды
-            },
-
-            // Извлечение session_id из URL
-            extractSessionFromURL: function(url) {
-                if (!url || typeof url !== 'string') return;
-                var self = this;
-
-                // Паттерны session_id в URL
-                var patterns = [
-                    /[?&]session_id=([^&?#]+)/i,
-                    /[?&]sessionId=([^&?#]+)/i,
-                    /[?&]sid=([^&?#]+)/i,
-                    /[?&]token=([^&?#]+)/i,
-                    /[?&]round_id=([^&?#]+)/i,
-                    /[?&]roundId=([^&?#]+)/i,
-                    /[?&]game_session=([^&?#]+)/i,
-                    /[?&]batch_id=([^&?#]+)/i,
-                    /\/session\/([^\/\?#]+)/i,
-                    /\/round\/([^\/\?#]+)/i,
-                    /\/game\/([^\/\?#]+)/i,
-                    /[?&]code=([^&?#]+)/i,
-                    /[?&]maphien=([^&?#]+)/i
-                ];
-
-                for (var i = 0; i < patterns.length; i++) {
-                    var match = url.match(patterns[i]);
-                    if (match && match[1] && match[1].length > 3) {
-                        self.addSessionCode(match[1], 'URL');
-                        return;
-                    }
-                }
-            },
-
-            // Извлечение из строки
-            extractSessionFromString: function(str, source) {
-                if (!str || typeof str !== 'string' || str.length < 4) return;
-                var self = this;
-
-                // Ищем JSON в строке
-                try {
-                    var parsed = JSON.parse(str);
-                    self.extractSessionFromObject(parsed, source);
-                    return;
-                } catch(e) {}
-
-                // Ищем ключи session_id прямо в строке
-                var keyPatterns = [
-                    /"session_id"\s*:\s*"([^"]+)"/i,
-                    /"sessionId"\s*:\s*"([^"]+)"/i,
-                    /"round_id"\s*:\s*"([^"]+)"/i,
-                    /"roundId"\s*:\s*"([^"]+)"/i,
-                    /"sid"\s*:\s*"([^"]+)"/i,
-                    /"token"\s*:\s*"([^"]+)"/i,
-                    /"code"\s*:\s*"([^"]+)"/i,
-                    /"maphien"\s*:\s*"([^"]+)"/i,
-                    /session_id=([^\s&"]+)/i,
-                    /sessionId=([^\s&"]+)/i,
-                    /round_id=([^\s&"]+)/i
-                ];
-
-                for (var i = 0; i < keyPatterns.length; i++) {
-                    var match = str.match(keyPatterns[i]);
-                    if (match && match[1] && match[1].length > 3) {
-                        self.addSessionCode(match[1], source);
-                        return;
-                    }
-                }
-            },
-
-            // Извлечение из объекта
-            extractSessionFromObject: function(obj, source) {
-                if (!obj || typeof obj !== 'object') return;
-                var self = this;
-
-                var keyVariants = [
-                    'session_id', 'sessionId', 'session', 'sid',
-                    'round_id', 'roundId', 'round', 'code',
-                    'token', 'maphien', 'phiên', 'game_session',
-                    'gameSession', 'batch_id', 'batchId', 'id'
-                ];
-
-                var searchObj = function(o, depth) {
-                    if (depth > 10 || !o || typeof o !== 'object') return;
-                    if (Array.isArray(o)) {
-                        for (var i = 0; i < o.length; i++) searchObj(o[i], depth + 1);
-                        return;
-                    }
-                    for (var key in o) {
-                        if (o.hasOwnProperty(key)) {
-                            var lowerKey = key.toLowerCase();
-                            for (var j = 0; j < keyVariants.length; j++) {
-                                if (lowerKey.indexOf(keyVariants[j].toLowerCase()) !== -1) {
-                                    var val = o[key];
-                                    if (typeof val === 'string' && val.length > 3 && val.length < 256) {
-                                        self.addSessionCode(val, source + ':' + key);
-                                        return;
-                                    }
-                                }
-                            }
-                            if (typeof o[key] === 'object' && o[key] !== null) {
-                                searchObj(o[key], depth + 1);
-                            }
-                        }
-                    }
-                };
-
-                searchObj(obj, 0);
+        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ПРЕДСКАЗАНИЯ (детерминированный анализ)
+        function computePrediction(historyArray, currentObj) {
+            // historyArray - массив объектов {session, dice, total, result}
+            // currentObj - текущая сессия {Phien, Xuc_xac_1, Xuc_xac_2, Xuc_xac_3, Tong, Ket_qua}
+            if (!historyArray || historyArray.length === 0) {
+                return (currentObj && currentObj.Ket_qua === "Tài") ? "Xỉu" : "Tài";
             }
-        };
-
-        // ==================== INIT ====================
-        function onLoad() {
-            var frame = document.getElementById('main-frame');
-            var loading = document.getElementById('loading-screen');
-
-            frame.onload = function() {
-                loading.style.display = 'none';
-                frame.style.display = 'block';
-            };
-
-            // Загружаем игру в iframe
-            setTimeout(function() {
-                frame.src = gameUrl;
-            }, 1500);
-
-            // Запускаем отслеживание session_id
-            SessionTracker.init();
-
-            // Настройка кнопки панели
-            var panel = document.getElementById('tai-xiu-panel');
-            var toggleBtn = document.getElementById('toggle-panel-btn');
-            var panelVisible = false;
-            toggleBtn.addEventListener('click', function() {
-                panelVisible = !panelVisible;
-                panel.style.display = panelVisible ? 'block' : 'none';
-                toggleBtn.textContent = panelVisible ? '✕' : '🎲';
-                toggleBtn.style.background = panelVisible ? '#ff4444' : '#ffcc00';
-            });
+            
+            // 1. собираем последние результаты (max 12)
+            let recentResults = historyArray.slice(0, 12).map(h => h.result);
+            let recentTotals = historyArray.slice(0, 12).map(h => h.total);
+            
+            // 2. анализ частотности: Tài / Xỉu
+            let countTai = recentResults.filter(r => r === "Tài").length;
+            let countXiu = recentResults.filter(r => r === "Xỉu").length;
+            let freqBias = (countTai > countXiu) ? "Xỉu" : "Tài";   // анти-тренд по частоте
+            
+            // 3. Анализ суммы: если средняя сумма > 10.5 => склонность к Tài, иначе Xỉu
+            let avgTotal = recentTotals.reduce((a,b) => a+b,0) / recentTotals.length;
+            let sumBias = (avgTotal >= 10.5) ? "Xỉu" : "Tài";       // регрессия к среднему
+            
+            // 4. Проверка последних 3 исходов: паттерн чередования
+            let lastThree = recentResults.slice(0,3);
+            let patternBias = null;
+            if(lastThree.length === 3 && lastThree[0] === lastThree[1] && lastThree[1] === lastThree[2]) {
+                // три одинаковых подряд -> смена
+                patternBias = (lastThree[0] === "Tài") ? "Xỉu" : "Tài";
+            } else if(lastThree.length >=2 && lastThree[0] === lastThree[1]) {
+                patternBias = (lastThree[0] === "Tài") ? "Xỉu" : "Tài";
+            } else {
+                patternBias = (recentResults[0] === "Tài") ? "Xỉu" : "Tài";
+            }
+            
+            // 5. Текущая сумма влияет: если текущая "Tong" > 10 -> следующий может быть Xỉu (откат)
+            let currentSumBias = null;
+            if(currentObj && currentObj.Tong !== undefined) {
+                currentSumBias = (currentObj.Tong > 10) ? "Xỉu" : "Tài";
+            } else {
+                currentSumBias = sumBias;
+            }
+            
+            // ВЕСОВАЯ СИСТЕМА : частота(0.3) + сумма(0.2) + паттерн(0.35) + тек.сумма(0.15)
+            let scores = { "Tài": 0, "Xỉu": 0 };
+            // частота
+            scores[freqBias] += 0.3;
+            // сумма bias
+            scores[sumBias] += 0.2;
+            // pattern bias
+            scores[patternBias] += 0.35;
+            // текущая сумма bias
+            scores[currentSumBias] += 0.15;
+            
+            // финальный прогноз: больше очков
+            let finalPred = scores["Tài"] >= scores["Xỉu"] ? "Tài" : "Xỉu";
+            
+            // дополнительный детерминизм: если всего история < 5, то используем простой цикл +1
+            if(historyArray.length < 5) {
+                let lastKnown = (historyArray[0] && historyArray[0].result) ? historyArray[0].result : "Tài";
+                finalPred = (lastKnown === "Tài") ? "Xỉu" : "Tài";
+            }
+            return finalPred;
         }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', onLoad);
-        } else {
-            onLoad();
+        
+        // ОБНОВЛЕНИЕ UI ИЗ currentData
+        function renderUI() {
+            if(!currentData) {
+                document.getElementById('apiStatus').innerText = '❌ нет данных с API';
+                return;
+            }
+            const curr = currentData.current;
+            const hist = currentData.history || [];
+            
+            // 1. отображение текущей сессии
+            if(curr) {
+                document.getElementById('sessionId').innerText = curr.Phien || '?';
+                const d1 = curr.Xuc_xac_1 ?? '-';
+                const d2 = curr.Xuc_xac_2 ?? '-';
+                const d3 = curr.Xuc_xac_3 ?? '-';
+                document.getElementById('diceDisplay').innerText = `${d1} ${d2} ${d3}`;
+                document.getElementById('totalSum').innerText = curr.Tong ?? '?';
+                document.getElementById('resultText').innerHTML = (curr.Ket_qua === "Tài") ? '🟢 TÀI' : '🔴 XỈU';
+            } else {
+                document.getElementById('sessionId').innerText = 'нет данных';
+            }
+            
+            // 2. история
+            const historyContainer = document.getElementById('historyList');
+            if(hist && hist.length > 0) {
+                let html = '';
+                // лимит 20
+                const limited = hist.slice(0,20);
+                for(let item of limited) {
+                    const diceStr = (item.dice && item.dice.length===3) ? `${item.dice[0]} ${item.dice[1]} ${item.dice[2]}` : '? ? ?';
+                    const resSym = item.result === 'Tài' ? '🟢' : '🔴';
+                    html += `<li><span>🎲 ${diceStr} | Σ${item.total}</span> <strong>${resSym} ${item.result}</strong> <span style="font-size:10px">#${item.session}</span></li>`;
+                }
+                historyContainer.innerHTML = html;
+            } else {
+                historyContainer.innerHTML = '<li>📭 история отсутствует</li>';
+            }
+            
+            // 3. ВЫЧИСЛИТЬ ПРОГНОЗ на основе доступных данных
+            let predicted = "Tài";
+            if(hist && hist.length > 0) {
+                predicted = computePrediction(hist, curr);
+            } else if(curr) {
+                // если нет истории, но есть текущий результат — инверсия
+                predicted = (curr.Ket_qua === "Tài") ? "Xỉu" : "Tài";
+            } else {
+                predicted = "Tài";
+            }
+            lastPrediction = predicted;
+            const predSpan = document.getElementById('nextPrediction');
+            predSpan.innerHTML = (predicted === "Tài") ? '🎲 ПРОГНОЗ: TÀI ⬆️' : '🎲 ПРОГНОЗ: XỈU ⬇️';
+            predSpan.style.color = (predicted === "Tài") ? '#66ffcc' : '#ffaa77';
+            document.getElementById('apiStatus').innerHTML = '✅ API активен | прогноз готов';
         }
+        
+        // ЗАГРУЗКА ДАННЫХ
+        async function fetchDataAndUpdate() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                });
+                if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if(data && (data.current || data.history)) {
+                    currentData = data;
+                    renderUI();
+                } else {
+                    document.getElementById('apiStatus').innerText = '⚠️ формат API некорректен';
+                }
+            } catch(err) {
+                console.error('fetch error:', err);
+                document.getElementById('apiStatus').innerHTML = '🔴 ошибка подключения к API';
+                if(!currentData) {
+                    document.getElementById('historyList').innerHTML = '<li>⚠️ нет связи с сервером прогнозов</li>';
+                }
+            }
+        }
+        
+        // Принудительный пересчет (кнопка)
+        function manualRefresh() {
+            fetchDataAndUpdate();
+        }
+        
+        // автообновление каждые 12 секунд
+        function startAutoRefresh() {
+            if(updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => {
+                fetchDataAndUpdate();
+            }, 12000);
+        }
+        
+        // инициализация + защита iframe (на всякий случай)
+        window.addEventListener('load', () => {
+            fetchDataAndUpdate();
+            startAutoRefresh();
+            const btn = document.getElementById('refreshBtn');
+            if(btn) btn.addEventListener('click', manualRefresh);
+            // коррекция заголовков для iframe (безопасно)
+            const frame = document.getElementById('gameFrame');
+            if(frame) {
+                frame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen');
+            }
+        });
     })();
-    </script>
+</script>
 </body>
 </html>
