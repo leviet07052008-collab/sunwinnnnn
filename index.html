@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SunWin Dự Đoán - WebSocket Trực Tiếp</title>
+    <title>SunWin Dự Đoán - Tự động</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: black; }
@@ -83,7 +83,7 @@
 
 <div id="expandedPanel" class="expanded-panel" style="display: none; top: 80px; right: 110px;">
     <div class="panel-header" id="panelHeader">
-        <span>🎲 SUNWIN WS TRỰC TIẾP</span>
+        <span>🎲 SUNWIN DỰ ĐOÁN</span>
         <div>
             <button class="minimize-panel-btn" id="minimizePanelBtn">─</button>
             <button class="close-panel-btn" id="closePanelBtn">✕</button>
@@ -101,7 +101,7 @@
             🟢 TÀI: <span id="taiCount">0</span> &nbsp;| 🔴 XỈU: <span id="xiuCount">0</span><br>
             📜 Tổng: <span id="totalHistory">0</span> | Phiên: <span id="sessionId">---</span>
         </div>
-        <button id="refreshBtn">⟳ LẤY DỮ LIỆU THỦ CÔNG</button>
+        <button id="refreshBtn">⟳ CẬP NHẬT</button>
         <hr>
         <div>📜 15 KQ GẦN NHẤT:</div>
         <div id="miniHistory" class="history-mini" style="margin-top: 6px;">--</div>
@@ -110,7 +110,7 @@
 </div>
 
 <script>
-    // ======================= UI DRAG & DROP =======================
+    // ======================= KÉO THẢ UI =======================
     const circleMenu = document.getElementById('circleMenu');
     const expandedPanel = document.getElementById('expandedPanel');
     let isCircleDragging = false, circleOffsetX, circleOffsetY;
@@ -135,7 +135,6 @@
         circleMenu.style.top = newTop + 'px';
         circleMenu.style.right = 'auto';
     });
-
     window.addEventListener('mouseup', () => { isCircleDragging = false; circleMenu.style.cursor = 'grab'; });
 
     circleMenu.addEventListener('click', (e) => {
@@ -173,16 +172,12 @@
     });
     window.addEventListener('mouseup', () => { isPanelDragging = false; });
 
-    // ======================= WEBSOCKET TRỰC TIẾP - CHUẨN TỪ CODE NODE.JS =======================
+    // ======================= WEBSOCKET + DỰ ĐOÁN =======================
     let ws = null;
-    let currentSessionId = null;
-    let historyData = [];
+    let currentSession = null;
+    let historyData = [];      // [{ session, dice, total, result }]
     let pingInterval = null;
-    let reconnectTimeout = null;
     let reconnectAttempts = 0;
-    const RECONNECT_DELAY = 2500;
-    const PING_INTERVAL = 15000;
-    const MAX_RECONNECT = 10;
 
     const WS_URL = "wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjAsInVzZXJuYW1lIjoiU0NfYXBpc3Vud2luMTIzIn0.hgrRbSV6vnBwJMg9ZFtbx3rRu9mX_hZMZ_m5gMNhkw0";
     
@@ -201,17 +196,18 @@
         document.getElementById('taiCount').innerText = taiTotal;
         document.getElementById('xiuCount').innerText = xiuTotal;
         document.getElementById('totalHistory').innerText = historyData.length;
-        document.getElementById('sessionId').innerText = currentSessionId || '---';
+        document.getElementById('sessionId').innerText = currentSession || '---';
 
         if (historyData.length > 0) {
             const last = historyData[0];
             document.getElementById('currentInfo').innerHTML = `
                 🎲 PHIÊN: ${last.session}<br>
-                🎲 TỔNG: ${last.total} | KQ: <strong>${last.result === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
+                🎲 XÚC XẮC: ${last.dice.join('-')} | TỔNG: ${last.total}<br>
+                📌 KẾT QUẢ: <strong>${last.result === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
             `;
         }
 
-        if (historyData.length >= 5) {
+        if (historyData.length >= 3) {
             const prediction = calculatePrediction();
             const predElem = document.getElementById('nextPred');
             predElem.innerHTML = prediction === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
@@ -223,32 +219,45 @@
     }
 
     function calculatePrediction() {
-        if (historyData.length < 5) return 'Tài';
+        if (historyData.length < 3) return 'Tài';
         
-        const last15 = historyData.slice(0, 15);
-        const results = last15.map(h => h.result);
+        const last10 = historyData.slice(0, 10);
+        const results = last10.map(h => h.result);
         
+        // 1. Phân tích chuỗi (streak)
         let streak = 1;
-        for (let i = 1; i < results.length; i++) {
+        for (let i = 1; i < Math.min(5, results.length); i++) {
             if (results[i] === results[i-1]) streak++;
             else break;
         }
         
         let streakPred = null;
-        if (streak >= 3) streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
+        if (streak >= 3) {
+            streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
+        }
         
-        const last12 = historyData.slice(0, 12);
-        const tai12 = last12.filter(h => h.result === 'Tài').length;
-        const xiu12 = last12.filter(h => h.result === 'Xỉu').length;
-        const freqPred = tai12 > xiu12 ? 'Xỉu' : 'Tài';
+        // 2. Tần suất 10 ván gần nhất
+        const taiCount = last10.filter(h => h.result === 'Tài').length;
+        const xiuCount = last10.filter(h => h.result === 'Xỉu').length;
+        const freqPred = taiCount > xiuCount ? 'Xỉu' : (xiuCount > taiCount ? 'Tài' : (Math.random() > 0.5 ? 'Tài' : 'Xỉu'));
         
-        let avgTotal = last12.reduce((a, h) => a + h.total, 0) / last12.length;
+        // 3. Phân tích tổng điểm
+        let avgTotal = 0;
+        if (last10.length > 0) {
+            avgTotal = last10.reduce((a, h) => a + h.total, 0) / last10.length;
+        }
         const sumPred = avgTotal >= 10.5 ? 'Xỉu' : 'Tài';
         
+        // Trọng số
         let scores = { 'Tài': 0, 'Xỉu': 0 };
-        if (streakPred) scores[streakPred] += 0.45;
-        scores[freqPred] += 0.30;
-        scores[sumPred] += 0.25;
+        if (streakPred) scores[streakPred] += 0.5;
+        scores[freqPred] += 0.3;
+        scores[sumPred] += 0.2;
+        
+        // Nếu hòa, ưu tiên đảo chiều streak
+        if (Math.abs(scores['Tài'] - scores['Xỉu']) < 0.01) {
+            return results[0] === 'Tài' ? 'Xỉu' : 'Tài';
+        }
         
         return scores['Tài'] >= scores['Xỉu'] ? 'Tài' : 'Xỉu';
     }
@@ -263,7 +272,7 @@
         for (let i = 0; i < Math.min(15, historyData.length); i++) {
             let item = historyData[i];
             let short = item.result === 'Tài' ? '🟢T' : '🔴X';
-            html += `<span title="Phiên ${item.session} | Tổng ${item.total}">${short}</span>`;
+            html += `<span title="Phiên ${item.session} | ${item.dice.join('-')} = ${item.total}">${short}</span>`;
         }
         container.innerHTML = html;
     }
@@ -271,8 +280,8 @@
     function connectWebSocket() {
         if (ws && ws.readyState === WebSocket.OPEN) return;
         
-        if (reconnectAttempts >= MAX_RECONNECT) {
-            console.log('⚠️ Max reconnect attempts reached, waiting 60s...');
+        if (reconnectAttempts > 15) {
+            console.log('⚠️ Quá nhiều lần reconnect, chờ 60s...');
             setTimeout(() => { reconnectAttempts = 0; connectWebSocket(); }, 60000);
             return;
         }
@@ -280,7 +289,7 @@
         ws = new WebSocket(WS_URL);
         
         ws.onopen = () => {
-            console.log('✅ WebSocket connected to Sun.Win');
+            console.log('✅ WebSocket đã kết nối');
             document.getElementById('wsStatusDot').style.color = '#0f0';
             reconnectAttempts = 0;
             
@@ -288,7 +297,7 @@
                 setTimeout(() => {
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify(msg));
-                        console.log(`📤 Sent init message ${i+1}`);
+                        console.log(`📤 Gửi init message ${i+1}`);
                     }
                 }, i * 600);
             });
@@ -296,10 +305,9 @@
             if (pingInterval) clearInterval(pingInterval);
             pingInterval = setInterval(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.ping();
-                    console.log('📶 Ping sent');
+                    ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
                 }
-            }, PING_INTERVAL);
+            }, 25000);
         };
         
         ws.onmessage = (event) => {
@@ -310,8 +318,8 @@
                 const { cmd, sid, d1, d2, d3, gBB } = data[1];
                 
                 if (cmd === 1008 && sid) {
-                    currentSessionId = sid;
-                    console.log(`🎮 New session: ${sid}`);
+                    currentSession = sid;
+                    console.log(`🎮 Phiên hiện tại: ${sid}`);
                 }
                 
                 if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
@@ -319,33 +327,34 @@
                     const result = total > 10 ? "Tài" : "Xỉu";
                     
                     const newResult = {
-                        session: currentSessionId,
+                        session: currentSession,
                         dice: [d1, d2, d3],
                         total: total,
                         result: result,
                         timestamp: Date.now()
                     };
                     
-                    if (historyData.length === 0 || historyData[0].session !== currentSessionId) {
+                    // Chống trùng lặp (kiểm tra theo session)
+                    if (historyData.length === 0 || historyData[0].session !== currentSession) {
                         historyData.unshift(newResult);
                         if (historyData.length > 100) historyData.pop();
-                        console.log(`🎲 ${d1}-${d2}-${d3} = ${total} (${result})`);
+                        console.log(`🎲 Kết quả: ${d1}-${d2}-${d3} = ${total} (${result})`);
                         updateUI();
                     }
                 }
-            } catch(e) { console.error('Parse error:', e); }
+            } catch(e) { console.error('Lỗi parse:', e); }
         };
         
-        ws.onclose = (code, reason) => {
-            console.log(`🔌 WebSocket closed. Code: ${code}`);
+        ws.onclose = (code) => {
+            console.log(`🔌 WebSocket đóng, code: ${code}`);
             document.getElementById('wsStatusDot').style.color = '#f00';
             clearInterval(pingInterval);
             reconnectAttempts++;
-            setTimeout(() => connectWebSocket(), RECONNECT_DELAY);
+            setTimeout(() => connectWebSocket(), 3000);
         };
         
         ws.onerror = (err) => {
-            console.error('❌ WebSocket error:', err);
+            console.error('❌ Lỗi WebSocket:', err);
             if (ws) ws.close();
         };
     }
