@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SunWin Dự Đoán - Chính Xác</title>
+    <title>SunWin Dự Đoán - Fix Join Game</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: black; }
@@ -105,6 +105,7 @@
             🟢 TÀI: <span id="taiCount">0</span> &nbsp;| 🔴 XỈU: <span id="xiuCount">0</span><br>
             📜 Tổng: <span id="totalHistory">0</span> | Phiên: <span id="sessionId">---</span>
         </div>
+        <button id="forceJoinBtn">🔗 FORCE JOIN GAME</button>
         <button id="refreshBtn">⟳ CẬP NHẬT</button>
         <hr>
         <div>📜 15 KQ GẦN NHẤT:</div>
@@ -115,7 +116,7 @@
 </div>
 
 <script>
-    // ======================= KÉO THẢ UI =======================
+    // ======================= UI DRAG & DROP =======================
     const circleMenu = document.getElementById('circleMenu');
     const expandedPanel = document.getElementById('expandedPanel');
     let isCircleDragging = false, circleOffsetX, circleOffsetY;
@@ -177,13 +178,12 @@
     });
     window.addEventListener('mouseup', () => { isPanelDragging = false; });
 
-    // ======================= WEBSOCKET =======================
+    // ======================= WEBSOCKET FIX =======================
     let ws = null;
     let currentSession = null;
     let historyData = [];
     let pingInterval = null;
     let reconnectAttempts = 0;
-    let lastPongTime = Date.now();
 
     function addLog(msg) {
         const logDiv = document.getElementById('logArea');
@@ -203,6 +203,24 @@
         [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
         [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
     ];
+
+    function sendJoinGame() {
+        if (ws && ws.readyState === WebSocket.OPEN && currentSession) {
+            const joinMsg = JSON.stringify([6, "MiniGame", "taixiuPlugin", { cmd: 1006, sid: currentSession }]);
+            ws.send(joinMsg);
+            addLog(`🔗 Đã gửi JOIN GAME (cmd:1006) cho session ${currentSession}`);
+            
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const playMsg = JSON.stringify([6, "MiniGame", "taixiuPlugin", { cmd: 1007, sid: currentSession }]);
+                    ws.send(playMsg);
+                    addLog(`🎮 Đã gửi PLAY (cmd:1007) cho session ${currentSession}`);
+                }
+            }, 500);
+        } else {
+            addLog(`⚠️ Không thể join: ws=${ws?.readyState}, session=${currentSession}`);
+        }
+    }
 
     function updateUI() {
         const taiTotal = historyData.filter(h => h.result === 'Tài').length;
@@ -227,45 +245,30 @@
             predElem.innerHTML = prediction === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
             predElem.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
             document.getElementById('miniPred').innerHTML = prediction === 'Tài' ? 'TÀI' : 'XỈU';
-        } else {
-            document.getElementById('nextPred').innerHTML = '---';
-            document.getElementById('miniPred').innerHTML = '---';
         }
         renderMiniHistory();
     }
 
     function calculatePrediction() {
         if (historyData.length < 3) return 'Tài';
-        
         const last10 = historyData.slice(0, 10);
         const results = last10.map(h => h.result);
-        
         let streak = 1;
         for (let i = 1; i < Math.min(5, results.length); i++) {
             if (results[i] === results[i-1]) streak++;
             else break;
         }
-        
         let streakPred = null;
-        if (streak >= 3) {
-            streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
-        }
-        
+        if (streak >= 3) streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
         const taiCount = last10.filter(h => h.result === 'Tài').length;
         const xiuCount = last10.filter(h => h.result === 'Xỉu').length;
         const freqPred = taiCount > xiuCount ? 'Xỉu' : (xiuCount > taiCount ? 'Tài' : 'Tài');
-        
-        let avgTotal = 0;
-        if (last10.length > 0) {
-            avgTotal = last10.reduce((a, h) => a + h.total, 0) / last10.length;
-        }
+        let avgTotal = last10.reduce((a, h) => a + h.total, 0) / last10.length;
         const sumPred = avgTotal >= 10.5 ? 'Xỉu' : 'Tài';
-        
         let scores = { 'Tài': 0, 'Xỉu': 0 };
         if (streakPred) scores[streakPred] += 0.5;
         scores[freqPred] += 0.3;
         scores[sumPred] += 0.2;
-        
         if (Math.abs(scores['Tài'] - scores['Xỉu']) < 0.01) {
             return results[0] === 'Tài' ? 'Xỉu' : 'Tài';
         }
@@ -289,51 +292,37 @@
 
     function sendHeartbeat() {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            const heartbeatMsg = JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]);
-            ws.send(heartbeatMsg);
-            addLog('💓 Heartbeat sent');
+            ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
         }
     }
 
     function connectWebSocket() {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            addLog('WebSocket đã mở sẵn');
-            return;
-        }
+        if (ws && ws.readyState === WebSocket.OPEN) return;
         
         addLog('Đang kết nối WebSocket...');
-        document.getElementById('currentInfo').innerHTML = '📡 ĐANG KẾT NỐI WEBSOCKET...';
-        
         try {
             ws = new WebSocket(WS_URL);
         } catch(e) {
-            addLog('LỖI: Không thể tạo WebSocket - ' + e.message);
-            document.getElementById('currentInfo').innerHTML = '❌ TRÌNH DUYỆT KHÔNG HỖ TRỢ WEBSOCKET';
+            addLog('LỖI: ' + e.message);
             return;
         }
         
         ws.onopen = () => {
             addLog('✅ WebSocket kết nối thành công!');
             document.getElementById('wsStatusDot').style.color = '#0f0';
-            document.getElementById('currentInfo').innerHTML = '📡 ĐÃ KẾT NỐI, ĐANG ĐĂNG NHẬP...';
             reconnectAttempts = 0;
-            lastPongTime = Date.now();
             
             INIT_MESSAGES.forEach((msg, i) => {
                 setTimeout(() => {
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify(msg));
-                        addLog(`📤 Gửi init message ${i+1}`);
+                        addLog(`📤 Init ${i+1}`);
                     }
                 }, i * 800);
             });
             
             if (pingInterval) clearInterval(pingInterval);
-            pingInterval = setInterval(() => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    sendHeartbeat();
-                }
-            }, 20000);
+            pingInterval = setInterval(sendHeartbeat, 20000);
         };
         
         ws.onmessage = (event) => {
@@ -345,58 +334,44 @@
                 
                 if (cmd === 1008 && sid) {
                     currentSession = sid;
-                    addLog(`🎮 Phiên hiện tại: ${sid}`);
-                    document.getElementById('currentInfo').innerHTML = `📡 ĐÃ ĐĂNG NHẬP, PHIÊN: ${sid}`;
+                    addLog(`🎮 Phiên: ${sid}`);
                     document.getElementById('sessionId').innerText = sid;
+                    document.getElementById('currentInfo').innerHTML = `📡 PHIÊN ${sid}, ĐANG JOIN GAME...`;
+                    sendJoinGame();
                 }
                 
                 if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
                     const total = d1 + d2 + d3;
                     const result = total > 10 ? "Tài" : "Xỉu";
-                    
-                    const newResult = {
-                        session: currentSession,
-                        dice: [d1, d2, d3],
-                        total: total,
-                        result: result,
-                        timestamp: Date.now()
-                    };
+                    const newResult = { session: currentSession, dice: [d1, d2, d3], total, result, timestamp: Date.now() };
                     
                     if (historyData.length === 0 || historyData[0].session !== currentSession) {
                         historyData.unshift(newResult);
                         if (historyData.length > 100) historyData.pop();
-                        addLog(`🎲 KẾT QUẢ: ${d1}-${d2}-${d3} = ${total} (${result})`);
+                        addLog(`🎲 ${d1}-${d2}-${d3} = ${total} (${result})`);
                         updateUI();
                     }
                 }
-                
-                if (cmd === 1003 && data[1].hasOwnProperty('gBB') && !gBB) {
-                    addLog(`⚠️ Nhận gBB=false, có thể chưa đăng ký thành công`);
-                }
-            } catch(e) { 
-                addLog('Lỗi parse message: ' + e.message);
-            }
+            } catch(e) { addLog('Lỗi parse: ' + e.message); }
         };
         
-        ws.onclose = (code, reason) => {
-            addLog(`🔌 WebSocket đóng - Code: ${code}`);
+        ws.onclose = () => {
+            addLog('🔌 WebSocket đóng, reconnect sau 5s...');
             document.getElementById('wsStatusDot').style.color = '#f00';
-            document.getElementById('currentInfo').innerHTML = '❌ MẤT KẾT NỐI, ĐANG THỬ LẠI SAU 5S...';
             clearInterval(pingInterval);
-            setTimeout(() => connectWebSocket(), 5000);
+            setTimeout(connectWebSocket, 5000);
         };
         
         ws.onerror = (err) => {
-            addLog('❌ Lỗi WebSocket: ' + (err.message || 'unknown'));
+            addLog('❌ Lỗi: ' + (err.message || 'unknown'));
         };
     }
 
     connectWebSocket();
-    document.getElementById('refreshBtn').addEventListener('click', () => { updateUI(); });
-    
-    addLog('=== SUNWIN DỰ ĐOÁN KHỞI ĐỘNG ===');
-    addLog('⚠️ Mở bằng Live Server (không mở file trực tiếp)');
-    addLog('⚠️ Nếu không nhận kết quả, WebSocket server có thể đang bảo trì');
+    document.getElementById('forceJoinBtn').addEventListener('click', () => sendJoinGame());
+    document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
+    addLog('=== KHỞI ĐỘNG ===');
+    addLog('🔘 Bấm "FORCE JOIN GAME" nếu không nhận kết quả');
 </script>
 </body>
 </html>
