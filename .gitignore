@@ -1,41 +1,90 @@
-# Prerequisites
-*.d
+# =======================
+# macOS / Windows hệ thống
+# =======================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+desktop.ini
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# =======================
+# Trình soạn thảo / IDE
+# =======================
+.vscode/
+.idea/
+*.sublime-*
+.project
+.classpath
+.settings/
+*.code-workspace
 
-# Precompiled Headers
-*.gch
-*.pch
+# =======================
+# File log và tạm thời
+# =======================
+*.log
+*.tmp
+*.temp
+*.cache
+logs/
+tmp/
+temp/
 
-# Linker files
-*.ilk
+# =======================
+# Môi trường Node.js (nếu có)
+# =======================
+node_modules/
+package-lock.json
+yarn.lock
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Debugger Files
-*.pdb
+# =======================
+# Build / dist
+# =======================
+dist/
+build/
+out/
+*.min.js
+*.min.css
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# =======================
+# File cấu hình local
+# =======================
+config.local.js
+config.local.json
+*.local.json
+*.local.js
 
-# Fortran module files
-*.mod
-*.smod
+# =======================
+# File nhạy cảm (key, token)
+# =======================
+*.key
+*.pem
+*.crt
+.secrets/
+.env.production
+.env.development
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# =======================
+# Dự án web tĩnh (không cần)
+# =======================
+# Bỏ qua file backup
+*.bak
+*.old
+*.orig
 
-# Executables
-*.exe
-*.out
-*.app
-
-# debug information files
-*.dwo
+# Bỏ qua file nén
+*.zip
+*.rar
+*.7z
+*.tar.gz
