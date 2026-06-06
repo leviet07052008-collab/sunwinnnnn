@@ -2,359 +2,407 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SunWin Predictor + Live Frame</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SunWin Predictor - Floating Menu</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0a0f1e;
-            font-family: 'Courier New', 'Fira Code', monospace;
-            color: #00ffcc;
-            padding: 12px;
-            overflow-x: hidden;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
         }
-        /* MAIN LAYOUT: LEFT MENU (FIXED), RIGHT IFRAME */
-        .app-container {
-            display: flex;
-            flex-direction: row;
-            gap: 16px;
-            max-width: 1600px;
-            margin: 0 auto;
-            height: calc(100vh - 24px);
-        }
-        /* ПАНЕЛЬ ПРЕДСКАЗАНИЙ — FIXED WIDTH, SCROLL */
-        .prediction-panel {
-            width: 320px;
-            background: #101520;
-            border: 1px solid #2a3a4a;
-            border-radius: 12px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
-            overflow-y: auto;
-            flex-shrink: 0;
-            backdrop-filter: blur(2px);
-        }
-        /* ОБЛАСТЬ IFRAME */
-        .iframe-area {
-            flex: 1;
-            background: #000000;
-            border: 1px solid #2a5f6e;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 0 12px rgba(0,255,200,0.2);
-            position: relative;
-        }
-        iframe {
+
+        body, html {
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            background: black;
+        }
+
+        /* IFRAME FULL MÀN HÌNH */
+        #fullscreen-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             border: none;
-            background: white;
+            background: #000;
+            z-index: 1;
         }
-        /* СТИЛИ ДЛЯ МЕНЮ ПРЕДСКАЗАНИЙ */
-        .header-stats {
-            border-bottom: 1px solid #2a5f6e;
-            padding-bottom: 8px;
+
+        /* MENU DI CHUYỂN ĐƯỢC - NHỎ GÓC */
+        .floating-panel {
+            position: fixed;
+            z-index: 9999;
+            width: 260px;
+            background: rgba(10, 20, 30, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid #00ffcc88;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            font-family: 'Courier New', monospace;
+            color: #00ffcc;
+            font-size: 12px;
+            cursor: move;
+            transition: box-shadow 0.1s;
+            resize: both;
+            overflow: hidden;
+        }
+
+        .floating-panel:active {
+            cursor: grabbing;
+            box-shadow: 0 0 15px cyan;
+        }
+
+        /* HEADER CỦA MENU (KÉO THẢ) */
+        .drag-handle {
+            background: #0a2a2f;
+            padding: 8px 10px;
+            border-radius: 16px 16px 0 0;
             font-weight: bold;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
+            font-size: 13px;
             text-align: center;
-        }
-        .current-session {
-            background: #0c1422;
-            padding: 10px;
-            border-radius: 10px;
-            border-left: 4px solid #00ffcc;
-            font-size: 0.85rem;
-        }
-        .history-list {
-            list-style: none;
-            max-height: 340px;
-            overflow-y: auto;
-            margin-top: 6px;
-        }
-        .history-list li {
-            background: #111a22;
-            margin: 6px 0;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-family: monospace;
-            border-right: 2px solid #2c4c5c;
+            letter-spacing: 1px;
+            cursor: grab;
+            border-bottom: 1px solid #2faa99;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
-        .prediction-card {
-            background: #0a1018;
-            border-top: 2px solid #00aa88;
-            margin-top: 8px;
-            padding: 12px;
-            border-radius: 12px;
+        .drag-handle:active {
+            cursor: grabbing;
         }
-        .prediction-title {
+        .close-btn {
+            background: #aa3355;
+            border: none;
+            color: white;
+            border-radius: 20px;
+            width: 22px;
+            height: 22px;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
             font-weight: bold;
-            font-size: 1.1rem;
             text-align: center;
-            background: #00000040;
+        }
+        .close-btn:hover {
+            background: red;
+        }
+
+        /* NỘI DUNG BÊN TRONG */
+        .menu-content {
+            padding: 10px;
+            cursor: auto;
+            max-height: 380px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+
+        .stats-row {
+            background: #031016;
+            margin: 6px 0;
+            padding: 6px;
+            border-radius: 12px;
+            border-left: 3px solid #0ff;
+        }
+        .prediction {
+            background: #021118;
+            text-align: center;
+            padding: 8px;
+            border-radius: 20px;
+            margin: 8px 0;
+            font-weight: bold;
         }
         .prediction-value {
-            font-size: 2rem;
-            text-align: center;
-            margin: 10px 0;
+            font-size: 22px;
             font-weight: 800;
-            background: #00000060;
-            border-radius: 20px;
-            padding: 6px;
-        }
-        .algo-note {
-            font-size: 0.65rem;
-            color: #7faaaf;
-            text-align: center;
         }
         button {
-            background: #1f3a44;
+            background: #1a4a55;
             border: none;
-            color: #d0fff0;
-            padding: 8px;
-            border-radius: 30px;
-            font-weight: bold;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            margin-top: 8px;
+            width: 100%;
             cursor: pointer;
-            transition: all 0.1s linear;
             font-family: monospace;
         }
-        button:hover {
-            background: #2f5a6e;
-            box-shadow: 0 0 6px cyan;
+        .history-mini {
+            font-size: 9px;
+            max-height: 140px;
+            overflow-y: auto;
         }
-        .status {
-            font-size: 0.7rem;
-            color: #aaffdd;
+        .history-mini span {
+            display: inline-block;
+            background: #001e22;
+            margin: 2px;
+            padding: 2px 6px;
+            border-radius: 20px;
         }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #1f8a7a; }
-        @media (max-width: 720px) {
-            .app-container { flex-direction: column; height: auto; }
-            .prediction-panel { width: 100%; max-height: 380px; }
-            .iframe-area { min-height: 55vh; }
+
+        /* NÚT THU GỌN */
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: cyan;
+            font-size: 16px;
+            cursor: pointer;
+            width: auto;
+            display: inline;
+            margin: 0;
+            padding: 0 6px;
+        }
+        hr {
+            border-color: #2faa9955;
+        }
+        ::-webkit-scrollbar {
+            width: 3px;
         }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <!-- БЛОК ПРЕДСКАЗАНИЙ / МЕНЮ -->
-    <div class="prediction-panel">
-        <div class="header-stats">🔮 SUNWIN PREDICTOR v4.0</div>
-        <div class="status" id="apiStatus">⏳ загрузка данных с API...</div>
-        
-        <div class="current-session" id="currentBlock">
-            <span>⚡ ТЕКУЩАЯ СЕССИЯ:</span><br>
-            <span id="sessionId">—</span> | 🎲 <span id="diceDisplay">0-0-0</span> | СУММА: <span id="totalSum">0</span><br>
-            📊 РЕЗУЛЬТАТ: <strong id="resultText">—</strong>
-        </div>
 
-        <div class="prediction-card">
-            <div class="prediction-title">📈 ПРОГНОЗ НА СЛЕДУЮЩУЮ СЕССИЮ</div>
-            <div class="prediction-value" id="nextPrediction">---</div>
-            <div class="algo-note">алгоритм: паттерн + тренд + дельта суммы (нейросетевой эмулятор)</div>
-            <button id="refreshBtn">⟳ ОБНОВИТЬ ПРОГНОЗ</button>
-        </div>
+<!-- IFRAME TOÀN MÀN HÌNH web.sunwin.qa -->
+<iframe id="fullscreen-frame" src="https://web.sunwin.qa" allow="fullscreen; autoplay; clipboard-write" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation"></iframe>
 
+<!-- MENU NỔI CÓ THỂ KÉO THẢ + THU NHỎ -->
+<div id="floatMenu" class="floating-panel" style="top: 20px; right: 20px; left: auto; width: 270px;">
+    <div class="drag-handle" id="dragHandle">
+        <span>🎲 SUNWIN PREDICTOR</span>
         <div>
-            <div>📜 ПОСЛЕДНИЕ 20 ИСТОРИЙ</div>
-            <ul class="history-list" id="historyList">
-                <li>⏳ ожидание истории...</li>
-            </ul>
+            <button class="toggle-btn" id="minimizeBtn" title="Thu gọn">─</button>
+            <button class="close-btn" id="closeMenuBtn" title="Ẩn menu">✕</button>
         </div>
-        <div class="status">⚙️ автообновление: 12 сек | прогноз на основе весов</div>
     </div>
-
-    <!-- IFRAME: SUNWIN.QA -->
-    <div class="iframe-area">
-        <iframe id="gameFrame" src="https://web.sunwin.qa" title="SunWin Game" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+    <div id="menuBody" class="menu-content">
+        <div class="stats-row" id="currentInfo">
+            📡 Đang tải dữ liệu...
+        </div>
+        <div class="prediction">
+            <div>🔮 PROGNOZ (TIẾP THEO)</div>
+            <div class="prediction-value" id="nextPred">---</div>
+            <div style="font-size:8px;">thuật toán tần suất + bias</div>
+        </div>
+        <div class="stats-row">
+            📊 TÀI: <span id="taiCount">0</span> &nbsp;| XỈU: <span id="xiuCount">0</span>
+            <br>🎲 Tổng lịch sử: <span id="totalHistory">0</span>
+        </div>
+        <button id="refreshPredBtn">⟳ CẬP NHẬT DỮ LIỆU</button>
+        <hr>
+        <div style="font-size:9px; margin-top:6px;">📜 10 KQ gần nhất:</div>
+        <div id="miniHistory" class="history-mini">--</div>
+        <div style="font-size:8px; text-align:center; margin-top:6px;">Kéo góc để thay đổi kích thước | Kéo thanh tiêu đề để di chuyển</div>
     </div>
 </div>
 
 <script>
-    (function() {
-        // -------- ЖЕСТКИЙ КОД ПРЕДСКАЗАНИЯ ----------
-        const API_URL = 'https://sun-nvg7.onrender.com/api/history';
-        
-        let currentData = null;          // последний ответ API
-        let lastPrediction = "Tài";       // значение по умолчанию
-        let updateInterval = null;
+    // ======================= QUẢN LÝ MENU NỔI (DRAG & RESIZE) =======================
+    const floatMenu = document.getElementById('floatMenu');
+    const dragHandle = document.getElementById('dragHandle');
+    let isDragging = false;
+    let offsetX, offsetY;
 
-        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ПРЕДСКАЗАНИЯ (детерминированный анализ)
-        function computePrediction(historyArray, currentObj) {
-            // historyArray - массив объектов {session, dice, total, result}
-            // currentObj - текущая сессия {Phien, Xuc_xac_1, Xuc_xac_2, Xuc_xac_3, Tong, Ket_qua}
-            if (!historyArray || historyArray.length === 0) {
-                return (currentObj && currentObj.Ket_qua === "Tài") ? "Xỉu" : "Tài";
-            }
-            
-            // 1. собираем последние результаты (max 12)
-            let recentResults = historyArray.slice(0, 12).map(h => h.result);
-            let recentTotals = historyArray.slice(0, 12).map(h => h.total);
-            
-            // 2. анализ частотности: Tài / Xỉu
-            let countTai = recentResults.filter(r => r === "Tài").length;
-            let countXiu = recentResults.filter(r => r === "Xỉu").length;
-            let freqBias = (countTai > countXiu) ? "Xỉu" : "Tài";   // анти-тренд по частоте
-            
-            // 3. Анализ суммы: если средняя сумма > 10.5 => склонность к Tài, иначе Xỉu
-            let avgTotal = recentTotals.reduce((a,b) => a+b,0) / recentTotals.length;
-            let sumBias = (avgTotal >= 10.5) ? "Xỉu" : "Tài";       // регрессия к среднему
-            
-            // 4. Проверка последних 3 исходов: паттерн чередования
-            let lastThree = recentResults.slice(0,3);
-            let patternBias = null;
-            if(lastThree.length === 3 && lastThree[0] === lastThree[1] && lastThree[1] === lastThree[2]) {
-                // три одинаковых подряд -> смена
-                patternBias = (lastThree[0] === "Tài") ? "Xỉu" : "Tài";
-            } else if(lastThree.length >=2 && lastThree[0] === lastThree[1]) {
-                patternBias = (lastThree[0] === "Tài") ? "Xỉu" : "Tài";
-            } else {
-                patternBias = (recentResults[0] === "Tài") ? "Xỉu" : "Tài";
-            }
-            
-            // 5. Текущая сумма влияет: если текущая "Tong" > 10 -> следующий может быть Xỉu (откат)
-            let currentSumBias = null;
-            if(currentObj && currentObj.Tong !== undefined) {
-                currentSumBias = (currentObj.Tong > 10) ? "Xỉu" : "Tài";
-            } else {
-                currentSumBias = sumBias;
-            }
-            
-            // ВЕСОВАЯ СИСТЕМА : частота(0.3) + сумма(0.2) + паттерн(0.35) + тек.сумма(0.15)
-            let scores = { "Tài": 0, "Xỉu": 0 };
-            // частота
-            scores[freqBias] += 0.3;
-            // сумма bias
-            scores[sumBias] += 0.2;
-            // pattern bias
-            scores[patternBias] += 0.35;
-            // текущая сумма bias
-            scores[currentSumBias] += 0.15;
-            
-            // финальный прогноз: больше очков
-            let finalPred = scores["Tài"] >= scores["Xỉu"] ? "Tài" : "Xỉu";
-            
-            // дополнительный детерминизм: если всего история < 5, то используем простой цикл +1
-            if(historyArray.length < 5) {
-                let lastKnown = (historyArray[0] && historyArray[0].result) ? historyArray[0].result : "Tài";
-                finalPred = (lastKnown === "Tài") ? "Xỉu" : "Tài";
-            }
-            return finalPred;
+    dragHandle.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('toggle-btn') || e.target.classList.contains('close-btn')) return;
+        isDragging = true;
+        offsetX = e.clientX - floatMenu.offsetLeft;
+        offsetY = e.clientY - floatMenu.offsetTop;
+        floatMenu.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+        newLeft = Math.min(window.innerWidth - floatMenu.offsetWidth - 5, Math.max(5, newLeft));
+        newTop = Math.min(window.innerHeight - 80, Math.max(5, newTop));
+        floatMenu.style.left = newLeft + 'px';
+        floatMenu.style.top = newTop + 'px';
+        floatMenu.style.right = 'auto';
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        floatMenu.style.cursor = '';
+    });
+
+    // Resize (góc dưới phải)
+    let resizeActive = false;
+    floatMenu.addEventListener('mousedown', (e) => {
+        const rect = floatMenu.getBoundingClientRect();
+        const isResizeHandle = (e.clientX > rect.right - 15 && e.clientY > rect.bottom - 15);
+        if (isResizeHandle) {
+            resizeActive = true;
+            e.preventDefault();
+            const startX = e.clientX, startY = e.clientY;
+            const startW = rect.width, startH = rect.height;
+            const onMouseMove = (moveEvent) => {
+                if (!resizeActive) return;
+                const newW = Math.max(200, startW + (moveEvent.clientX - startX));
+                const newH = Math.max(180, startH + (moveEvent.clientY - startY));
+                floatMenu.style.width = newW + 'px';
+                floatMenu.style.height = 'auto';
+            };
+            const onMouseUp = () => {
+                resizeActive = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
         }
-        
-        // ОБНОВЛЕНИЕ UI ИЗ currentData
-        function renderUI() {
-            if(!currentData) {
-                document.getElementById('apiStatus').innerText = '❌ нет данных с API';
-                return;
-            }
-            const curr = currentData.current;
-            const hist = currentData.history || [];
-            
-            // 1. отображение текущей сессии
-            if(curr) {
-                document.getElementById('sessionId').innerText = curr.Phien || '?';
-                const d1 = curr.Xuc_xac_1 ?? '-';
-                const d2 = curr.Xuc_xac_2 ?? '-';
-                const d3 = curr.Xuc_xac_3 ?? '-';
-                document.getElementById('diceDisplay').innerText = `${d1} ${d2} ${d3}`;
-                document.getElementById('totalSum').innerText = curr.Tong ?? '?';
-                document.getElementById('resultText').innerHTML = (curr.Ket_qua === "Tài") ? '🟢 TÀI' : '🔴 XỈU';
+    });
+
+    // Thu nhỏ / phục hồi
+    const minimizeBtn = document.getElementById('minimizeBtn');
+    const menuBodyDiv = document.getElementById('menuBody');
+    let minimized = false;
+    minimizeBtn.addEventListener('click', () => {
+        if (!minimized) {
+            menuBodyDiv.style.display = 'none';
+            minimizeBtn.innerHTML = '□';
+            floatMenu.style.width = 'auto';
+            minimized = true;
+        } else {
+            menuBodyDiv.style.display = 'block';
+            minimizeBtn.innerHTML = '─';
+            floatMenu.style.width = '270px';
+            minimized = false;
+        }
+    });
+
+    // Đóng hoàn toàn menu (ẩn)
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    closeMenuBtn.addEventListener('click', () => {
+        floatMenu.style.display = 'none';
+    });
+
+    // ======================= LOGIC LẤY DỮ LIỆU TỪ API CỦA BẠN =======================
+    const API_HISTORY_URL = 'https://sun-nvg7.onrender.com/api/history';  // API backend của bạn
+
+    let currentPrediction = "Tài";
+    let historyData = [];
+
+    async function fetchPredictionData() {
+        try {
+            const response = await fetch(API_HISTORY_URL, { cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP error');
+            const data = await response.json();
+            // data.current + data.history
+            const current = data.current;
+            const historyArr = data.history || [];
+
+            // Hiển thị thông tin current
+            if (current && current.Phien) {
+                const diceStr = `${current.Xuc_xac_1} ${current.Xuc_xac_2} ${current.Xuc_xac_3}`;
+                document.getElementById('currentInfo').innerHTML = `
+                    🎲 Phiên: ${current.Phien}<br>
+                    🎲 Xúc xắc: ${diceStr} | Tổng: ${current.Tong}<br>
+                    📌 Kết quả: <strong>${current.Ket_qua === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
+                `;
             } else {
-                document.getElementById('sessionId').innerText = 'нет данных';
+                document.getElementById('currentInfo').innerHTML = '⏳ Chờ dữ liệu từ WebSocket...';
             }
-            
-            // 2. история
-            const historyContainer = document.getElementById('historyList');
-            if(hist && hist.length > 0) {
-                let html = '';
-                // лимит 20
-                const limited = hist.slice(0,20);
-                for(let item of limited) {
-                    const diceStr = (item.dice && item.dice.length===3) ? `${item.dice[0]} ${item.dice[1]} ${item.dice[2]}` : '? ? ?';
-                    const resSym = item.result === 'Tài' ? '🟢' : '🔴';
-                    html += `<li><span>🎲 ${diceStr} | Σ${item.total}</span> <strong>${resSym} ${item.result}</strong> <span style="font-size:10px">#${item.session}</span></li>`;
-                }
-                historyContainer.innerHTML = html;
+
+            // Lưu lịch sử để tính toán
+            historyData = historyArr.slice(0, 30);
+            renderMiniHistory(historyArr.slice(0, 10));
+
+            // Thống kê Tài/Xỉu
+            const taiTotal = historyArr.filter(h => h.result === 'Tài').length;
+            const xiuTotal = historyArr.filter(h => h.result === 'Xỉu').length;
+            document.getElementById('taiCount').innerText = taiTotal;
+            document.getElementById('xiuCount').innerText = xiuTotal;
+            document.getElementById('totalHistory').innerText = historyArr.length;
+
+            // Dự đoán dựa trên 10 kết quả gần nhất + pattern
+            if (historyArr.length > 0) {
+                const prediction = calculatePrediction(historyArr, current);
+                currentPrediction = prediction;
+                const predElem = document.getElementById('nextPred');
+                predElem.innerHTML = prediction === 'Tài' ? '🎲 TÀI ⬆️' : '🎲 XỈU ⬇️';
+                predElem.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
             } else {
-                historyContainer.innerHTML = '<li>📭 история отсутствует</li>';
+                document.getElementById('nextPred').innerHTML = '⚠️ chờ dữ liệu';
             }
-            
-            // 3. ВЫЧИСЛИТЬ ПРОГНОЗ на основе доступных данных
-            let predicted = "Tài";
-            if(hist && hist.length > 0) {
-                predicted = computePrediction(hist, curr);
-            } else if(curr) {
-                // если нет истории, но есть текущий результат — инверсия
-                predicted = (curr.Ket_qua === "Tài") ? "Xỉu" : "Tài";
-            } else {
-                predicted = "Tài";
-            }
-            lastPrediction = predicted;
-            const predSpan = document.getElementById('nextPrediction');
-            predSpan.innerHTML = (predicted === "Tài") ? '🎲 ПРОГНОЗ: TÀI ⬆️' : '🎲 ПРОГНОЗ: XỈU ⬇️';
-            predSpan.style.color = (predicted === "Tài") ? '#66ffcc' : '#ffaa77';
-            document.getElementById('apiStatus').innerHTML = '✅ API активен | прогноз готов';
+        } catch (err) {
+            console.error(err);
+            document.getElementById('currentInfo').innerHTML = '⚠️ Lỗi kết nối API backend';
+            document.getElementById('nextPred').innerHTML = '???';
         }
-        
-        // ЗАГРУЗКА ДАННЫХ
-        async function fetchDataAndUpdate() {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' },
-                    cache: 'no-store'
-                });
-                if(!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if(data && (data.current || data.history)) {
-                    currentData = data;
-                    renderUI();
-                } else {
-                    document.getElementById('apiStatus').innerText = '⚠️ формат API некорректен';
-                }
-            } catch(err) {
-                console.error('fetch error:', err);
-                document.getElementById('apiStatus').innerHTML = '🔴 ошибка подключения к API';
-                if(!currentData) {
-                    document.getElementById('historyList').innerHTML = '<li>⚠️ нет связи с сервером прогнозов</li>';
-                }
-            }
+    }
+
+    // THUẬT TOÁN DỰ ĐOÁN (giống logic mạnh mẽ)
+    function calculatePrediction(history, currentObj) {
+        if (!history.length) return 'Tài';
+        const last10 = history.slice(0, 10);
+        const taiCount = last10.filter(h => h.result === 'Tài').length;
+        const xiuCount = last10.filter(h => h.result === 'Xỉu').length;
+
+        // xu hướng đảo chiều: nếu chuỗi 3 kết quả giống nhau => đảo
+        let lastResults = last10.map(h => h.result);
+        let trendBias = null;
+        if (lastResults.length >= 3 && lastResults[0] === lastResults[1] && lastResults[1] === lastResults[2]) {
+            trendBias = (lastResults[0] === 'Tài') ? 'Xỉu' : 'Tài';
+        } else {
+            // tần suất thấp hơn sẽ được ưu tiên
+            trendBias = (taiCount <= xiuCount) ? 'Tài' : 'Xỉu';
         }
-        
-        // Принудительный пересчет (кнопка)
-        function manualRefresh() {
-            fetchDataAndUpdate();
+
+        // phân tích tổng điểm gần nhất (trung bình)
+        let avgTotal = 0;
+        if (last10.length) {
+            const sumTotals = last10.reduce((acc, h) => acc + h.total, 0);
+            avgTotal = sumTotals / last10.length;
         }
-        
-        // автообновление каждые 12 секунд
-        function startAutoRefresh() {
-            if(updateInterval) clearInterval(updateInterval);
-            updateInterval = setInterval(() => {
-                fetchDataAndUpdate();
-            }, 12000);
+        let sumBias = (avgTotal >= 10.5) ? 'Xỉu' : 'Tài';
+
+        // Trọng số: trendBias 0.6 , sumBias 0.4
+        let final = (trendBias === sumBias) ? trendBias : (Math.random() > 0.5 ? trendBias : sumBias);
+        if (currentObj && currentObj.Tong !== undefined && currentObj.Tong > 10) {
+            final = 'Xỉu';  // anti momentum
+        } else if (currentObj && currentObj.Tong < 8) {
+            final = 'Tài';
         }
-        
-        // инициализация + защита iframe (на всякий случай)
-        window.addEventListener('load', () => {
-            fetchDataAndUpdate();
-            startAutoRefresh();
-            const btn = document.getElementById('refreshBtn');
-            if(btn) btn.addEventListener('click', manualRefresh);
-            // коррекция заголовков для iframe (безопасно)
-            const frame = document.getElementById('gameFrame');
-            if(frame) {
-                frame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen');
-            }
-        });
-    })();
+        return final;
+    }
+
+    function renderMiniHistory(histSlice) {
+        const container = document.getElementById('miniHistory');
+        if (!histSlice || histSlice.length === 0) {
+            container.innerHTML = '<span>Không có dữ liệu</span>';
+            return;
+        }
+        let html = '';
+        for (let item of histSlice) {
+            let resultShort = (item.result === 'Tài') ? '🟢T' : '🔴X';
+            html += `<span title="Σ${item.total}">${resultShort}</span>`;
+        }
+        container.innerHTML = html;
+    }
+
+    // TỰ ĐỘNG CẬP NHẬP MỖI 8 GIÂY
+    let intervalId = setInterval(() => {
+        fetchPredictionData();
+    }, 8000);
+
+    document.getElementById('refreshPredBtn').addEventListener('click', () => {
+        fetchPredictionData();
+    });
+
+    // Khởi tạo lần đầu
+    fetchPredictionData();
+
+    // Optional: Cho phép kéo thả mượt hơn khi iframe fullscreen có thể chặn sự kiện
+    window.addEventListener('load', () => {
+        // fix iframe pointer events ko ảnh hưởng menu
+        const iframe = document.getElementById('fullscreen-frame');
+        iframe.style.pointerEvents = 'auto';
+        floatMenu.style.pointerEvents = 'auto';
+    });
 </script>
 </body>
 </html>
