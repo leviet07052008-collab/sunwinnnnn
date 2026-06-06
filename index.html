@@ -71,7 +71,7 @@
         ::-webkit-scrollbar-thumb { background: #00ffcc88; border-radius: 4px; }
         .log-area {
             background: #001a1a; border-radius: 8px; padding: 6px; margin-top: 8px;
-            font-size: 9px; color: #88aaaa; max-height: 80px; overflow-y: auto;
+            font-size: 9px; color: #88aaaa; max-height: 100px; overflow-y: auto;
         }
     </style>
 </head>
@@ -177,18 +177,19 @@
     });
     window.addEventListener('mouseup', () => { isPanelDragging = false; });
 
-    // ======================= WEBSOCKET + DỰ ĐOÁN =======================
+    // ======================= WEBSOCKET =======================
     let ws = null;
     let currentSession = null;
     let historyData = [];
     let pingInterval = null;
     let reconnectAttempts = 0;
+    let lastPongTime = Date.now();
 
     function addLog(msg) {
         const logDiv = document.getElementById('logArea');
         const time = new Date().toLocaleTimeString('vi-VN');
         logDiv.innerHTML = `<div>[${time}] ${msg}</div>` + logDiv.innerHTML;
-        if (logDiv.children.length > 15) logDiv.removeChild(logDiv.lastChild);
+        if (logDiv.children.length > 20) logDiv.removeChild(logDiv.lastChild);
         console.log(msg);
     }
 
@@ -286,6 +287,14 @@
         container.innerHTML = html;
     }
 
+    function sendHeartbeat() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            const heartbeatMsg = JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]);
+            ws.send(heartbeatMsg);
+            addLog('💓 Heartbeat sent');
+        }
+    }
+
     function connectWebSocket() {
         if (ws && ws.readyState === WebSocket.OPEN) {
             addLog('WebSocket đã mở sẵn');
@@ -308,6 +317,7 @@
             document.getElementById('wsStatusDot').style.color = '#0f0';
             document.getElementById('currentInfo').innerHTML = '📡 ĐÃ KẾT NỐI, ĐANG ĐĂNG NHẬP...';
             reconnectAttempts = 0;
+            lastPongTime = Date.now();
             
             INIT_MESSAGES.forEach((msg, i) => {
                 setTimeout(() => {
@@ -315,15 +325,15 @@
                         ws.send(JSON.stringify(msg));
                         addLog(`📤 Gửi init message ${i+1}`);
                     }
-                }, i * 600);
+                }, i * 800);
             });
             
             if (pingInterval) clearInterval(pingInterval);
             pingInterval = setInterval(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
+                    sendHeartbeat();
                 }
-            }, 25000);
+            }, 20000);
         };
         
         ws.onmessage = (event) => {
@@ -338,15 +348,6 @@
                     addLog(`🎮 Phiên hiện tại: ${sid}`);
                     document.getElementById('currentInfo').innerHTML = `📡 ĐÃ ĐĂNG NHẬP, PHIÊN: ${sid}`;
                     document.getElementById('sessionId').innerText = sid;
-                    
-                    // Đăng ký nhận kết quả sau khi có session
-                    setTimeout(() => {
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            ws.send(JSON.stringify([6, "MiniGame", "taixiuPlugin", { cmd: 1006, sid: sid }]));
-                            ws.send(JSON.stringify([6, "MiniGame", "taixiuPlugin", { cmd: 1007, sid: sid }]));
-                            addLog(`📤 Đã gửi đăng ký nhận kết quả (1006, 1007)`);
-                        }
-                    }, 1000);
                 }
                 
                 if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
@@ -368,6 +369,10 @@
                         updateUI();
                     }
                 }
+                
+                if (cmd === 1003 && data[1].hasOwnProperty('gBB') && !gBB) {
+                    addLog(`⚠️ Nhận gBB=false, có thể chưa đăng ký thành công`);
+                }
             } catch(e) { 
                 addLog('Lỗi parse message: ' + e.message);
             }
@@ -376,7 +381,7 @@
         ws.onclose = (code, reason) => {
             addLog(`🔌 WebSocket đóng - Code: ${code}`);
             document.getElementById('wsStatusDot').style.color = '#f00';
-            document.getElementById('currentInfo').innerHTML = '❌ MẤT KẾT NỐI, ĐANG THỬ LẠI...';
+            document.getElementById('currentInfo').innerHTML = '❌ MẤT KẾT NỐI, ĐANG THỬ LẠI SAU 5S...';
             clearInterval(pingInterval);
             setTimeout(() => connectWebSocket(), 5000);
         };
@@ -390,7 +395,8 @@
     document.getElementById('refreshBtn').addEventListener('click', () => { updateUI(); });
     
     addLog('=== SUNWIN DỰ ĐOÁN KHỞI ĐỘNG ===');
-    addLog('Mở bằng Live Server để WebSocket hoạt động');
+    addLog('⚠️ Mở bằng Live Server (không mở file trực tiếp)');
+    addLog('⚠️ Nếu không nhận kết quả, WebSocket server có thể đang bảo trì');
 </script>
 </body>
 </html>
