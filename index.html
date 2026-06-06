@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SunWin Dự Đoán - Menu Tròn</title>
+    <title>SunWin Dự Đoán - WebSocket Trực Tiếp</title>
     <style>
         * {
             margin: 0;
@@ -30,16 +30,16 @@
             z-index: 1;
         }
 
-        /* MENU HÌNH TRÒN DI CHUYỂN ĐƯỢC */
+        /* MENU HÌNH TRÒN */
         .circle-menu {
             position: fixed;
             z-index: 9999;
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, #0a1a25 0%, #0a2a2f 100%);
             border-radius: 50%;
             border: 2px solid #00ffcc;
-            box-shadow: 0 0 15px rgba(0,255,204,0.5), 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 0 15px rgba(0,255,204,0.5);
             cursor: grab;
             transition: all 0.2s ease;
             backdrop-filter: blur(8px);
@@ -49,39 +49,33 @@
             flex-direction: column;
         }
 
-        .circle-menu:active {
-            cursor: grabbing;
-            transform: scale(0.96);
-        }
+        .circle-menu:active { cursor: grabbing; transform: scale(0.96); }
+        .circle-menu:hover { box-shadow: 0 0 25px rgba(0,255,204,0.8); }
 
-        .circle-menu:hover {
-            box-shadow: 0 0 25px rgba(0,255,204,0.8);
-            border-color: #88ffdd;
-        }
-
-        /* ICON BÊN TRONG HÌNH TRÒN */
-        .menu-icon {
-            font-size: 28px;
-            text-align: center;
-            line-height: 1;
-        }
-
+        .menu-icon { font-size: 28px; }
         .prediction-badge {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             border-radius: 20px;
-            padding: 2px 6px;
-            margin-top: 2px;
+            padding: 2px 8px;
+            margin-top: 4px;
             color: #00ffcc;
             font-family: monospace;
         }
+        .ws-status {
+            font-size: 8px;
+            position: absolute;
+            bottom: 2px;
+            right: 8px;
+            color: #0f0;
+        }
 
-        /* PANEL MỞ RỘNG KHI CLICK VÀO HÌNH TRÒN */
+        /* PANEL MỞ RỘNG */
         .expanded-panel {
             position: fixed;
             z-index: 9998;
-            width: 320px;
+            width: 340px;
             background: rgba(8, 18, 24, 0.96);
             backdrop-filter: blur(16px);
             border-radius: 24px;
@@ -90,7 +84,6 @@
             font-family: 'Courier New', monospace;
             color: #00ffcc;
             font-size: 12px;
-            transition: all 0.2s ease;
             overflow: hidden;
             pointer-events: auto;
         }
@@ -109,7 +102,7 @@
 
         .panel-content {
             padding: 12px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
         }
 
@@ -129,12 +122,7 @@
             margin: 10px 0;
         }
 
-        .prediction-value {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 2px;
-        }
-
+        .prediction-value { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
         button {
             background: #1a4a55;
             border: none;
@@ -147,11 +135,7 @@
             font-family: monospace;
             font-weight: bold;
         }
-
-        button:hover {
-            background: #2a6a7a;
-        }
-
+        button:hover { background: #2a6a7a; }
         .history-mini span {
             display: inline-block;
             background: #001e22;
@@ -160,19 +144,7 @@
             border-radius: 20px;
             font-size: 11px;
         }
-
-        .close-panel-btn {
-            background: #aa3355;
-            border: none;
-            color: white;
-            border-radius: 20px;
-            width: 26px;
-            height: 26px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .minimize-panel-btn {
+        .close-panel-btn, .minimize-panel-btn {
             background: #226655;
             border: none;
             color: white;
@@ -181,78 +153,60 @@
             height: 26px;
             font-size: 16px;
             cursor: pointer;
-            margin-right: 8px;
         }
-
-        hr {
-            border-color: #2faa9955;
-            margin: 8px 0;
-        }
-
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #031016;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00ffcc88;
-            border-radius: 4px;
-        }
+        .close-panel-btn { background: #aa3355; margin-left: 8px; }
+        hr { border-color: #2faa9955; margin: 8px 0; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #031016; }
+        ::-webkit-scrollbar-thumb { background: #00ffcc88; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<!-- IFRAME TOÀN MÀN HÌNH -->
 <iframe id="fullscreen-frame" src="https://web.sunwin.qa" allow="fullscreen; autoplay; clipboard-write" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation"></iframe>
 
 <!-- MENU HÌNH TRÒN -->
-<div id="circleMenu" class="circle-menu" style="top: 80px; right: 20px; left: auto;">
+<div id="circleMenu" class="circle-menu" style="top: 80px; right: 20px;">
     <div class="menu-icon">🎲</div>
     <div class="prediction-badge" id="miniPred">---</div>
+    <div class="ws-status" id="wsStatusDot">●</div>
 </div>
 
-<!-- PANEL MỞ RỘNG -->
-<div id="expandedPanel" class="expanded-panel" style="display: none; top: 80px; right: 100px;">
+<!-- PANEL -->
+<div id="expandedPanel" class="expanded-panel" style="display: none; top: 80px; right: 110px;">
     <div class="panel-header" id="panelHeader">
-        <span>🎲 SUNWIN DỰ ĐOÁN NÂNG CẤP</span>
+        <span>🎲 SUNWIN WS TRỰC TIẾP</span>
         <div>
             <button class="minimize-panel-btn" id="minimizePanelBtn">─</button>
             <button class="close-panel-btn" id="closePanelBtn">✕</button>
         </div>
     </div>
     <div id="panelBody" class="panel-content">
-        <div class="stats-row" id="currentInfo">
-            📡 Đang tải dữ liệu...
-        </div>
+        <div class="stats-row" id="currentInfo">📡 Đang kết nối WebSocket...</div>
         <div class="prediction-box">
             <div>🔮 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
             <div class="prediction-value" id="nextPred">---</div>
-            <div style="font-size: 9px; margin-top: 5px;">thuật toán: tần suất + xu hướng + phân tích tổng</div>
+            <div style="font-size: 9px;">thuật toán: streak + tần suất + tổng điểm</div>
         </div>
         <div class="stats-row">
-            📊 THỐNG KÊ HIỆN TẠI<br>
+            📊 THỐNG KÊ<br>
             🟢 TÀI: <span id="taiCount">0</span> &nbsp;| 🔴 XỈU: <span id="xiuCount">0</span><br>
-            📜 Tổng lịch sử: <span id="totalHistory">0</span>
+            📜 Tổng: <span id="totalHistory">0</span> | Phiên: <span id="sessionId">---</span>
         </div>
-        <button id="refreshPredBtn">⟳ CẬP NHẬT DỮ LIỆU</button>
+        <button id="refreshBtn">⟳ LẤY DỮ LIỆU THỦ CÔNG</button>
         <hr>
-        <div style="font-size: 10px;">📜 12 KẾT QUẢ GẦN NHẤT:</div>
+        <div>📜 15 KQ GẦN NHẤT:</div>
         <div id="miniHistory" class="history-mini" style="margin-top: 6px;">--</div>
-        <div style="font-size: 9px; text-align: center; margin-top: 10px; color: #88aacc;">
-            💡 Kéo thả thanh tiêu đề để di chuyển panel
-        </div>
+        <div style="font-size: 9px; text-align: center; margin-top: 10px;">💡 Kéo thả tiêu đề để di chuyển</div>
     </div>
 </div>
 
 <script>
-    // ======================= QUẢN LÝ MENU HÌNH TRÒN =======================
+    // ======================= UI DRAG & DROP =======================
     const circleMenu = document.getElementById('circleMenu');
     const expandedPanel = document.getElementById('expandedPanel');
-    let isCircleDragging = false;
-    let circleOffsetX, circleOffsetY;
+    let isCircleDragging = false, circleOffsetX, circleOffsetY;
 
-    // KÉO THẢ HÌNH TRÒN
     circleMenu.addEventListener('mousedown', (e) => {
         if (e.target.closest('.circle-menu') !== circleMenu) return;
         isCircleDragging = true;
@@ -261,7 +215,6 @@
         circleOffsetY = e.clientY - rect.top;
         circleMenu.style.cursor = 'grabbing';
         e.preventDefault();
-        e.stopPropagation();
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -275,233 +228,224 @@
         circleMenu.style.right = 'auto';
     });
 
-    window.addEventListener('mouseup', () => {
-        isCircleDragging = false;
-        circleMenu.style.cursor = 'grab';
-    });
+    window.addEventListener('mouseup', () => { isCircleDragging = false; circleMenu.style.cursor = 'grab'; });
 
-    // CLICK VÀO HÌNH TRÒN -> MỞ PANEL
     circleMenu.addEventListener('click', (e) => {
         if (isCircleDragging) return;
         const rect = circleMenu.getBoundingClientRect();
-        // Đặt panel gần vị trí hình tròn
-        let panelLeft = rect.right + 10;
-        let panelTop = rect.top;
-        if (panelLeft + 320 > window.innerWidth) {
-            panelLeft = rect.left - 330;
-        }
-        if (panelTop + 450 > window.innerHeight) {
-            panelTop = window.innerHeight - 460;
-        }
+        let panelLeft = rect.right + 10, panelTop = rect.top;
+        if (panelLeft + 340 > window.innerWidth) panelLeft = rect.left - 350;
+        if (panelTop + 500 > window.innerHeight) panelTop = window.innerHeight - 510;
         if (panelTop < 10) panelTop = 10;
         expandedPanel.style.left = panelLeft + 'px';
         expandedPanel.style.top = panelTop + 'px';
-        expandedPanel.style.right = 'auto';
         expandedPanel.style.display = 'block';
     });
 
-    // ĐÓNG PANEL
-    document.getElementById('closePanelBtn').addEventListener('click', () => {
-        expandedPanel.style.display = 'none';
-    });
+    document.getElementById('closePanelBtn').addEventListener('click', () => { expandedPanel.style.display = 'none'; });
+    document.getElementById('minimizePanelBtn').addEventListener('click', () => { expandedPanel.style.display = 'none'; });
 
-    // THU GỌN PANEL (về lại hình tròn)
-    document.getElementById('minimizePanelBtn').addEventListener('click', () => {
-        expandedPanel.style.display = 'none';
-    });
-
-    // KÉO THẢ PANEL (qua header)
     const panelHeader = document.getElementById('panelHeader');
-    let isPanelDragging = false;
-    let panelOffsetX, panelOffsetY;
-
+    let isPanelDragging = false, panelOffsetX, panelOffsetY;
     panelHeader.addEventListener('mousedown', (e) => {
         if (e.target.classList.contains('minimize-panel-btn') || e.target.classList.contains('close-panel-btn')) return;
         isPanelDragging = true;
         const rect = expandedPanel.getBoundingClientRect();
         panelOffsetX = e.clientX - rect.left;
         panelOffsetY = e.clientY - rect.top;
-        expandedPanel.style.cursor = 'grabbing';
         e.preventDefault();
     });
-
     window.addEventListener('mousemove', (e) => {
         if (!isPanelDragging || expandedPanel.style.display === 'none') return;
-        let newLeft = e.clientX - panelOffsetX;
-        let newTop = e.clientY - panelOffsetY;
+        let newLeft = e.clientX - panelOffsetX, newTop = e.clientY - panelOffsetY;
         newLeft = Math.min(window.innerWidth - expandedPanel.offsetWidth - 5, Math.max(5, newLeft));
         newTop = Math.min(window.innerHeight - 80, Math.max(5, newTop));
         expandedPanel.style.left = newLeft + 'px';
         expandedPanel.style.top = newTop + 'px';
     });
+    window.addEventListener('mouseup', () => { isPanelDragging = false; });
 
-    window.addEventListener('mouseup', () => {
-        isPanelDragging = false;
-        if (expandedPanel) expandedPanel.style.cursor = '';
-    });
+    // ======================= WEBSOCKET TRỰC TIẾP =======================
+    let ws = null;
+    let currentSession = null;
+    let historyData = [];  // Lưu lịch sử [{result, total, session}]
+    let lastResult = null;
+    let reconnectAttempts = 0;
+    let pingInterval = null;
 
-    // ======================= DỰ ĐOÁN NÂNG CẤP =======================
-    const API_HISTORY_URL = 'https://sun-nvg7.onrender.com/api/history';
+    const WS_URL = "wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjAsInVzZXJuYW1lIjoiU0NfYXBpc3Vud2luMTIzIn0.hgrRbSV6vnBwJMg9ZFtbx3rRu9mX_hZMZ_m5gMNhkw0";
+    const WS_HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Origin": "https://play.sun.win"
+    };
 
-    async function fetchPredictionData() {
-        try {
-            const response = await fetch(API_HISTORY_URL, { cache: 'no-store' });
-            if (!response.ok) throw new Error('HTTP error');
-            const data = await response.json();
-            const current = data.current;
-            const historyArr = data.history || [];
+    const INIT_MESSAGES = [
+        [1, "MiniGame", "GM_apivopnhaan", "WangLin", {
+            "info": "{\"ipAddress\":\"113.185.45.88\",\"wsToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW5kZXIiOjAsImNhblZpZXdTdGF0IjpmYWxzZSwiZGlzcGxheU5hbWUiOiJwbGFtYW1hIiwiYm90IjowLCJpc01lcmNoYW50IjpmYWxzZSwidmVyaWZpZWRCYW5rQWNjb3VudCI6ZmFsc2UsInBsYXlFdmVudExvYmJ5IjpmYWxzZSwiY3VzdG9tZXJJZCI6MzMxNDgxMTYyLCJhZmZJZCI6IkdFTVdJTiIsImJhbm5lZCI6ZmFsc2UsImJyYW5kIjoiZ2VtIiwidGltZXN0YW1wIjoxNzY2NDc0NzgwMDA2LCJsb2NrR2FtZXMiOltdLCJhbW91bnQiOjAsImxvY2tDaGF0IjpmYWxzZSwicGhvbmVWZXJpZmllZCI6ZmFsc2UsImlwQWRkcmVzcyI6IjExMy4xODUuNDUuODgiLCJtdXRlIjpmYWxzZSwiYXZhdGFyIjoiaHR0cHM6Ly9pbWFnZXMuc3dpbnNob3AubmV0L2ltYWdlcy9hdmF0YXIvYXZhdGFyXzE4LnBuZyIsInBsYXRmb3JtSWQiOjUsInVzZXJJZCI6IjZhOGI0ZDM4LTFlYzEtNDUxYi1hYTA1LWYyZDkwYWFhNGM1MCIsInJlZ1RpbWUiOjE3NjY0NzQ3NTEzOTEsInBob25lIjoiIiwiZGVwb3NpdCI6ZmFsc2UsInVzZXJuYW1lIjoiR01fYXBpdm9wbmhhYW4ifQ.YFOscbeojWNlRo7490BtlzkDGYmwVpnlgOoh04oCJy4\",\"locale\":\"vi\",\"userId\":\"6a8b4d38-1ec1-451b-aa05-f2d90aaa4c50\",\"username\":\"GM_apivopnhaan\",\"timestamp\":1766474780007,\"refreshToken\":\"63d5c9be0c494b74b53ba150d69039fd.7592f06d63974473b4aaa1ea849b2940\"}",
+            "signature": "66772A1641AA8B18BD99207CE448EA00ECA6D8A4D457C1FF13AB092C22C8DECF0C0014971639A0FBA9984701A91FCCBE3056ABC1BE1541D1C198AA18AF3C45595AF6601F8B048947ADF8F48A9E3E074162F9BA3E6C0F7543D38BD54FD4C0A2C56D19716CC5353BBC73D12C3A92F78C833F4EFFDC4AB99E55C77AD2CDFA91E296"
+        }],
+        [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
+        [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
+    ];
 
-            // Cập nhật thông tin current
-            if (current && current.Phien) {
-                const diceStr = `${current.Xuc_xac_1} ${current.Xuc_xac_2} ${current.Xuc_xac_3}`;
-                document.getElementById('currentInfo').innerHTML = `
-                    🎲 PHIÊN: ${current.Phien}<br>
-                    🎲 XÚC XẮC: ${diceStr} | TỔNG: ${current.Tong}<br>
-                    📌 KẾT QUẢ: <strong>${current.Ket_qua === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
-                `;
-            } else {
-                document.getElementById('currentInfo').innerHTML = '⏳ ĐANG CHỜ DỮ LIỆU WEBSOCKET...';
-            }
+    function updateUI() {
+        // Cập nhật thống kê
+        const taiTotal = historyData.filter(h => h.result === 'Tài').length;
+        const xiuTotal = historyData.filter(h => h.result === 'Xỉu').length;
+        document.getElementById('taiCount').innerText = taiTotal;
+        document.getElementById('xiuCount').innerText = xiuTotal;
+        document.getElementById('totalHistory').innerText = historyData.length;
+        document.getElementById('sessionId').innerText = currentSession || '---';
 
-            // Thống kê
-            const taiTotal = historyArr.filter(h => h.result === 'Tài').length;
-            const xiuTotal = historyArr.filter(h => h.result === 'Xỉu').length;
-            document.getElementById('taiCount').innerText = taiTotal;
-            document.getElementById('xiuCount').innerText = xiuTotal;
-            document.getElementById('totalHistory').innerText = historyArr.length;
-
-            // Lịch sử gần nhất
-            renderMiniHistory(historyArr.slice(0, 12));
-
-            // DỰ ĐOÁN NÂNG CẤP
-            if (historyArr.length > 0) {
-                const prediction = calculateAdvancedPrediction(historyArr, current);
-                const predElem = document.getElementById('nextPred');
-                predElem.innerHTML = prediction === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
-                predElem.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
-                
-                // Cập nhật badge trên hình tròn
-                const miniBadge = document.getElementById('miniPred');
-                miniBadge.innerHTML = prediction === 'Tài' ? 'TÀI' : 'XỈU';
-                miniBadge.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
-            } else {
-                document.getElementById('nextPred').innerHTML = '⚠️ CHỜ DỮ LIỆU';
-                document.getElementById('miniPred').innerHTML = '???';
-            }
-        } catch (err) {
-            console.error(err);
-            document.getElementById('currentInfo').innerHTML = '⚠️ LỖI KẾT NỐI API';
-            document.getElementById('nextPred').innerHTML = 'LỖI';
-            document.getElementById('miniPred').innerHTML = 'ERR';
+        // Hiển thị kết quả gần nhất
+        if (historyData.length > 0) {
+            const last = historyData[0];
+            document.getElementById('currentInfo').innerHTML = `
+                🎲 PHIÊN: ${last.session}<br>
+                🎲 TỔNG: ${last.total} | KQ: <strong>${last.result === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
+            `;
         }
+
+        // Dự đoán
+        if (historyData.length >= 5) {
+            const prediction = calculatePrediction();
+            const predElem = document.getElementById('nextPred');
+            predElem.innerHTML = prediction === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
+            predElem.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
+            document.getElementById('miniPred').innerHTML = prediction === 'Tài' ? 'TÀI' : 'XỈU';
+        }
+
+        // Hiển thị lịch sử
+        renderMiniHistory();
     }
 
-    // THUẬT TOÁN DỰ ĐOÁN NÂNG CẤP
-    function calculateAdvancedPrediction(history, currentObj) {
-        if (!history.length) return 'Tài';
+    function calculatePrediction() {
+        if (historyData.length < 5) return 'Tài';
         
-        // Lấy 15 kết quả gần nhất để phân tích xu hướng
-        const last15 = history.slice(0, 15);
-        const lastResults = last15.map(h => h.result);
+        const last15 = historyData.slice(0, 15);
+        const results = last15.map(h => h.result);
         
-        // 1. Phân tích chuỗi (streak)
+        // Phân tích streak
         let streak = 1;
-        for (let i = 1; i < lastResults.length; i++) {
-            if (lastResults[i] === lastResults[i-1]) streak++;
+        for (let i = 1; i < results.length; i++) {
+            if (results[i] === results[i-1]) streak++;
             else break;
         }
         
-        let streakPrediction = null;
-        if (streak >= 3) {
-            // Nếu chuỗi >= 3, dự đoán đảo chiều
-            streakPrediction = (lastResults[0] === 'Tài') ? 'Xỉu' : 'Tài';
-        }
+        let streakPred = null;
+        if (streak >= 3) streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
         
-        // 2. Tần suất 12 ván gần nhất
-        const last12 = history.slice(0, 12);
-        const taiCount12 = last12.filter(h => h.result === 'Tài').length;
-        const xiuCount12 = last12.filter(h => h.result === 'Xỉu').length;
-        const freqPrediction = (taiCount12 > xiuCount12) ? 'Xỉu' : 'Tài';
-        
-        // 3. Phân tích tổng điểm trung bình
-        let avgTotal = 0;
-        if (last12.length) {
-            const sumTotals = last12.reduce((acc, h) => acc + h.total, 0);
-            avgTotal = sumTotals / last12.length;
-        }
-        const sumPrediction = (avgTotal >= 10.5) ? 'Xỉu' : 'Tài';
-        
-        // 4. Phân tích bias từ current nếu có
-        let currentBias = null;
-        if (currentObj && currentObj.Tong !== undefined) {
-            if (currentObj.Tong >= 11) currentBias = 'Xỉu';
-            else if (currentObj.Tong <= 7) currentBias = 'Tài';
-        }
-        
-        // 5. TRỌNG SỐ NÂNG CẤP
-        let scores = { 'Tài': 0, 'Xỉu': 0 };
-        
-        // Chuỗi streak (ưu tiên cao nhất nếu có)
-        if (streakPrediction) {
-            scores[streakPrediction] += 0.45;
-        }
-        
-        // Tần suất
-        scores[freqPrediction] += 0.25;
+        // Tần suất 12 ván
+        const last12 = historyData.slice(0, 12);
+        const tai12 = last12.filter(h => h.result === 'Tài').length;
+        const xiu12 = last12.filter(h => h.result === 'Xỉu').length;
+        const freqPred = tai12 > xiu12 ? 'Xỉu' : 'Tài';
         
         // Trung bình tổng
-        scores[sumPrediction] += 0.20;
+        let avgTotal = last12.reduce((a, h) => a + h.total, 0) / last12.length;
+        const sumPred = avgTotal >= 10.5 ? 'Xỉu' : 'Tài';
         
-        // Bias từ current
-        if (currentBias) {
-            scores[currentBias] += 0.10;
-        }
+        // Trọng số
+        let scores = { 'Tài': 0, 'Xỉu': 0 };
+        if (streakPred) scores[streakPred] += 0.45;
+        scores[freqPred] += 0.30;
+        scores[sumPred] += 0.25;
         
-        // Quyết định cuối cùng
-        let finalPred = scores['Tài'] >= scores['Xỉu'] ? 'Tài' : 'Xỉu';
-        
-        // Ghi log để debug (tùy chọn)
-        console.log(`[DỰ ĐOÁN] Streak:${streak} | Tài/Xỉu 12v:${taiCount12}/${xiuCount12} | TB:${avgTotal.toFixed(1)} | KQ:${finalPred}`);
-        
-        return finalPred;
+        return scores['Tài'] >= scores['Xỉu'] ? 'Tài' : 'Xỉu';
     }
 
-    function renderMiniHistory(histSlice) {
+    function renderMiniHistory() {
         const container = document.getElementById('miniHistory');
-        if (!histSlice || histSlice.length === 0) {
+        if (historyData.length === 0) {
             container.innerHTML = '<span>CHƯA CÓ DỮ LIỆU</span>';
             return;
         }
         let html = '';
-        for (let item of histSlice) {
-            let resultShort = (item.result === 'Tài') ? '🟢T' : '🔴X';
-            html += `<span title="Phiên ${item.session} | Tổng ${item.total}">${resultShort}</span>`;
+        for (let i = 0; i < Math.min(15, historyData.length); i++) {
+            let item = historyData[i];
+            let short = item.result === 'Tài' ? '🟢T' : '🔴X';
+            html += `<span title="Phiên ${item.session} | Tổng ${item.total}">${short}</span>`;
         }
         container.innerHTML = html;
     }
 
-    // TỰ ĐỘNG CẬP NHẬT MỖI 6 GIÂY
-    let intervalId = setInterval(() => {
-        fetchPredictionData();
-    }, 6000);
-
-    document.getElementById('refreshPredBtn').addEventListener('click', () => {
-        fetchPredictionData();
-    });
+    function connectWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        
+        ws = new WebSocket(WS_URL);
+        
+        ws.onopen = () => {
+            console.log('✅ WebSocket đã kết nối');
+            document.getElementById('wsStatusDot').style.color = '#0f0';
+            document.getElementById('wsStatusDot').title = 'Đã kết nối';
+            reconnectAttempts = 0;
+            
+            // Gửi init messages
+            INIT_MESSAGES.forEach((msg, i) => {
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+                }, i * 500);
+            });
+            
+            // Gửi ping định kỳ
+            if (pingInterval) clearInterval(pingInterval);
+            pingInterval = setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
+                }
+            }, 25000);
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (!Array.isArray(data) || typeof data[1] !== 'object') return;
+                
+                const { cmd, sid, d1, d2, d3, gBB } = data[1];
+                
+                if (cmd === 1008 && sid) {
+                    currentSession = sid;
+                    console.log(`🎮 Session: ${sid}`);
+                }
+                
+                if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
+                    const total = d1 + d2 + d3;
+                    const result = total > 10 ? "Tài" : "Xỉu";
+                    
+                    const newResult = {
+                        session: currentSession,
+                        total: total,
+                        result: result,
+                        timestamp: Date.now()
+                    };
+                    
+                    // Chống trùng lặp
+                    if (historyData.length === 0 || historyData[0].session !== currentSession) {
+                        historyData.unshift(newResult);
+                        if (historyData.length > 100) historyData.pop();
+                        console.log(`🎲 ${d1}-${d2}-${d3} = ${total} (${result})`);
+                        updateUI();
+                    }
+                }
+            } catch(e) { console.error('Parse error:', e); }
+        };
+        
+        ws.onclose = () => {
+            console.log('🔌 WebSocket đóng, reconnect sau 3s...');
+            document.getElementById('wsStatusDot').style.color = '#f00';
+            clearInterval(pingInterval);
+            setTimeout(() => connectWebSocket(), 3000);
+        };
+        
+        ws.onerror = (err) => {
+            console.error('WS Error:', err);
+            ws.close();
+        };
+    }
 
     // Khởi tạo
-    fetchPredictionData();
-
-    // Ẩn panel khi click ra ngoài (tùy chọn)
-    document.addEventListener('click', (e) => {
-        if (!expandedPanel.contains(e.target) && !circleMenu.contains(e.target)) {
-            if (expandedPanel.style.display === 'block') {
-                // Không tự động đóng để tránh khó chịu, nhưng giữ nguyên
-                // Có thể bỏ comment dòng dưới nếu muốn tự đóng
-                // expandedPanel.style.display = 'none';
-            }
-        }
-    });
+    connectWebSocket();
+    document.getElementById('refreshBtn').addEventListener('click', () => { updateUI(); });
 </script>
 </body>
 </html>
