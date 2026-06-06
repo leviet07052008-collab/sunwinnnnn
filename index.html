@@ -6,15 +6,28 @@
     <title>AI Thomas - Dự Đoán SunWin</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 100%);
             font-family: 'Segoe UI', Arial, sans-serif;
-            color: white;
-            min-height: 100vh;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        /* Header */
+        /* Trang chủ - hiển thị khi chưa chọn game */
+        .home-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
         .header { text-align: center; margin-bottom: 40px; }
         .logo { font-size: 48px; font-weight: bold; background: linear-gradient(45deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .badge { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-top: 10px; }
@@ -22,9 +35,6 @@
         .status-dot { width: 12px; height: 12px; background: #00ff00; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 5px #00ff00; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
         
-        /* Game Grid - Chỉ có SunWin */
-        .section-title { text-align: center; margin: 30px 0 20px; font-size: 24px; }
-        .game-grid { display: flex; justify-content: center; align-items: center; }
         .game-card {
             background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
             border-radius: 20px; padding: 40px 60px; text-align: center;
@@ -32,21 +42,68 @@
             border: 1px solid rgba(255,255,255,0.15);
             max-width: 400px;
             width: 100%;
+            margin: 0 auto;
         }
         .game-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.15); border-color: #ffd700; }
         .game-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
         .game-desc { font-size: 14px; color: #ccc; }
         .game-badge { display: inline-block; background: rgba(0,255,0,0.2); padding: 3px 15px; border-radius: 20px; font-size: 12px; margin-top: 15px; color: #0f0; }
         
-        .footer { text-align: center; margin-top: 50px; padding: 20px; color: #666; border-top: 1px solid rgba(255,255,255,0.1); }
+        .footer { text-align: center; margin-top: 50px; padding: 20px; color: #666; }
         
-        /* Floating Menu - Hình tròn kéo thả */
+        /* Iframe container - ẩn ban đầu, hiện khi chọn game */
+        .iframe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: none;
+            background: #000;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Nút quay lại */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: #ffd700; color: #1a1a3a; }
+        
+        /* Floating Menu - Hình tròn kéo thả (luôn hiển thị trên iframe) */
         .float-menu {
-            position: fixed; z-index: 9999; cursor: grab;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
-            border-radius: 50%; border: 2px solid #ffd700;
+            position: fixed;
+            z-index: 10001;
+            cursor: grab;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 50%;
+            border: 2px solid #ffd700;
             box-shadow: 0 0 20px rgba(255,215,0,0.4);
-            width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
             transition: all 0.2s ease;
         }
         .float-menu:active { cursor: grabbing; transform: scale(0.95); }
@@ -58,16 +115,28 @@
         
         /* Panel mở rộng */
         .float-panel {
-            position: fixed; z-index: 9998; width: 320px;
-            background: rgba(10,10,30,0.96); backdrop-filter: blur(16px);
-            border-radius: 20px; border: 1px solid #ffd700;
-            font-family: monospace; color: #ffd700; font-size: 12px;
-            overflow: hidden; display: none;
+            position: fixed;
+            z-index: 10002;
+            width: 320px;
+            background: rgba(10,10,30,0.96);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid #ffd700;
+            font-family: monospace;
+            color: #ffd700;
+            font-size: 12px;
+            overflow: hidden;
+            display: none;
         }
         .panel-header {
-            background: #1a1a3a; padding: 10px 14px; font-weight: bold;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #ffd700; cursor: move;
+            background: #1a1a3a;
+            padding: 10px 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ffd700;
+            cursor: move;
         }
         .panel-content { padding: 12px; max-height: 450px; overflow-y: auto; }
         .stat-row { background: rgba(255,255,255,0.05); margin: 8px 0; padding: 8px; border-radius: 12px; border-left: 3px solid #ffd700; }
@@ -92,17 +161,17 @@
             font-size: 9px; color: #aaa; max-height: 100px; overflow-y: auto;
         }
         
-        /* Responsive */
         @media (max-width: 600px) {
             .game-card { padding: 30px 40px; }
             .game-name { font-size: 28px; }
+            .float-panel { width: 300px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- HEADER -->
+<!-- TRANG CHỦ -->
+<div id="homePage" class="home-container">
     <div class="header">
         <div class="logo">🚀 AI THOMAS</div>
         <div class="badge">Tool AI • Hỗ Trợ Game</div>
@@ -115,19 +184,24 @@
         </div>
     </div>
     
-    <h2 class="section-title">🎮 Chọn Cổng Game</h2>
-    <div class="game-grid">
-        <div class="game-card" id="sunwinCard">
-            <div class="game-name">✨ SUNWIN ✨</div>
-            <div class="game-desc">Tài Xỉu Online - Dự đoán chính xác</div>
-            <div class="game-badge">● ĐANG HOẠT ĐỘNG</div>
-        </div>
+    <div class="game-card" id="sunwinCard">
+        <div class="game-name">✨ SUNWIN ✨</div>
+        <div class="game-desc">Tài Xỉu Online - Dự đoán chính xác</div>
+        <div class="game-badge">● ĐANG HOẠT ĐỘNG</div>
     </div>
     
     <div class="footer">
         <p>© 2025 AI Thomas - Dự đoán chính xác cao | Hỗ trợ 24/7</p>
     </div>
 </div>
+
+<!-- IFRAME CONTAINER -->
+<div id="iframeContainer" class="iframe-container">
+    <iframe id="gameIframe" src="about:blank"></iframe>
+</div>
+
+<!-- Nút quay lại -->
+<button id="backBtn" class="back-btn">← Quay lại</button>
 
 <!-- Floating Menu -->
 <div id="floatMenu" class="float-menu" style="top: 100px; right: 20px;">
@@ -167,12 +241,29 @@
 </div>
 
 <script>
-    // ======================= CLICK SUNWIN -> MỞ web.sunwin.tg =======================
+    // ======================= CHUYỂN ĐỔI GIỮA TRANG CHỦ VÀ IFRAME =======================
+    const homePage = document.getElementById('homePage');
+    const iframeContainer = document.getElementById('iframeContainer');
+    const gameIframe = document.getElementById('gameIframe');
+    const backBtn = document.getElementById('backBtn');
+    
+    // Click vào SunWin -> hiển thị iframe với web.sunwin.tg
     document.getElementById('sunwinCard').addEventListener('click', function() {
-        window.location.href = 'https://web.sunwin.tg';
+        homePage.style.display = 'none';
+        iframeContainer.style.display = 'block';
+        gameIframe.src = 'https://web.sunwin.tg';
+        backBtn.style.display = 'block';
     });
     
-    // ======================= KÉO THẢ MENU =======================
+    // Nút quay lại
+    backBtn.addEventListener('click', function() {
+        homePage.style.display = 'flex';
+        iframeContainer.style.display = 'none';
+        gameIframe.src = 'about:blank';
+        backBtn.style.display = 'none';
+    });
+    
+    // ======================= KÉO THẢ MENU (LUÔN HOẠT ĐỘNG) =======================
     const floatMenu = document.getElementById('floatMenu');
     const floatPanel = document.getElementById('floatPanel');
     let isDrag = false, dragX, dragY;
@@ -351,6 +442,7 @@
     document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
     addLog('🚀 AI THOMAS - Dự đoán SunWin');
     addLog('⚡ WebSocket tự động kết nối');
+    addLog('💡 Click vào SUNWIN để mở game, menu dự đoán vẫn hoạt động');
 </script>
 </body>
 </html>
