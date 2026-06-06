@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SunWin Predictor - Floating Menu</title>
+    <title>SunWin Dự Đoán - Menu Tròn</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         body, html {
@@ -19,7 +18,7 @@
             background: black;
         }
 
-        /* IFRAME FULL MÀN HÌNH */
+        /* IFRAME TOÀN MÀN HÌNH */
         #fullscreen-frame {
             position: fixed;
             top: 0;
@@ -31,377 +30,477 @@
             z-index: 1;
         }
 
-        /* MENU DI CHUYỂN ĐƯỢC - NHỎ GÓC */
-        .floating-panel {
+        /* MENU HÌNH TRÒN DI CHUYỂN ĐƯỢC */
+        .circle-menu {
             position: fixed;
             z-index: 9999;
-            width: 260px;
-            background: rgba(10, 20, 30, 0.92);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            border: 1px solid #00ffcc88;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #0a1a25 0%, #0a2a2f 100%);
+            border-radius: 50%;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 15px rgba(0,255,204,0.5), 0 4px 12px rgba(0,0,0,0.3);
+            cursor: grab;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .circle-menu:active {
+            cursor: grabbing;
+            transform: scale(0.96);
+        }
+
+        .circle-menu:hover {
+            box-shadow: 0 0 25px rgba(0,255,204,0.8);
+            border-color: #88ffdd;
+        }
+
+        /* ICON BÊN TRONG HÌNH TRÒN */
+        .menu-icon {
+            font-size: 28px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .prediction-badge {
+            font-size: 10px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            border-radius: 20px;
+            padding: 2px 6px;
+            margin-top: 2px;
+            color: #00ffcc;
+            font-family: monospace;
+        }
+
+        /* PANEL MỞ RỘNG KHI CLICK VÀO HÌNH TRÒN */
+        .expanded-panel {
+            position: fixed;
+            z-index: 9998;
+            width: 320px;
+            background: rgba(8, 18, 24, 0.96);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid #00ffccaa;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             font-family: 'Courier New', monospace;
             color: #00ffcc;
             font-size: 12px;
-            cursor: move;
-            transition: box-shadow 0.1s;
-            resize: both;
+            transition: all 0.2s ease;
             overflow: hidden;
+            pointer-events: auto;
         }
 
-        .floating-panel:active {
-            cursor: grabbing;
-            box-shadow: 0 0 15px cyan;
-        }
-
-        /* HEADER CỦA MENU (KÉO THẢ) */
-        .drag-handle {
+        .panel-header {
             background: #0a2a2f;
-            padding: 8px 10px;
-            border-radius: 16px 16px 0 0;
+            padding: 10px 14px;
             font-weight: bold;
             font-size: 13px;
-            text-align: center;
-            letter-spacing: 1px;
-            cursor: grab;
-            border-bottom: 1px solid #2faa99;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-        .close-btn {
-            background: #aa3355;
-            border: none;
-            color: white;
-            border-radius: 20px;
-            width: 22px;
-            height: 22px;
-            font-size: 14px;
-            line-height: 1;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-        }
-        .close-btn:hover {
-            background: red;
+            border-bottom: 1px solid #2faa99;
+            cursor: move;
         }
 
-        /* NỘI DUNG BÊN TRONG */
-        .menu-content {
-            padding: 10px;
-            cursor: auto;
-            max-height: 380px;
+        .panel-content {
+            padding: 12px;
+            max-height: 400px;
             overflow-y: auto;
-            font-size: 11px;
         }
 
         .stats-row {
             background: #031016;
-            margin: 6px 0;
-            padding: 6px;
+            margin: 8px 0;
+            padding: 8px;
             border-radius: 12px;
             border-left: 3px solid #0ff;
         }
-        .prediction {
+
+        .prediction-box {
             background: #021118;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             border-radius: 20px;
-            margin: 8px 0;
-            font-weight: bold;
+            margin: 10px 0;
         }
+
         .prediction-value {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 800;
+            letter-spacing: 2px;
         }
+
         button {
             background: #1a4a55;
             border: none;
             color: white;
-            padding: 5px 12px;
-            border-radius: 40px;
+            padding: 6px 12px;
+            border-radius: 30px;
             margin-top: 8px;
             width: 100%;
             cursor: pointer;
             font-family: monospace;
+            font-weight: bold;
         }
-        .history-mini {
-            font-size: 9px;
-            max-height: 140px;
-            overflow-y: auto;
+
+        button:hover {
+            background: #2a6a7a;
         }
+
         .history-mini span {
             display: inline-block;
             background: #001e22;
-            margin: 2px;
-            padding: 2px 6px;
+            margin: 3px;
+            padding: 3px 8px;
             border-radius: 20px;
+            font-size: 11px;
         }
 
-        /* NÚT THU GỌN */
-        .toggle-btn {
-            background: none;
+        .close-panel-btn {
+            background: #aa3355;
             border: none;
-            color: cyan;
+            color: white;
+            border-radius: 20px;
+            width: 26px;
+            height: 26px;
             font-size: 16px;
             cursor: pointer;
-            width: auto;
-            display: inline;
-            margin: 0;
-            padding: 0 6px;
         }
+
+        .minimize-panel-btn {
+            background: #226655;
+            border: none;
+            color: white;
+            border-radius: 20px;
+            width: 26px;
+            height: 26px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
         hr {
             border-color: #2faa9955;
+            margin: 8px 0;
         }
+
         ::-webkit-scrollbar {
-            width: 3px;
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #031016;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ffcc88;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-<!-- IFRAME TOÀN MÀN HÌNH web.sunwin.qa -->
+<!-- IFRAME TOÀN MÀN HÌNH -->
 <iframe id="fullscreen-frame" src="https://web.sunwin.qa" allow="fullscreen; autoplay; clipboard-write" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation"></iframe>
 
-<!-- MENU NỔI CÓ THỂ KÉO THẢ + THU NHỎ -->
-<div id="floatMenu" class="floating-panel" style="top: 20px; right: 20px; left: auto; width: 270px;">
-    <div class="drag-handle" id="dragHandle">
-        <span>🎲 SUNWIN PREDICTOR</span>
+<!-- MENU HÌNH TRÒN -->
+<div id="circleMenu" class="circle-menu" style="top: 80px; right: 20px; left: auto;">
+    <div class="menu-icon">🎲</div>
+    <div class="prediction-badge" id="miniPred">---</div>
+</div>
+
+<!-- PANEL MỞ RỘNG -->
+<div id="expandedPanel" class="expanded-panel" style="display: none; top: 80px; right: 100px;">
+    <div class="panel-header" id="panelHeader">
+        <span>🎲 SUNWIN DỰ ĐOÁN NÂNG CẤP</span>
         <div>
-            <button class="toggle-btn" id="minimizeBtn" title="Thu gọn">─</button>
-            <button class="close-btn" id="closeMenuBtn" title="Ẩn menu">✕</button>
+            <button class="minimize-panel-btn" id="minimizePanelBtn">─</button>
+            <button class="close-panel-btn" id="closePanelBtn">✕</button>
         </div>
     </div>
-    <div id="menuBody" class="menu-content">
+    <div id="panelBody" class="panel-content">
         <div class="stats-row" id="currentInfo">
             📡 Đang tải dữ liệu...
         </div>
-        <div class="prediction">
-            <div>🔮 PROGNOZ (TIẾP THEO)</div>
+        <div class="prediction-box">
+            <div>🔮 DỰ ĐOÁN PHIÊN TIẾP THEO</div>
             <div class="prediction-value" id="nextPred">---</div>
-            <div style="font-size:8px;">thuật toán tần suất + bias</div>
+            <div style="font-size: 9px; margin-top: 5px;">thuật toán: tần suất + xu hướng + phân tích tổng</div>
         </div>
         <div class="stats-row">
-            📊 TÀI: <span id="taiCount">0</span> &nbsp;| XỈU: <span id="xiuCount">0</span>
-            <br>🎲 Tổng lịch sử: <span id="totalHistory">0</span>
+            📊 THỐNG KÊ HIỆN TẠI<br>
+            🟢 TÀI: <span id="taiCount">0</span> &nbsp;| 🔴 XỈU: <span id="xiuCount">0</span><br>
+            📜 Tổng lịch sử: <span id="totalHistory">0</span>
         </div>
         <button id="refreshPredBtn">⟳ CẬP NHẬT DỮ LIỆU</button>
         <hr>
-        <div style="font-size:9px; margin-top:6px;">📜 10 KQ gần nhất:</div>
-        <div id="miniHistory" class="history-mini">--</div>
-        <div style="font-size:8px; text-align:center; margin-top:6px;">Kéo góc để thay đổi kích thước | Kéo thanh tiêu đề để di chuyển</div>
+        <div style="font-size: 10px;">📜 12 KẾT QUẢ GẦN NHẤT:</div>
+        <div id="miniHistory" class="history-mini" style="margin-top: 6px;">--</div>
+        <div style="font-size: 9px; text-align: center; margin-top: 10px; color: #88aacc;">
+            💡 Kéo thả thanh tiêu đề để di chuyển panel
+        </div>
     </div>
 </div>
 
 <script>
-    // ======================= QUẢN LÝ MENU NỔI (DRAG & RESIZE) =======================
-    const floatMenu = document.getElementById('floatMenu');
-    const dragHandle = document.getElementById('dragHandle');
-    let isDragging = false;
-    let offsetX, offsetY;
+    // ======================= QUẢN LÝ MENU HÌNH TRÒN =======================
+    const circleMenu = document.getElementById('circleMenu');
+    const expandedPanel = document.getElementById('expandedPanel');
+    let isCircleDragging = false;
+    let circleOffsetX, circleOffsetY;
 
-    dragHandle.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('toggle-btn') || e.target.classList.contains('close-btn')) return;
-        isDragging = true;
-        offsetX = e.clientX - floatMenu.offsetLeft;
-        offsetY = e.clientY - floatMenu.offsetTop;
-        floatMenu.style.cursor = 'grabbing';
+    // KÉO THẢ HÌNH TRÒN
+    circleMenu.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.circle-menu') !== circleMenu) return;
+        isCircleDragging = true;
+        const rect = circleMenu.getBoundingClientRect();
+        circleOffsetX = e.clientX - rect.left;
+        circleOffsetY = e.clientY - rect.top;
+        circleMenu.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isCircleDragging) return;
+        let newLeft = e.clientX - circleOffsetX;
+        let newTop = e.clientY - circleOffsetY;
+        newLeft = Math.min(window.innerWidth - circleMenu.offsetWidth - 5, Math.max(5, newLeft));
+        newTop = Math.min(window.innerHeight - circleMenu.offsetHeight - 5, Math.max(5, newTop));
+        circleMenu.style.left = newLeft + 'px';
+        circleMenu.style.top = newTop + 'px';
+        circleMenu.style.right = 'auto';
+    });
+
+    window.addEventListener('mouseup', () => {
+        isCircleDragging = false;
+        circleMenu.style.cursor = 'grab';
+    });
+
+    // CLICK VÀO HÌNH TRÒN -> MỞ PANEL
+    circleMenu.addEventListener('click', (e) => {
+        if (isCircleDragging) return;
+        const rect = circleMenu.getBoundingClientRect();
+        // Đặt panel gần vị trí hình tròn
+        let panelLeft = rect.right + 10;
+        let panelTop = rect.top;
+        if (panelLeft + 320 > window.innerWidth) {
+            panelLeft = rect.left - 330;
+        }
+        if (panelTop + 450 > window.innerHeight) {
+            panelTop = window.innerHeight - 460;
+        }
+        if (panelTop < 10) panelTop = 10;
+        expandedPanel.style.left = panelLeft + 'px';
+        expandedPanel.style.top = panelTop + 'px';
+        expandedPanel.style.right = 'auto';
+        expandedPanel.style.display = 'block';
+    });
+
+    // ĐÓNG PANEL
+    document.getElementById('closePanelBtn').addEventListener('click', () => {
+        expandedPanel.style.display = 'none';
+    });
+
+    // THU GỌN PANEL (về lại hình tròn)
+    document.getElementById('minimizePanelBtn').addEventListener('click', () => {
+        expandedPanel.style.display = 'none';
+    });
+
+    // KÉO THẢ PANEL (qua header)
+    const panelHeader = document.getElementById('panelHeader');
+    let isPanelDragging = false;
+    let panelOffsetX, panelOffsetY;
+
+    panelHeader.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('minimize-panel-btn') || e.target.classList.contains('close-panel-btn')) return;
+        isPanelDragging = true;
+        const rect = expandedPanel.getBoundingClientRect();
+        panelOffsetX = e.clientX - rect.left;
+        panelOffsetY = e.clientY - rect.top;
+        expandedPanel.style.cursor = 'grabbing';
         e.preventDefault();
     });
 
     window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-        newLeft = Math.min(window.innerWidth - floatMenu.offsetWidth - 5, Math.max(5, newLeft));
+        if (!isPanelDragging || expandedPanel.style.display === 'none') return;
+        let newLeft = e.clientX - panelOffsetX;
+        let newTop = e.clientY - panelOffsetY;
+        newLeft = Math.min(window.innerWidth - expandedPanel.offsetWidth - 5, Math.max(5, newLeft));
         newTop = Math.min(window.innerHeight - 80, Math.max(5, newTop));
-        floatMenu.style.left = newLeft + 'px';
-        floatMenu.style.top = newTop + 'px';
-        floatMenu.style.right = 'auto';
+        expandedPanel.style.left = newLeft + 'px';
+        expandedPanel.style.top = newTop + 'px';
     });
 
     window.addEventListener('mouseup', () => {
-        isDragging = false;
-        floatMenu.style.cursor = '';
+        isPanelDragging = false;
+        if (expandedPanel) expandedPanel.style.cursor = '';
     });
 
-    // Resize (góc dưới phải)
-    let resizeActive = false;
-    floatMenu.addEventListener('mousedown', (e) => {
-        const rect = floatMenu.getBoundingClientRect();
-        const isResizeHandle = (e.clientX > rect.right - 15 && e.clientY > rect.bottom - 15);
-        if (isResizeHandle) {
-            resizeActive = true;
-            e.preventDefault();
-            const startX = e.clientX, startY = e.clientY;
-            const startW = rect.width, startH = rect.height;
-            const onMouseMove = (moveEvent) => {
-                if (!resizeActive) return;
-                const newW = Math.max(200, startW + (moveEvent.clientX - startX));
-                const newH = Math.max(180, startH + (moveEvent.clientY - startY));
-                floatMenu.style.width = newW + 'px';
-                floatMenu.style.height = 'auto';
-            };
-            const onMouseUp = () => {
-                resizeActive = false;
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            };
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        }
-    });
-
-    // Thu nhỏ / phục hồi
-    const minimizeBtn = document.getElementById('minimizeBtn');
-    const menuBodyDiv = document.getElementById('menuBody');
-    let minimized = false;
-    minimizeBtn.addEventListener('click', () => {
-        if (!minimized) {
-            menuBodyDiv.style.display = 'none';
-            minimizeBtn.innerHTML = '□';
-            floatMenu.style.width = 'auto';
-            minimized = true;
-        } else {
-            menuBodyDiv.style.display = 'block';
-            minimizeBtn.innerHTML = '─';
-            floatMenu.style.width = '270px';
-            minimized = false;
-        }
-    });
-
-    // Đóng hoàn toàn menu (ẩn)
-    const closeMenuBtn = document.getElementById('closeMenuBtn');
-    closeMenuBtn.addEventListener('click', () => {
-        floatMenu.style.display = 'none';
-    });
-
-    // ======================= LOGIC LẤY DỮ LIỆU TỪ API CỦA BẠN =======================
-    const API_HISTORY_URL = 'https://sun-nvg7.onrender.com/api/history';  // API backend của bạn
-
-    let currentPrediction = "Tài";
-    let historyData = [];
+    // ======================= DỰ ĐOÁN NÂNG CẤP =======================
+    const API_HISTORY_URL = 'https://sun-nvg7.onrender.com/api/history';
 
     async function fetchPredictionData() {
         try {
             const response = await fetch(API_HISTORY_URL, { cache: 'no-store' });
             if (!response.ok) throw new Error('HTTP error');
             const data = await response.json();
-            // data.current + data.history
             const current = data.current;
             const historyArr = data.history || [];
 
-            // Hiển thị thông tin current
+            // Cập nhật thông tin current
             if (current && current.Phien) {
                 const diceStr = `${current.Xuc_xac_1} ${current.Xuc_xac_2} ${current.Xuc_xac_3}`;
                 document.getElementById('currentInfo').innerHTML = `
-                    🎲 Phiên: ${current.Phien}<br>
-                    🎲 Xúc xắc: ${diceStr} | Tổng: ${current.Tong}<br>
-                    📌 Kết quả: <strong>${current.Ket_qua === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
+                    🎲 PHIÊN: ${current.Phien}<br>
+                    🎲 XÚC XẮC: ${diceStr} | TỔNG: ${current.Tong}<br>
+                    📌 KẾT QUẢ: <strong>${current.Ket_qua === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong>
                 `;
             } else {
-                document.getElementById('currentInfo').innerHTML = '⏳ Chờ dữ liệu từ WebSocket...';
+                document.getElementById('currentInfo').innerHTML = '⏳ ĐANG CHỜ DỮ LIỆU WEBSOCKET...';
             }
 
-            // Lưu lịch sử để tính toán
-            historyData = historyArr.slice(0, 30);
-            renderMiniHistory(historyArr.slice(0, 10));
-
-            // Thống kê Tài/Xỉu
+            // Thống kê
             const taiTotal = historyArr.filter(h => h.result === 'Tài').length;
             const xiuTotal = historyArr.filter(h => h.result === 'Xỉu').length;
             document.getElementById('taiCount').innerText = taiTotal;
             document.getElementById('xiuCount').innerText = xiuTotal;
             document.getElementById('totalHistory').innerText = historyArr.length;
 
-            // Dự đoán dựa trên 10 kết quả gần nhất + pattern
+            // Lịch sử gần nhất
+            renderMiniHistory(historyArr.slice(0, 12));
+
+            // DỰ ĐOÁN NÂNG CẤP
             if (historyArr.length > 0) {
-                const prediction = calculatePrediction(historyArr, current);
-                currentPrediction = prediction;
+                const prediction = calculateAdvancedPrediction(historyArr, current);
                 const predElem = document.getElementById('nextPred');
-                predElem.innerHTML = prediction === 'Tài' ? '🎲 TÀI ⬆️' : '🎲 XỈU ⬇️';
+                predElem.innerHTML = prediction === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
                 predElem.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
+                
+                // Cập nhật badge trên hình tròn
+                const miniBadge = document.getElementById('miniPred');
+                miniBadge.innerHTML = prediction === 'Tài' ? 'TÀI' : 'XỈU';
+                miniBadge.style.color = prediction === 'Tài' ? '#88ffcc' : '#ffaa88';
             } else {
-                document.getElementById('nextPred').innerHTML = '⚠️ chờ dữ liệu';
+                document.getElementById('nextPred').innerHTML = '⚠️ CHỜ DỮ LIỆU';
+                document.getElementById('miniPred').innerHTML = '???';
             }
         } catch (err) {
             console.error(err);
-            document.getElementById('currentInfo').innerHTML = '⚠️ Lỗi kết nối API backend';
-            document.getElementById('nextPred').innerHTML = '???';
+            document.getElementById('currentInfo').innerHTML = '⚠️ LỖI KẾT NỐI API';
+            document.getElementById('nextPred').innerHTML = 'LỖI';
+            document.getElementById('miniPred').innerHTML = 'ERR';
         }
     }
 
-    // THUẬT TOÁN DỰ ĐOÁN (giống logic mạnh mẽ)
-    function calculatePrediction(history, currentObj) {
+    // THUẬT TOÁN DỰ ĐOÁN NÂNG CẤP
+    function calculateAdvancedPrediction(history, currentObj) {
         if (!history.length) return 'Tài';
-        const last10 = history.slice(0, 10);
-        const taiCount = last10.filter(h => h.result === 'Tài').length;
-        const xiuCount = last10.filter(h => h.result === 'Xỉu').length;
-
-        // xu hướng đảo chiều: nếu chuỗi 3 kết quả giống nhau => đảo
-        let lastResults = last10.map(h => h.result);
-        let trendBias = null;
-        if (lastResults.length >= 3 && lastResults[0] === lastResults[1] && lastResults[1] === lastResults[2]) {
-            trendBias = (lastResults[0] === 'Tài') ? 'Xỉu' : 'Tài';
-        } else {
-            // tần suất thấp hơn sẽ được ưu tiên
-            trendBias = (taiCount <= xiuCount) ? 'Tài' : 'Xỉu';
+        
+        // Lấy 15 kết quả gần nhất để phân tích xu hướng
+        const last15 = history.slice(0, 15);
+        const lastResults = last15.map(h => h.result);
+        
+        // 1. Phân tích chuỗi (streak)
+        let streak = 1;
+        for (let i = 1; i < lastResults.length; i++) {
+            if (lastResults[i] === lastResults[i-1]) streak++;
+            else break;
         }
-
-        // phân tích tổng điểm gần nhất (trung bình)
+        
+        let streakPrediction = null;
+        if (streak >= 3) {
+            // Nếu chuỗi >= 3, dự đoán đảo chiều
+            streakPrediction = (lastResults[0] === 'Tài') ? 'Xỉu' : 'Tài';
+        }
+        
+        // 2. Tần suất 12 ván gần nhất
+        const last12 = history.slice(0, 12);
+        const taiCount12 = last12.filter(h => h.result === 'Tài').length;
+        const xiuCount12 = last12.filter(h => h.result === 'Xỉu').length;
+        const freqPrediction = (taiCount12 > xiuCount12) ? 'Xỉu' : 'Tài';
+        
+        // 3. Phân tích tổng điểm trung bình
         let avgTotal = 0;
-        if (last10.length) {
-            const sumTotals = last10.reduce((acc, h) => acc + h.total, 0);
-            avgTotal = sumTotals / last10.length;
+        if (last12.length) {
+            const sumTotals = last12.reduce((acc, h) => acc + h.total, 0);
+            avgTotal = sumTotals / last12.length;
         }
-        let sumBias = (avgTotal >= 10.5) ? 'Xỉu' : 'Tài';
-
-        // Trọng số: trendBias 0.6 , sumBias 0.4
-        let final = (trendBias === sumBias) ? trendBias : (Math.random() > 0.5 ? trendBias : sumBias);
-        if (currentObj && currentObj.Tong !== undefined && currentObj.Tong > 10) {
-            final = 'Xỉu';  // anti momentum
-        } else if (currentObj && currentObj.Tong < 8) {
-            final = 'Tài';
+        const sumPrediction = (avgTotal >= 10.5) ? 'Xỉu' : 'Tài';
+        
+        // 4. Phân tích bias từ current nếu có
+        let currentBias = null;
+        if (currentObj && currentObj.Tong !== undefined) {
+            if (currentObj.Tong >= 11) currentBias = 'Xỉu';
+            else if (currentObj.Tong <= 7) currentBias = 'Tài';
         }
-        return final;
+        
+        // 5. TRỌNG SỐ NÂNG CẤP
+        let scores = { 'Tài': 0, 'Xỉu': 0 };
+        
+        // Chuỗi streak (ưu tiên cao nhất nếu có)
+        if (streakPrediction) {
+            scores[streakPrediction] += 0.45;
+        }
+        
+        // Tần suất
+        scores[freqPrediction] += 0.25;
+        
+        // Trung bình tổng
+        scores[sumPrediction] += 0.20;
+        
+        // Bias từ current
+        if (currentBias) {
+            scores[currentBias] += 0.10;
+        }
+        
+        // Quyết định cuối cùng
+        let finalPred = scores['Tài'] >= scores['Xỉu'] ? 'Tài' : 'Xỉu';
+        
+        // Ghi log để debug (tùy chọn)
+        console.log(`[DỰ ĐOÁN] Streak:${streak} | Tài/Xỉu 12v:${taiCount12}/${xiuCount12} | TB:${avgTotal.toFixed(1)} | KQ:${finalPred}`);
+        
+        return finalPred;
     }
 
     function renderMiniHistory(histSlice) {
         const container = document.getElementById('miniHistory');
         if (!histSlice || histSlice.length === 0) {
-            container.innerHTML = '<span>Không có dữ liệu</span>';
+            container.innerHTML = '<span>CHƯA CÓ DỮ LIỆU</span>';
             return;
         }
         let html = '';
         for (let item of histSlice) {
             let resultShort = (item.result === 'Tài') ? '🟢T' : '🔴X';
-            html += `<span title="Σ${item.total}">${resultShort}</span>`;
+            html += `<span title="Phiên ${item.session} | Tổng ${item.total}">${resultShort}</span>`;
         }
         container.innerHTML = html;
     }
 
-    // TỰ ĐỘNG CẬP NHẬP MỖI 8 GIÂY
+    // TỰ ĐỘNG CẬP NHẬT MỖI 6 GIÂY
     let intervalId = setInterval(() => {
         fetchPredictionData();
-    }, 8000);
+    }, 6000);
 
     document.getElementById('refreshPredBtn').addEventListener('click', () => {
         fetchPredictionData();
     });
 
-    // Khởi tạo lần đầu
+    // Khởi tạo
     fetchPredictionData();
 
-    // Optional: Cho phép kéo thả mượt hơn khi iframe fullscreen có thể chặn sự kiện
-    window.addEventListener('load', () => {
-        // fix iframe pointer events ko ảnh hưởng menu
-        const iframe = document.getElementById('fullscreen-frame');
-        iframe.style.pointerEvents = 'auto';
-        floatMenu.style.pointerEvents = 'auto';
+    // Ẩn panel khi click ra ngoài (tùy chọn)
+    document.addEventListener('click', (e) => {
+        if (!expandedPanel.contains(e.target) && !circleMenu.contains(e.target)) {
+            if (expandedPanel.style.display === 'block') {
+                // Không tự động đóng để tránh khó chịu, nhưng giữ nguyên
+                // Có thể bỏ comment dòng dưới nếu muốn tự đóng
+                // expandedPanel.style.display = 'none';
+            }
+        }
     });
 </script>
 </body>
