@@ -325,7 +325,6 @@
     window.addEventListener('mouseup', () => { isPanelDrag = false; });
     
     // ======================= WEBSOCKET =======================
-    // ======================= SỬ DỤNG CLOUDFLARE WORKER LÀM PROXY =======================
     let ws = null, currentSession = null, historyData = [], pingInt = null;
     
     function addLog(msg) {
@@ -336,10 +335,9 @@
         console.log(msg);
     }
     
-    // *** QUAN TRỌNG: ĐÃ THAY WS_URL BẰNG CLOUDFLARE WORKER ***
+    // --- SỬ DỤNG CLOUDFLARE WORKER CỦA BẠN ---
     const WS_URL = 'wss://sun.leviet07052008.workers.dev';
     
-    // Mảng các tin nhắn khởi tạo khi kết nối WebSocket thành công
     const INIT_MSGS = [
         [1, "MiniGame", "GM_apivopnhaan", "WangLin", {
             "info": "{\"ipAddress\":\"113.185.45.88\",\"wsToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW5kZXIiOjAsImNhblZpZXdTdGF0IjpmYWxzZSwiZGlzcGxheU5hbWUiOiJwbGFtYW1hIiwiYm90IjowLCJpc01lcmNoYW50IjpmYWxzZSwidmVyaWZpZWRCYW5rQWNjb3VudCI6ZmFsc2UsInBsYXlFdmVudExvYmJ5IjpmYWxzZSwiY3VzdG9tZXJJZCI6MzMxNDgxMTYyLCJhZmZJZCI6IkdFTVdJTiIsImJhbm5lZCI6ZmFsc2UsImJyYW5kIjoiZ2VtIiwidGltZXN0YW1wIjoxNzY2NDc0NzgwMDA2LCJsb2NrR2FtZXMiOltdLCJhbW91bnQiOjAsImxvY2tDaGF0IjpmYWxzZSwicGhvbmVWZXJpZmllZCI6ZmFsc2UsImlwQWRkcmVzcyI6IjExMy4xODUuNDUuODgiLCJtdXRlIjpmYWxzZSwiYXZhdGFyIjoiaHR0cHM6Ly9pbWFnZXMuc3dpbnNob3AubmV0L2ltYWdlcy9hdmF0YXIvYXZhdGFyXzE4LnBuZyIsInBsYXRmb3JtSWQiOjUsInVzZXJJZCI6IjZhOGI0ZDM4LTFlYzEtNDUxYi1hYTA1LWYyZDkwYWFhNGM1MCIsInJlZ1RpbWUiOjE3NjY0NzQ3NTEzOTEsInBob25lIjoiIiwiZGVwb3NpdCI6ZmFsc2UsInVzZXJuYW1lIjoiR01fYXBpdm9wbmhhYW4ifQ.YFOscbeojWNlRo7490BtlzkDGYmwVpnlgOoh04oCJy4\",\"locale\":\"vi\",\"userId\":\"6a8b4d38-1ec1-451b-aa05-f2d90aaa4c50\",\"username\":\"GM_apivopnhaan\",\"timestamp\":1766474780007,\"refreshToken\":\"63d5c9be0c494b74b53ba150d69039fd.7592f06d63974473b4aaa1ea849b2940\"}",
@@ -409,35 +407,35 @@
     
     function connectWS() {
         if (ws && ws.readyState === WebSocket.OPEN) return;
-        addLog(`🔄 Đang kết nối WebSocket qua Worker...`);
+        addLog(`🔄 Đang kết nối WebSocket qua Worker: ${WS_URL}`);
         try { 
             ws = new WebSocket(WS_URL); 
-            addLog(`🌐 Đã khởi tạo kết nối đến Worker: ${WS_URL}`);
         } catch(e) { 
-            addLog(`❌ Lỗi tạo WebSocket: ${e.message}`); 
+            addLog(`❌ Lỗi khởi tạo WebSocket: ${e.message}`); 
             return; 
         }
         
         ws.onopen = () => {
-            addLog('✅ WebSocket đã kết nối qua Cloudflare Worker!');
+            addLog('✅ Kết nối WebSocket thành công!');
             document.getElementById('wsDot').classList.remove('float-off');
-            // Gửi các tin nhắn khởi tạo
+            
+            // Gửi các tin nhắn khởi tạo với độ trễ phù hợp
             INIT_MSGS.forEach((msg, i) => {
                 setTimeout(() => { 
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify(msg));
-                        addLog(`📤 Đã gửi tin nhắn khởi tạo ${i+1}`);
+                        addLog(`📤 Đã gửi gói tin khởi tạo ${i+1}`);
                     }
-                }, i * 600);
+                }, i * 800); // Tăng độ trễ lên 800ms
             });
-            // Thiết lập ping interval để giữ kết nối
+            
             if (pingInt) clearInterval(pingInt);
+            // Tăng tần suất ping lên 15 giây để giữ kết nối ổn định hơn
             pingInt = setInterval(() => { 
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
-                    // addLog(`💓 Heartbeat sent`); // Có thể bật nếu cần debug
                 }
-            }, 25000);
+            }, 15000);
         };
         
         ws.onmessage = (e) => {
@@ -450,8 +448,8 @@
                     addLog(`🎮 Phiên hiện tại: ${sid}`); 
                 }
                 if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
-                    const total = d1 + d2 + d3, result = total > 10 ? "Tài" : "Xỉu";
-                    // Chống ghi nhận trùng lặp dựa trên session hiện tại
+                    const total = d1 + d2 + d3;
+                    const result = total > 10 ? "Tài" : "Xỉu";
                     if (historyData.length === 0 || historyData[0].session !== currentSession) {
                         historyData.unshift({ session: currentSession, dice: [d1, d2, d3], total, result, time: Date.now() });
                         if (historyData.length > 100) historyData.pop();
@@ -460,28 +458,25 @@
                     }
                 }
             } catch(er) {
-                // Lỗi parse JSON, có thể log để debug
-                // addLog(`⚠️ Lỗi xử lý dữ liệu: ${er.message}`);
+                // Bỏ qua lỗi parse nếu không nghiêm trọng
             }
         };
         
         ws.onclose = (event) => { 
-            addLog(`🔌 Mất kết nối WebSocket (Code: ${event.code}). Thử kết nối lại sau 5s...`); 
+            addLog(`🔌 Mất kết nối (Code: ${event.code}). Thử kết nối lại sau 5s...`); 
             document.getElementById('wsDot').classList.add('float-off'); 
             clearInterval(pingInt); 
             setTimeout(connectWS, 5000); 
         };
         ws.onerror = (err) => {
             addLog(`❌ Lỗi WebSocket: ${err.message}`);
-            // Không cần đóng ở đây, onclose sẽ được gọi sau đó
         };
     }
     
-    // Khởi động kết nối WebSocket
     connectWS();
     document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
     addLog('🚀 AI THOMAS - Dự đoán SunWin');
-    addLog('⚡ Sử dụng Cloudflare Worker làm WebSocket Proxy');
+    addLog('⚡ Đã cấu hình WebSocket qua Cloudflare Worker');
     addLog('💡 Click vào SUNWIN để mở game, menu dự đoán vẫn hoạt động');
 </script>
 </body>
