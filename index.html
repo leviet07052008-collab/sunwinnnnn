@@ -2,456 +2,317 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AI Thomas - Dự Đoán SunWin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sun.win - Dự đoán & Iframe</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        
-        /* Trang chủ */
-        .home-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-            overflow-y: auto;
+        body {
+            background: #0a0a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             padding: 20px;
         }
-        
-        .header { text-align: center; margin-bottom: 40px; }
-        .logo { font-size: 48px; font-weight: bold; background: linear-gradient(45deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-top: 10px; }
-        .status { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
-        .status-dot { width: 12px; height: 12px; background: #00ff00; border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        
-        .game-card {
-            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
-            border-radius: 20px; padding: 40px 60px; text-align: center;
-            cursor: pointer; border: 1px solid rgba(255,255,255,0.15);
-            max-width: 400px; width: 100%; margin: 0 auto;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,215,0,0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        h1 {
+            color: #ffd700;
+            font-size: 2rem;
+            text-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+        .btn-predict {
+            padding: 12px 35px;
+            background: linear-gradient(135deg, #ffd700, #f0a500);
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
             transition: all 0.3s;
+            color: #0a0a1a;
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
         }
-        .game-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.15); border-color: #ffd700; }
-        .game-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
-        .game-desc { font-size: 14px; color: #ccc; }
-        .game-badge { display: inline-block; background: rgba(0,255,0,0.2); padding: 3px 15px; border-radius: 20px; font-size: 12px; margin-top: 15px; color: #0f0; }
-        
-        .footer { text-align: center; margin-top: 50px; padding: 20px; color: #666; }
-        
-        .iframe-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; background: #000; }
-        .iframe-container iframe { width: 100%; height: 100%; border: none; }
-        
-        .back-btn {
-            position: fixed; top: 20px; left: 20px; z-index: 10000;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
-            border: 1px solid #ffd700; color: #ffd700;
-            padding: 10px 20px; border-radius: 30px; cursor: pointer;
-            display: none; transition: all 0.3s;
+        .btn-predict:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(255,215,0,0.5);
         }
-        .back-btn:hover { background: #ffd700; color: #1a1a3a; }
-        
-        /* Floating Menu - NHỎ GỌN */
-        .float-menu {
-            position: fixed; z-index: 10001; cursor: grab;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
-            border-radius: 50%; border: 2px solid #ffd700;
-            width: 55px; height: 55px;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-            transition: all 0.2s;
-            box-shadow: 0 0 10px rgba(255,215,0,0.3);
+        .btn-predict:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
-        .float-menu:active { transform: scale(0.95); cursor: grabbing; }
-        .float-icon { font-size: 22px; }
-        .float-pred { font-size: 9px; font-weight: bold; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 2px 5px; margin-top: 2px; }
-        .float-dot { width: 8px; height: 8px; border-radius: 50%; background: #0f0; position: absolute; bottom: 3px; right: 5px; }
-        .float-off { background: #f00; }
-        
-        /* Panel */
-        .float-panel {
-            position: fixed; z-index: 10002; width: 280px;
-            background: rgba(10,10,30,0.96); backdrop-filter: blur(16px);
-            border-radius: 16px; border: 1px solid #ffd700;
-            font-family: monospace; color: #ffd700; font-size: 11px;
-            overflow: hidden; display: none;
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
         }
-        .panel-header {
-            background: #1a1a3a; padding: 8px 12px; font-weight: bold;
-            display: flex; justify-content: space-between;
-            border-bottom: 1px solid #ffd700; cursor: move;
+        @media (max-width: 900px) {
+            .grid-2col { grid-template-columns: 1fr; }
         }
-        .panel-content { padding: 10px; max-height: 400px; overflow-y: auto; }
-        .stat-row { background: rgba(255,255,255,0.05); margin: 6px 0; padding: 6px; border-radius: 10px; border-left: 2px solid #ffd700; font-size: 10px; }
-        .pred-box { background: rgba(0,0,0,0.3); text-align: center; padding: 8px; border-radius: 12px; margin: 8px 0; }
-        .pred-value { font-size: 22px; font-weight: 800; }
-        button {
-            background: #ffd700; color: #1a1a3a; border: none; padding: 6px;
-            border-radius: 25px; margin-top: 6px; width: 100%; cursor: pointer;
-            font-weight: bold; font-size: 10px;
+        .card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(5px);
         }
-        .history span {
-            display: inline-block; background: rgba(255,215,0,0.2); margin: 2px;
-            padding: 2px 6px; border-radius: 15px; font-size: 9px;
+        .card-title {
+            color: #ffd700;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .close-btn, .mini-btn {
-            background: #333; border: none; color: white; border-radius: 20px;
-            width: 22px; height: 22px; font-size: 12px; cursor: pointer;
+        .iframe-wrapper {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,215,0,0.15);
         }
-        .close-btn { background: #aa3355; margin-left: 6px; }
-        .log-area {
-            background: rgba(0,0,0,0.5); border-radius: 6px; padding: 4px;
-            margin-top: 6px; font-size: 8px; color: #aaa; max-height: 80px; overflow-y: auto;
+        .iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
         }
-        .session-blink {
-            animation: blink 0.5s ease-in-out 2;
+        #result-box {
+            background: rgba(0,0,0,0.6);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 120px;
+            border-left: 4px solid #ffd700;
+            margin-top: 10px;
         }
-        @keyframes blink {
-            0%, 100% { opacity: 1; background: rgba(255,215,0,0.3); }
-            50% { opacity: 0.5; background: rgba(255,215,0,0.6); }
+        #result-box .time {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        #result-box .content {
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+        #result-box .loading {
+            color: #ffd700;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+        .status-bar {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        .status-bar .online { color: #0f0; }
+        .status-bar .offline { color: #f00; }
+        .history-toggle {
+            color: #aaa;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .history-toggle:hover { color: #ffd700; }
+        #history-box {
+            display: none;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        #history-box.active { display: block; }
+        #history-box::-webkit-scrollbar { width: 5px; }
+        #history-box::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+        .history-item {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 0;
+            color: #ccc;
+        }
+        .history-item .h-time { color: #888; font-size: 0.75rem; }
+        .history-item .h-content { color: #0f0; font-family: monospace; font-size: 0.85rem; margin-top: 3px; }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #444;
+            font-size: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 20px;
         }
     </style>
 </head>
 <body>
+<div class="container">
+    <header>
+        <h1>🎯 Sun.win <span style="font-size:1rem;color:#888;">| Dự đoán + Iframe</span></h1>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-predict" id="btnPredict" onclick="layDuDoan()">⚡ Lấy dự đoán</button>
+            <button class="btn-predict" style="background:rgba(255,255,255,0.1);color:#fff;box-shadow:none;" onclick="toggleHistory()">📜 Lịch sử</button>
+        </div>
+    </header>
 
-<!-- TRANG CHỦ -->
-<div id="homePage" class="home-container">
-    <div class="header">
-        <div class="logo">🚀 AI THOMAS</div>
-        <div class="badge">Tool AI • Hỗ Trợ Game</div>
-        <div class="status">
-            <div class="status-dot"></div>
-            <span>⚡ Chính Xác Cao</span>
-            <span>🤖 AI Thomas</span>
-            <div class="status-dot"></div>
-            <span>● Đang Hoạt Động</span>
+    <div class="grid-2col">
+        <!-- Cột trái: Iframe nhúng web.sunwin.date -->
+        <div class="card">
+            <div class="card-title">🌐 Trang chủ Sun.win (iframe)</div>
+            <div class="iframe-wrapper">
+                <iframe src="https://web.sunwin.date" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        loading="lazy">
+                </iframe>
+            </div>
+            <div style="color:#555;font-size:0.75rem;margin-top:8px;text-align:right;">
+                ⚠️ Nếu không hiển thị, trình duyệt có thể chặn iframe
+            </div>
+        </div>
+
+        <!-- Cột phải: Kết quả dự đoán + lịch sử -->
+        <div class="card">
+            <div class="card-title">📊 Kết quả dự đoán (từ VPS)</div>
+            <div id="result-box">
+                <div class="time" id="resultTime">🕐 Chưa có dữ liệu</div>
+                <div class="content" id="resultContent">Nhấn "Lấy dự đoán" để bắt đầu...</div>
+            </div>
+            <div class="status-bar">
+                <span id="statusIndicator">🔴 Đang kiểm tra VPS...</span>
+            </div>
+            <span class="history-toggle" onclick="toggleHistory()">📂 Xem lịch sử dự đoán</span>
+            <div id="history-box">
+                <div id="historyList"></div>
+            </div>
         </div>
     </div>
-    <div class="game-card" id="sunwinCard">
-        <div class="game-name">✨ SUNWIN ✨</div>
-        <div class="game-desc">Tài Xỉu Online - Dự đoán chính xác</div>
-        <div class="game-badge">● ĐANG HOẠT ĐỘNG</div>
-    </div>
+
     <div class="footer">
-        <p>© 2025 AI Thomas - Dự đoán chính xác cao | Hỗ trợ 24/7</p>
-    </div>
-</div>
-
-<!-- IFRAME -->
-<div id="iframeContainer" class="iframe-container">
-    <iframe id="gameIframe" src="about:blank"></iframe>
-</div>
-<button id="backBtn" class="back-btn">← Quay lại</button>
-
-<!-- Floating Menu -->
-<div id="floatMenu" class="float-menu" style="top: 100px; right: 20px;">
-    <div class="float-icon">🎲</div>
-    <div class="float-pred" id="miniPred">---</div>
-    <div class="float-dot" id="wsDot"></div>
-</div>
-
-<!-- Panel -->
-<div id="floatPanel" class="float-panel" style="top: 100px; right: 110px;">
-    <div class="panel-header" id="panelHeader">
-        <span>🎲 AI THOMAS</span>
-        <div>
-            <button class="mini-btn" id="miniBtn">─</button>
-            <button class="close-btn" id="closeBtn">✕</button>
-        </div>
-    </div>
-    <div id="panelBody" class="panel-content">
-        <div class="stat-row" id="currentInfo">📡 ĐANG KẾT NỐI...</div>
-        <div class="pred-box">
-            <div>🔮 DỰ ĐOÁN</div>
-            <div class="pred-value" id="nextPred">---</div>
-        </div>
-        <div class="stat-row">
-            📊 TÀI: <span id="taiCount">0</span> | XỈU: <span id="xiuCount">0</span><br>
-            📜 Tổng: <span id="totalHistory">0</span> | Phiên: <span id="sessionId">---</span>
-        </div>
-        <button id="refreshBtn">⟳ CẬP NHẬT</button>
-        <hr style="border-color:#333; margin:6px 0">
-        <div>📜 15 KQ GẦN NHẤT:</div>
-        <div id="miniHistory" class="history" style="margin-top:4px;">--</div>
-        <div class="log-area" id="logArea"></div>
+        Made with ❤️ • GitHub Pages + VPS Backend • Dữ liệu từ web.sunwin.date
     </div>
 </div>
 
 <script>
-    // DOM elements
-    const homePage = document.getElementById('homePage');
-    const iframeContainer = document.getElementById('iframeContainer');
-    const gameIframe = document.getElementById('gameIframe');
-    const backBtn = document.getElementById('backBtn');
-    const floatMenu = document.getElementById('floatMenu');
-    const floatPanel = document.getElementById('floatPanel');
-    
-    document.getElementById('sunwinCard').addEventListener('click', () => {
-        homePage.style.display = 'none';
-        iframeContainer.style.display = 'block';
-        gameIframe.src = 'https://web.sunwin.tg';
-        backBtn.style.display = 'block';
-    });
-    backBtn.addEventListener('click', () => {
-        homePage.style.display = 'flex';
-        iframeContainer.style.display = 'none';
-        gameIframe.src = 'about:blank';
-        backBtn.style.display = 'none';
-    });
-    
-    // ======================= DRAG MENU =======================
-    let isDrag = false, dragX, dragY;
-    floatMenu.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.float-menu') !== floatMenu) return;
-        isDrag = true;
-        const rect = floatMenu.getBoundingClientRect();
-        dragX = e.clientX - rect.left;
-        dragY = e.clientY - rect.top;
-        floatMenu.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (!isDrag) return;
-        let left = e.clientX - dragX, top = e.clientY - dragY;
-        left = Math.min(window.innerWidth - floatMenu.offsetWidth - 5, Math.max(5, left));
-        top = Math.min(window.innerHeight - floatMenu.offsetHeight - 5, Math.max(5, top));
-        floatMenu.style.left = left + 'px';
-        floatMenu.style.top = top + 'px';
-        floatMenu.style.right = 'auto';
-    });
-    window.addEventListener('mouseup', () => { isDrag = false; floatMenu.style.cursor = 'grab'; });
-    
-    floatMenu.addEventListener('click', (e) => {
-        if (isDrag) return;
-        const rect = floatMenu.getBoundingClientRect();
-        let left = rect.right + 10, top = rect.top;
-        if (left + 300 > window.innerWidth) left = rect.left - 290;
-        if (top + 450 > window.innerHeight) top = window.innerHeight - 460;
-        if (top < 10) top = 10;
-        floatPanel.style.left = left + 'px';
-        floatPanel.style.top = top + 'px';
-        floatPanel.style.display = 'block';
-    });
-    
-    document.getElementById('closeBtn').addEventListener('click', () => { floatPanel.style.display = 'none'; });
-    document.getElementById('miniBtn').addEventListener('click', () => { floatPanel.style.display = 'none'; });
-    
-    const panelHeader = document.getElementById('panelHeader');
-    let isPanelDrag = false, panelOffX, panelOffY;
-    panelHeader.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('mini-btn') || e.target.classList.contains('close-btn')) return;
-        isPanelDrag = true;
-        const rect = floatPanel.getBoundingClientRect();
-        panelOffX = e.clientX - rect.left;
-        panelOffY = e.clientY - rect.top;
-        e.preventDefault();
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (!isPanelDrag || floatPanel.style.display === 'none') return;
-        let left = e.clientX - panelOffX, top = e.clientY - panelOffY;
-        left = Math.min(window.innerWidth - floatPanel.offsetWidth - 5, Math.max(5, left));
-        top = Math.min(window.innerHeight - 80, Math.max(5, top));
-        floatPanel.style.left = left + 'px';
-        floatPanel.style.top = top + 'px';
-    });
-    window.addEventListener('mouseup', () => { isPanelDrag = false; });
-    
-    // ======================= WEBSOCKET =======================
-    let ws = null, currentSession = null, historyData = [], pingInt = null;
-    let lastSessionId = null;
-    
-    function addLog(msg) {
-        const logDiv = document.getElementById('logArea');
-        const time = new Date().toLocaleTimeString('vi-VN');
-        logDiv.innerHTML = `<div>[${time}] ${msg}</div>` + logDiv.innerHTML;
-        if (logDiv.children.length > 12) logDiv.removeChild(logDiv.lastChild);
-        console.log(msg);
-    }
-    
-    function blinkSessionElement() {
-        const sessionSpan = document.getElementById('sessionId');
-        if (sessionSpan) {
-            sessionSpan.classList.add('session-blink');
-            setTimeout(() => sessionSpan.classList.remove('session-blink'), 500);
-        }
-        const infoDiv = document.getElementById('currentInfo');
-        if (infoDiv) {
-            infoDiv.classList.add('session-blink');
-            setTimeout(() => infoDiv.classList.remove('session-blink'), 500);
-        }
-    }
-    
-    const WS_URL = 'wss://sun.leviet07052008.workers.dev';
-    
-    const INIT_MSGS = [
-        [1, "MiniGame", "GM_apivopnhaan", "WangLin", {
-            "info": "{\"ipAddress\":\"113.185.45.88\",\"wsToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW5kZXIiOjAsImNhblZpZXdTdGF0IjpmYWxzZSwiZGlzcGxheU5hbWUiOiJwbGFtYW1hIiwiYm90IjowLCJpc01lcmNoYW50IjpmYWxzZSwidmVyaWZpZWRCYW5rQWNjb3VudCI6ZmFsc2UsInBsYXlFdmVudExvYmJ5IjpmYWxzZSwiY3VzdG9tZXJJZCI6MzMxNDgxMTYyLCJhZmZJZCI6IkdFTVdJTiIsImJhbm5lZCI6ZmFsc2UsImJyYW5kIjoiZ2VtIiwidGltZXN0YW1wIjoxNzY2NDc0NzgwMDA2LCJsb2NrR2FtZXMiOltdLCJhbW91bnQiOjAsImxvY2tDaGF0IjpmYWxzZSwicGhvbmVWZXJpZmllZCI6ZmFsc2UsImlwQWRkcmVzcyI6IjExMy4xODUuNDUuODgiLCJtdXRlIjpmYWxzZSwiYXZhdGFyIjoiaHR0cHM6Ly9pbWFnZXMuc3dpbnNob3AubmV0L2ltYWdlcy9hdmF0YXIvYXZhdGFyXzE4LnBuZyIsInBsYXRmb3JtSWQiOjUsInVzZXJJZCI6IjZhOGI0ZDM4LTFlYzEtNDUxYi1hYTA1LWYyZDkwYWFhNGM1MCIsInJlZ1RpbWUiOjE3NjY0NzQ3NTEzOTEsInBob25lIjoiIiwiZGVwb3NpdCI6ZmFsc2UsInVzZXJuYW1lIjoiR01fYXBpdm9wbmhhYW4ifQ.YFOscbeojWNlRo7490BtlzkDGYmwVpnlgOoh04oCJy4\",\"locale\":\"vi\",\"userId\":\"6a8b4d38-1ec1-451b-aa05-f2d90aaa4c50\",\"username\":\"GM_apivopnhaan\",\"timestamp\":1766474780007,\"refreshToken\":\"63d5c9be0c494b74b53ba150d69039fd.7592f06d63974473b4aaa1ea849b2940\"}",
-            "signature": "66772A1641AA8B18BD99207CE448EA00ECA6D8A4D457C1FF13AB092C22C8DECF0C0014971639A0FBA9984701A91FCCBE3056ABC1BE1541D1C198AA18AF3C45595AF6601F8B048947ADF8F48A9E3E074162F9BA3E6C0F7543D38BD54FD4C0A2C56D19716CC5353BBC73D12C3A92F78C833F4EFFDC4AB99E55C77AD2CDFA91E296"
-        }],
-        [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
-        [6, "MiniGame", "taixiuPlugin", { cmd: 1006 }],
-        [6, "MiniGame", "taixiuPlugin", { cmd: 1007 }],
-        [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
-    ];
-    
-    function updateUI() {
-        const tai = historyData.filter(h => h.result === 'Tài').length;
-        const xiu = historyData.filter(h => h.result === 'Xỉu').length;
-        document.getElementById('taiCount').innerText = tai;
-        document.getElementById('xiuCount').innerText = xiu;
-        document.getElementById('totalHistory').innerText = historyData.length;
-        document.getElementById('sessionId').innerText = currentSession || '---';
-        
-        if (currentSession) {
-            document.getElementById('currentInfo').innerHTML = `✅ ĐÃ KẾT NỐI<br>🎮 Phiên hiện tại: ${currentSession}`;
-            document.getElementById('wsDot').classList.remove('float-off');
-        }
-        
-        if (historyData.length > 0) {
-            const last = historyData[0];
-            document.getElementById('currentInfo').innerHTML = `🎲 KQ MỚI NHẤT<br>🎲 ${last.dice.join('-')} = ${last.total}<br>📌 KQ: <strong>${last.result === 'Tài' ? '🟢 TÀI' : '🔴 XỈU'}</strong><br>🎮 Phiên: ${currentSession || '---'}`;
-        }
-        
-        if (historyData.length >= 3) {
-            const pred = calcPred();
-            const predElem = document.getElementById('nextPred');
-            predElem.innerHTML = pred === 'Tài' ? '🟢 TÀI ⬆️' : '🔴 XỈU ⬇️';
-            predElem.style.color = pred === 'Tài' ? '#88ffcc' : '#ffaa88';
-            document.getElementById('miniPred').innerHTML = pred;
-        } else {
-            document.getElementById('miniPred').innerHTML = '---';
-        }
-        renderHistory();
-    }
-    
-    function calcPred() {
-        if (historyData.length < 3) return 'Tài';
-        const last10 = historyData.slice(0, 10);
-        const results = last10.map(h => h.result);
-        let streak = 1;
-        for (let i = 1; i < Math.min(5, results.length); i++) {
-            if (results[i] === results[i-1]) streak++;
-            else break;
-        }
-        let streakPred = null;
-        if (streak >= 3) streakPred = results[0] === 'Tài' ? 'Xỉu' : 'Tài';
-        const taiCnt = last10.filter(h => h.result === 'Tài').length;
-        const xiuCnt = last10.filter(h => h.result === 'Xỉu').length;
-        const freqPred = taiCnt > xiuCnt ? 'Xỉu' : (xiuCnt > taiCnt ? 'Tài' : 'Tài');
-        let avg = last10.reduce((a, h) => a + h.total, 0) / last10.length;
-        const sumPred = avg >= 10.5 ? 'Xỉu' : 'Tài';
-        let scores = { 'Tài': 0, 'Xỉu': 0 };
-        if (streakPred) scores[streakPred] += 0.5;
-        scores[freqPred] += 0.3;
-        scores[sumPred] += 0.2;
-        if (Math.abs(scores['Tài'] - scores['Xỉu']) < 0.01) return results[0] === 'Tài' ? 'Xỉu' : 'Tài';
-        return scores['Tài'] >= scores['Xỉu'] ? 'Tài' : 'Xỉu';
-    }
-    
-    function renderHistory() {
-        const container = document.getElementById('miniHistory');
-        if (historyData.length === 0) { container.innerHTML = '<span>--</span>'; return; }
-        let html = '';
-        for (let i = 0; i < Math.min(15, historyData.length); i++) {
-            let item = historyData[i];
-            html += `<span title="${item.dice.join('-')} = ${item.total}">${item.result === 'Tài' ? '🟢T' : '🔴X'}</span>`;
-        }
-        container.innerHTML = html;
-    }
-    
-    function connectWS() {
-        if (ws && ws.readyState === WebSocket.OPEN) return;
-        addLog(`🔄 Đang kết nối WebSocket...`);
-        try { 
-            ws = new WebSocket(WS_URL); 
-        } catch(e) { 
-            addLog(`❌ Lỗi: ${e.message}`); 
-            return; 
-        }
-        
-        ws.onopen = () => {
-            addLog('✅ Đã kết nối!');
-            INIT_MSGS.forEach((msg, i) => {
-                setTimeout(() => { 
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify(msg));
-                    }
-                }, i * 600);
+    // ===== CẤU HÌNH =====
+    const API_BASE = "http://IP_VPS_CUA_BAN:8080";  // THAY IP THẬT HOẶC DOMAIN
+    // Ví dụ: const API_BASE = "http://123.123.123.123:8080";
+
+    // ===== LẤY DỰ ĐOÁN =====
+    async function layDuDoan() {
+        const btn = document.getElementById('btnPredict');
+        const content = document.getElementById('resultContent');
+        const timeEl = document.getElementById('resultTime');
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang lấy...';
+        content.className = 'content loading';
+        content.textContent = 'Đang kết nối VPS...';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/predict`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
             });
-            if (pingInt) clearInterval(pingInt);
-            pingInt = setInterval(() => { 
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify([6, "MiniGame", "heartbeat", { cmd: 9999, ts: Date.now() }]));
-                }
-            }, 25000);
-        };
-        
-        ws.onmessage = (e) => {
-            try {
-                const data = JSON.parse(e.data);
-                if (!Array.isArray(data) || typeof data[1] !== 'object') return;
-                const { cmd, sid, d1, d2, d3, gBB } = data[1];
-                
-                // KHI NHẬN ĐƯỢC SESSION MỚI (cmd 1008)
-                if (cmd === 1008 && sid) { 
-                    const oldSession = currentSession;
-                    currentSession = sid; 
-                    addLog(`🎮 PHIÊN MỚI: ${sid}`);
-                    if (oldSession !== sid) {
-                        blinkSessionElement();
-                    }
-                    updateUI();
-                }
-                
-                // KHI NHẬN ĐƯỢC KẾT QUẢ (cmd 1003)
-                if (cmd === 1003 && gBB === true && d1 && d2 && d3) {
-                    const total = d1 + d2 + d3;
-                    const result = total > 10 ? "Tài" : "Xỉu";
-                    const newResult = { 
-                        session: currentSession, 
-                        dice: [d1, d2, d3], 
-                        total, 
-                        result, 
-                        time: Date.now() 
-                    };
-                    
-                    // Tránh trùng lặp
-                    if (historyData.length === 0 || JSON.stringify(historyData[0]) !== JSON.stringify(newResult)) {
-                        historyData.unshift(newResult);
-                        if (historyData.length > 100) historyData.pop();
-                        addLog(`🎲 KẾT QUẢ: ${d1}-${d2}-${d3} = ${total} (${result})`);
-                        updateUI();
-                    }
-                }
-            } catch(er) {
-                // Lỗi parse JSON, bỏ qua
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                content.className = 'content';
+                content.textContent = data.result;
+                timeEl.textContent = `🕐 Cập nhật: ${data.timestamp}`;
+                localStorage.setItem('lastPredict', JSON.stringify(data));
+                document.getElementById('statusIndicator').innerHTML = '🟢 Online - VPS hoạt động';
+            } else {
+                throw new Error(data.message || 'Lỗi không xác định');
             }
-        };
-        
-        ws.onclose = (event) => { 
-            addLog(`🔌 Mất kết nối (Code: ${event.code}), thử lại sau 5s...`); 
-            document.getElementById('wsDot').classList.add('float-off'); 
-            clearInterval(pingInt); 
-            setTimeout(connectWS, 5000); 
-        };
-        ws.onerror = (err) => {
-            addLog(`❌ Lỗi: ${err.message}`);
-        };
+        } catch (error) {
+            content.className = 'content';
+            content.textContent = `❌ Lỗi: ${error.message}\n\n→ Kiểm tra VPS đã bật chưa\n→ Kiểm tra firewall port 8080\n→ Kiểm tra IP trong code`;
+            timeEl.textContent = '⚠️ Không kết nối được VPS';
+            document.getElementById('statusIndicator').innerHTML = '🔴 Offline - Không ping được VPS';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '⚡ Lấy dự đoán';
+        }
     }
-    
-    connectWS();
-    document.getElementById('refreshBtn').addEventListener('click', () => updateUI());
-    addLog('🚀 AI THOMAS - WebSocket theo dõi phiên liên tục');
-    addLog('💡 Mỗi khi có phiên hoặc kết quả mới, menu sẽ tự động cập nhật');
+
+    // ===== LỊCH SỬ =====
+    async function toggleHistory() {
+        const box = document.getElementById('history-box');
+        const list = document.getElementById('historyList');
+
+        if (box.classList.contains('active')) {
+            box.classList.remove('active');
+            return;
+        }
+
+        box.classList.add('active');
+        list.innerHTML = '<div style="color:#888;">Đang tải...</div>';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/history`);
+            const data = await response.json();
+            if (data.history && data.history.length > 0) {
+                list.innerHTML = data.history.map(item =>
+                    `<div class="history-item">
+                        <div class="h-time">🕐 ${item.thoi_gian}</div>
+                        <div class="h-content">${item.noi_dung.substring(0, 300)}${item.noi_dung.length > 300 ? '...' : ''}</div>
+                    </div>`
+                ).join('');
+            } else {
+                list.innerHTML = '<div style="color:#888;">Chưa có lịch sử</div>';
+            }
+        } catch (e) {
+            list.innerHTML = `<div style="color:#f00;">Lỗi: ${e.message}</div>`;
+        }
+    }
+
+    // ===== KIỂM TRA KẾT NỐI VPS =====
+    async function kiemTraVPS() {
+        try {
+            const response = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(3000) });
+            document.getElementById('statusIndicator').innerHTML = response.ok ? '🟢 Online' : '🟡 VPS lỗi';
+        } catch {
+            document.getElementById('statusIndicator').innerHTML = '🔴 Offline';
+        }
+    }
+
+    // ===== KHỞI TẠO =====
+    window.onload = function() {
+        kiemTraVPS();
+        // Hiển thị dữ liệu đã lưu nếu có
+        const saved = localStorage.getItem('lastPredict');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                document.getElementById('resultContent').textContent = data.result;
+                document.getElementById('resultTime').textContent = `🕐 (Đã lưu) ${data.timestamp}`;
+            } catch(e) {}
+        }
+        // Tự động lấy dự đoán sau 5s (bỏ comment nếu muốn)
+        // setTimeout(layDuDoan, 5000);
+    };
 </script>
 </body>
 </html>
