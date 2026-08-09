@@ -1,6 +1,6 @@
-# =======================
-# macOS / Windows hệ thống
-# =======================
+# ========================
+# OS generated files
+# ========================
 .DS_Store
 .DS_Store?
 ._*
@@ -8,83 +8,49 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# ========================
+# Editor directories & files
+# ========================
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
-desktop.ini
+*.sublime-workspace
+*.sublime-project
 
-# =======================
-# Trình soạn thảo / IDE
-# =======================
-.vscode/
-.idea/
-*.sublime-*
-.project
-.classpath
-.settings/
-*.code-workspace
-
-# =======================
-# File log và tạm thời
-# =======================
+# ========================
+# Logs & temporary files
+# ========================
 *.log
 *.tmp
-*.temp
-*.cache
-logs/
-tmp/
-temp/
+*.bak
+*.orig
 
-# =======================
-# Môi trường Node.js (nếu có)
-# =======================
-node_modules/
-package-lock.json
-yarn.lock
+# ========================
+# Project specific
+# ========================
+# Local configuration (nếu có)
+config.local.js
 .env
 .env.local
 .env.*.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# =======================
-# Build / dist
-# =======================
-dist/
-build/
-out/
-*.min.js
-*.min.css
+# Dữ liệu cá nhân export từ tool
+baccarat_export*.json
+history_backup*.json
 
-# =======================
-# File cấu hình local
-# =======================
-config.local.js
-config.local.json
-*.local.json
-*.local.js
-
-# =======================
-# File nhạy cảm (key, token)
-# =======================
-*.key
-*.pem
-*.crt
-.secrets/
-.env.production
-.env.development
-
-# =======================
-# Dự án web tĩnh (không cần)
-# =======================
-# Bỏ qua file backup
-*.bak
-*.old
-*.orig
-
-# Bỏ qua file nén
+# File nén không cần thiết
 *.zip
 *.rar
 *.7z
 *.tar.gz
+
+# ========================
+# Dependencies (nếu sau này dùng Node.js)
+# ========================
+node_modules/
+package-lock.json
+yarn.lock
