@@ -2,317 +2,713 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sun.win - Dự đoán & Iframe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Baccarat Dự Đoán - Menu Tròn</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0a;
+            --gold: #ffd700;
+            --player: #ff4444;
+            --banker: #4488ff;
+            --tie: #aaa;
+            --panel-bg: rgba(10, 10, 10, 0.95);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: #0a0a1a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #111;
+            font-family: 'Segoe UI', 'Courier New', monospace;
             min-height: 100vh;
-            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
         }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+
+        /* Nền watermark hướng dẫn */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #222;
+            font-size: 14px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 0;
+            line-height: 1.8;
         }
-        header {
+        .watermark span {
+            display: block;
+            font-size: 12px;
+            color: #333;
+        }
+
+        /* Nút tròn nổi */
+        #circle-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 99999;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(255, 215, 0, 0.1);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--gold);
+            transition: box-shadow 0.3s, transform 0.2s;
+            animation: pulse-glow 2.5s infinite;
+        }
+        #circle-btn:active {
+            cursor: grabbing;
+            transform: scale(0.93);
+        }
+        #circle-btn:hover {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 0 0 60px rgba(255, 215, 0, 0.4);
+        }
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(255, 215, 0, 0.8), 0 0 55px rgba(255, 215, 0, 0.35);
+            }
+        }
+
+        /* Bảng điều khiển */
+        #panel {
+            position: fixed;
+            top: 15px;
+            right: 80px;
+            z-index: 99998;
+            width: 260px;
+            background: var(--panel-bg);
+            border: 1px solid var(--gold);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.35);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            color: #ccc;
+            font-size: 12px;
+            animation: fadeSlide 0.25s ease;
+        }
+        #panel.show {
+            display: flex;
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255,215,0,0.2);
-            flex-wrap: wrap;
-            gap: 15px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 6px;
         }
-        h1 {
-            color: #ffd700;
-            font-size: 2rem;
-            text-shadow: 0 0 20px rgba(255,215,0,0.3);
+        .panel-title {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1px;
         }
-        .btn-predict {
-            padding: 12px 35px;
-            background: linear-gradient(135deg, #ffd700, #f0a500);
+        .panel-close {
+            background: none;
             border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1rem;
+            color: #f55;
+            font-size: 18px;
             cursor: pointer;
-            transition: all 0.3s;
-            color: #0a0a1a;
-            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+            padding: 0 4px;
+            line-height: 1;
         }
-        .btn-predict:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 30px rgba(255,215,0,0.5);
+        .panel-close:hover {
+            color: #f00;
         }
-        .btn-predict:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+
+        /* Ô dự đoán */
+        .predict-box {
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px dashed var(--gold);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
         }
-        .grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
+        .predict-label {
+            font-size: 10px;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
         }
-        @media (max-width: 900px) {
-            .grid-2col { grid-template-columns: 1fr; }
+        .predict-result {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
         }
-        .card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(5px);
+        .confidence {
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 2px;
         }
-        .card-title {
-            color: #ffd700;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
+        .confidence span {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Nút nhập liệu */
+        .input-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .btn-input {
+            flex: 1;
+            padding: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 1px;
+        }
+        .btn-player {
+            border-color: var(--player);
+            color: var(--player);
+        }
+        .btn-player:hover,
+        .btn-player:active {
+            background: rgba(255, 68, 68, 0.25);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+        .btn-banker {
+            border-color: var(--banker);
+            color: var(--banker);
+        }
+        .btn-banker:hover,
+        .btn-banker:active {
+            background: rgba(68, 136, 255, 0.25);
+            box-shadow: 0 0 15px rgba(68, 136, 255, 0.4);
+        }
+        .btn-tie {
+            border-color: var(--tie);
+            color: var(--tie);
+        }
+        .btn-tie:hover,
+        .btn-tie:active {
+            background: rgba(170, 170, 170, 0.2);
+            box-shadow: 0 0 15px rgba(170, 170, 170, 0.3);
+        }
+
+        /* Hàng nút phụ */
+        .action-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .btn-action {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: rgba(255, 255, 255, 0.03);
+            color: #aaa;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .btn-undo {
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+        .btn-clear {
+            border-color: #f55;
+            color: #f55;
+        }
+
+        /* Lịch sử */
+        .history-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 6px;
+        }
+        .history-label {
+            font-size: 10px;
+            color: #0ff;
+            margin-bottom: 4px;
+        }
+        .history-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 20px;
+            align-items: center;
+        }
+        .dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            color: #fff;
+            animation: popIn 0.3s ease;
         }
-        .iframe-wrapper {
-            position: relative;
-            width: 100%;
-            height: 600px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255,215,0,0.15);
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+            60% {
+                transform: scale(1.3);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
-        .iframe-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #000;
+        .dot.player {
+            background: var(--player);
         }
-        #result-box {
-            background: rgba(0,0,0,0.6);
-            border-radius: 12px;
-            padding: 20px;
-            min-height: 120px;
-            border-left: 4px solid #ffd700;
-            margin-top: 10px;
+        .dot.banker {
+            background: var(--banker);
         }
-        #result-box .time {
-            color: #888;
-            font-size: 0.8rem;
-            margin-bottom: 8px;
+        .dot.tie {
+            background: var(--tie);
         }
-        #result-box .content {
+
+        .no-data {
+            color: #555;
+            font-size: 10px;
+            font-style: italic;
+        }
+
+        .signal-text {
+            font-size: 10px;
             color: #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            white-space: pre-wrap;
-            word-break: break-word;
-            line-height: 1.6;
-        }
-        #result-box .loading {
-            color: #ffd700;
-            animation: pulse 1.2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-        .status-bar {
-            margin-top: 15px;
-            color: #666;
-            font-size: 0.8rem;
             text-align: center;
+            margin-top: 2px;
         }
-        .status-bar .online { color: #0f0; }
-        .status-bar .offline { color: #f00; }
-        .history-toggle {
-            color: #aaa;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.85rem;
-            margin-top: 10px;
-            display: inline-block;
-        }
-        .history-toggle:hover { color: #ffd700; }
-        #history-box {
-            display: none;
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            padding: 15px;
-            max-height: 250px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-        #history-box.active { display: block; }
-        #history-box::-webkit-scrollbar { width: 5px; }
-        #history-box::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
-        .history-item {
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 10px 0;
-            color: #ccc;
-        }
-        .history-item .h-time { color: #888; font-size: 0.75rem; }
-        .history-item .h-content { color: #0f0; font-family: monospace; font-size: 0.85rem; margin-top: 3px; }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #444;
-            font-size: 0.75rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            padding-top: 20px;
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            #circle-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+                top: 8px;
+                right: 8px;
+            }
+            #panel {
+                width: 220px;
+                right: 58px;
+                top: 8px;
+                padding: 10px;
+                gap: 7px;
+                font-size: 10px;
+            }
+            .btn-input {
+                padding: 8px 0;
+                font-size: 12px;
+            }
+            .dot {
+                width: 15px;
+                height: 15px;
+                font-size: 7px;
+            }
+            .predict-result {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>🎯 Sun.win <span style="font-size:1rem;color:#888;">| Dự đoán + Iframe</span></h1>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="btn-predict" id="btnPredict" onclick="layDuDoan()">⚡ Lấy dự đoán</button>
-            <button class="btn-predict" style="background:rgba(255,255,255,0.1);color:#fff;box-shadow:none;" onclick="toggleHistory()">📜 Lịch sử</button>
-        </div>
-    </header>
 
-    <div class="grid-2col">
-        <!-- Cột trái: Iframe nhúng web.sunwin.date -->
-        <div class="card">
-            <div class="card-title">🌐 Trang chủ Sun.win (iframe)</div>
-            <div class="iframe-wrapper">
-                <iframe src="https://web.sunwin.date" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        loading="lazy">
-                </iframe>
-            </div>
-            <div style="color:#555;font-size:0.75rem;margin-top:8px;text-align:right;">
-                ⚠️ Nếu không hiển thị, trình duyệt có thể chặn iframe
-            </div>
+    <!-- Watermark hướng dẫn -->
+    <div class="watermark">
+        🎰 BACCARAT DỰ ĐOÁN<br>
+        <span>Nhấn nút tròn 🔮 góc phải để mở</span><br>
+        <span>Nhập kết quả P / B / T</span>
+    </div>
+
+    <!-- Nút tròn -->
+    <div id="circle-btn" title="Baccarat Dự Đoán">🔮</div>
+
+    <!-- Bảng điều khiển -->
+    <div id="panel">
+        <div class="panel-header">
+            <span class="panel-title">🔮 DỰ ĐOÁN</span>
+            <button class="panel-close" id="btn-close" title="Đóng">✕</button>
         </div>
 
-        <!-- Cột phải: Kết quả dự đoán + lịch sử -->
-        <div class="card">
-            <div class="card-title">📊 Kết quả dự đoán (từ VPS)</div>
-            <div id="result-box">
-                <div class="time" id="resultTime">🕐 Chưa có dữ liệu</div>
-                <div class="content" id="resultContent">Nhấn "Lấy dự đoán" để bắt đầu...</div>
-            </div>
-            <div class="status-bar">
-                <span id="statusIndicator">🔴 Đang kiểm tra VPS...</span>
-            </div>
-            <span class="history-toggle" onclick="toggleHistory()">📂 Xem lịch sử dự đoán</span>
-            <div id="history-box">
-                <div id="historyList"></div>
+        <!-- Ô dự đoán -->
+        <div class="predict-box">
+            <div class="predict-label">CỬA TIẾP THEO</div>
+            <div class="predict-result" id="predict-display">--</div>
+            <div class="confidence">Độ tin: <span id="confidence-display">--</span></div>
+            <div class="signal-text" id="signal-display"></div>
+        </div>
+
+        <!-- Nút nhập liệu -->
+        <div class="input-row">
+            <button class="btn-input btn-player" data-result="P" title="Player thắng">P</button>
+            <button class="btn-input btn-banker" data-result="B" title="Banker thắng">B</button>
+            <button class="btn-input btn-tie" data-result="T" title="Hòa">T</button>
+        </div>
+
+        <!-- Nút phụ -->
+        <div class="action-row">
+            <button class="btn-action btn-undo" id="btn-undo" title="Hoàn tác">↩ Xóa cuối</button>
+            <button class="btn-action btn-clear" id="btn-clear" title="Xóa tất cả">🗑 Clear</button>
+        </div>
+
+        <!-- Lịch sử -->
+        <div class="history-section">
+            <div class="history-label">📜 LỊCH SỬ (<span id="history-count">0</span> ván)</div>
+            <div class="history-dots" id="history-container">
+                <span class="no-data">Chưa có dữ liệu</span>
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        Made with ❤️ • GitHub Pages + VPS Backend • Dữ liệu từ web.sunwin.date
-    </div>
-</div>
+    <script>
+        (function() {
+            // ===== DOM ELEMENTS =====
+            const circleBtn = document.getElementById('circle-btn');
+            const panel = document.getElementById('panel');
+            const btnClose = document.getElementById('btn-close');
+            const predictDisplay = document.getElementById('predict-display');
+            const confidenceDisplay = document.getElementById('confidence-display');
+            const signalDisplay = document.getElementById('signal-display');
+            const historyContainer = document.getElementById('history-container');
+            const historyCount = document.getElementById('history-count');
+            const btnUndo = document.getElementById('btn-undo');
+            const btnClear = document.getElementById('btn-clear');
+            const inputButtons = document.querySelectorAll('.btn-input');
 
-<script>
-    // ===== CẤU HÌNH =====
-    const API_BASE = "http://IP_VPS_CUA_BAN:8080";  // THAY IP THẬT HOẶC DOMAIN
-    // Ví dụ: const API_BASE = "http://123.123.123.123:8080";
+            // ===== STATE =====
+            let history = JSON.parse(localStorage.getItem('baccarat_history_html') || '[]');
+            const MAX_HISTORY = 60;
+            let isPanelOpen = false;
+            let autoHideTimer = null;
 
-    // ===== LẤY DỰ ĐOÁN =====
-    async function layDuDoan() {
-        const btn = document.getElementById('btnPredict');
-        const content = document.getElementById('resultContent');
-        const timeEl = document.getElementById('resultTime');
+            // ===== KÉO THẢ NÚT TRÒN =====
+            let isDragging = false;
+            let dragStartX, dragStartY, btnStartLeft, btnStartTop;
 
-        btn.disabled = true;
-        btn.textContent = '⏳ Đang lấy...';
-        content.className = 'content loading';
-        content.textContent = 'Đang kết nối VPS...';
-
-        try {
-            const response = await fetch(`${API_BASE}/api/predict`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
+            circleBtn.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                btnStartLeft = circleBtn.offsetLeft;
+                btnStartTop = circleBtn.offsetTop;
+                circleBtn.style.cursor = 'grabbing';
+                e.preventDefault();
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
 
-            if (data.status === 'success') {
-                content.className = 'content';
-                content.textContent = data.result;
-                timeEl.textContent = `🕐 Cập nhật: ${data.timestamp}`;
-                localStorage.setItem('lastPredict', JSON.stringify(data));
-                document.getElementById('statusIndicator').innerHTML = '🟢 Online - VPS hoạt động';
-            } else {
-                throw new Error(data.message || 'Lỗi không xác định');
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                circleBtn.style.left = (btnStartLeft + deltaX) + 'px';
+                circleBtn.style.top = (btnStartTop + deltaY) + 'px';
+                circleBtn.style.right = 'auto';
+                circleBtn.style.bottom = 'auto';
+                // Di chuyển panel theo nút
+                panel.style.top = circleBtn.style.top;
+                panel.style.right = 'auto';
+                panel.style.left = (parseInt(circleBtn.style.left) - 270) + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    // Nếu chỉ click (không kéo), toggle panel
+                    const moved = Math.abs(circleBtn.offsetLeft - btnStartLeft) > 3 ||
+                        Math.abs(circleBtn.offsetTop - btnStartTop) > 3;
+                    if (!moved) {
+                        togglePanel();
+                    }
+                }
+                isDragging = false;
+                circleBtn.style.cursor = 'grab';
+            });
+
+            // Touch events
+            circleBtn.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                dragStartX = e.touches[0].clientX;
+                dragStartY = e.touches[0].clientY;
+                btnStartLeft = circleBtn.offsetLeft;
+                btnStartTop = circleBtn.offsetTop;
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const deltaX = e.touches[0].clientX - dragStartX;
+                const deltaY = e.touches[0].clientY - dragStartY;
+                circleBtn.style.left = (btnStartLeft + deltaX) + 'px';
+                circleBtn.style.top = (btnStartTop + deltaY) + 'px';
+                circleBtn.style.right = 'auto';
+                circleBtn.style.bottom = 'auto';
+                panel.style.top = circleBtn.style.top;
+                panel.style.right = 'auto';
+                panel.style.left = (parseInt(circleBtn.style.left) - 270) + 'px';
+            });
+
+            document.addEventListener('touchend', function() {
+                if (isDragging) {
+                    const moved = Math.abs(circleBtn.offsetLeft - btnStartLeft) > 5 ||
+                        Math.abs(circleBtn.offsetTop - btnStartTop) > 5;
+                    if (!moved) {
+                        togglePanel();
+                    }
+                }
+                isDragging = false;
+            });
+
+            // ===== TOGGLE PANEL =====
+            function togglePanel() {
+                isPanelOpen = !isPanelOpen;
+                if (isPanelOpen) {
+                    panel.classList.add('show');
+                    resetAutoHide();
+                } else {
+                    panel.classList.remove('show');
+                    clearTimeout(autoHideTimer);
+                }
             }
-        } catch (error) {
-            content.className = 'content';
-            content.textContent = `❌ Lỗi: ${error.message}\n\n→ Kiểm tra VPS đã bật chưa\n→ Kiểm tra firewall port 8080\n→ Kiểm tra IP trong code`;
-            timeEl.textContent = '⚠️ Không kết nối được VPS';
-            document.getElementById('statusIndicator').innerHTML = '🔴 Offline - Không ping được VPS';
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '⚡ Lấy dự đoán';
-        }
-    }
 
-    // ===== LỊCH SỬ =====
-    async function toggleHistory() {
-        const box = document.getElementById('history-box');
-        const list = document.getElementById('historyList');
+            btnClose.addEventListener('click', function(e) {
+                e.stopPropagation();
+                isPanelOpen = false;
+                panel.classList.remove('show');
+                clearTimeout(autoHideTimer);
+            });
 
-        if (box.classList.contains('active')) {
-            box.classList.remove('active');
-            return;
-        }
-
-        box.classList.add('active');
-        list.innerHTML = '<div style="color:#888;">Đang tải...</div>';
-
-        try {
-            const response = await fetch(`${API_BASE}/api/history`);
-            const data = await response.json();
-            if (data.history && data.history.length > 0) {
-                list.innerHTML = data.history.map(item =>
-                    `<div class="history-item">
-                        <div class="h-time">🕐 ${item.thoi_gian}</div>
-                        <div class="h-content">${item.noi_dung.substring(0, 300)}${item.noi_dung.length > 300 ? '...' : ''}</div>
-                    </div>`
-                ).join('');
-            } else {
-                list.innerHTML = '<div style="color:#888;">Chưa có lịch sử</div>';
+            // Tự động ẩn panel sau 10 giây không tương tác
+            function resetAutoHide() {
+                clearTimeout(autoHideTimer);
+                autoHideTimer = setTimeout(() => {
+                    if (isPanelOpen) {
+                        isPanelOpen = false;
+                        panel.classList.remove('show');
+                    }
+                }, 10000);
             }
-        } catch (e) {
-            list.innerHTML = `<div style="color:#f00;">Lỗi: ${e.message}</div>`;
-        }
-    }
 
-    // ===== KIỂM TRA KẾT NỐI VPS =====
-    async function kiemTraVPS() {
-        try {
-            const response = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(3000) });
-            document.getElementById('statusIndicator').innerHTML = response.ok ? '🟢 Online' : '🟡 VPS lỗi';
-        } catch {
-            document.getElementById('statusIndicator').innerHTML = '🔴 Offline';
-        }
-    }
+            panel.addEventListener('mouseenter', () => clearTimeout(autoHideTimer));
+            panel.addEventListener('mouseleave', () => { if (isPanelOpen) resetAutoHide(); });
+            panel.addEventListener('touchstart', () => clearTimeout(autoHideTimer));
 
-    // ===== KHỞI TẠO =====
-    window.onload = function() {
-        kiemTraVPS();
-        // Hiển thị dữ liệu đã lưu nếu có
-        const saved = localStorage.getItem('lastPredict');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                document.getElementById('resultContent').textContent = data.result;
-                document.getElementById('resultTime').textContent = `🕐 (Đã lưu) ${data.timestamp}`;
-            } catch(e) {}
-        }
-        // Tự động lấy dự đoán sau 5s (bỏ comment nếu muốn)
-        // setTimeout(layDuDoan, 5000);
-    };
-</script>
+            // ===== THUẬT TOÁN DỰ ĐOÁN =====
+            function predict(seq) {
+                if (seq.length < 2) {
+                    return { bet: null, confidence: 0, signal: 'Cần ít nhất 2 ván' };
+                }
+
+                const recent20 = seq.slice(-20);
+                const last = seq[seq.length - 1];
+
+                // Đếm streak
+                let streak = 1;
+                for (let i = seq.length - 2; i >= 0; i--) {
+                    if (seq[i] === last) streak++;
+                    else break;
+                }
+
+                // Kiểm tra 1-1 xen kẽ
+                const recent8 = seq.slice(-8);
+                let isAlternating = recent8.length >= 4;
+                for (let i = 1; i < recent8.length; i++) {
+                    if (recent8[i] === recent8[i - 1]) {
+                        isAlternating = false;
+                        break;
+                    }
+                }
+
+                // Đếm tần suất
+                const countP = recent20.filter(r => r === 'P').length;
+                const countB = recent20.filter(r => r === 'B').length;
+                const total = recent20.length || 1;
+
+                let bet, confidence, signal;
+
+                if (streak >= 5) {
+                    bet = last === 'P' ? 'B' : 'P';
+                    confidence = 82;
+                    signal = `🔥 Bệt ${streak} tay - BẮT GÃY`;
+                } else if (streak === 4) {
+                    bet = last === 'P' ? 'B' : 'P';
+                    confidence = 72;
+                    signal = `Bệt 4 tay - Chuẩn bị gãy`;
+                } else if (isAlternating && recent8.length >= 4) {
+                    bet = last === 'P' ? 'B' : 'P';
+                    confidence = 78;
+                    signal = '🔄 Cầu 1-1 hoàn hảo';
+                } else if (streak === 3) {
+                    bet = last === 'P' ? 'B' : 'P';
+                    confidence = 62;
+                    signal = 'Bệt 3 - Có thể gãy';
+                } else if (countP > countB * 1.4) {
+                    bet = 'P';
+                    confidence = 58;
+                    signal = '📈 Nghiêng Player mạnh';
+                } else if (countB > countP * 1.4) {
+                    bet = 'B';
+                    confidence = 58;
+                    signal = '📈 Nghiêng Banker mạnh';
+                } else if (countP > countB) {
+                    bet = 'P';
+                    confidence = 52;
+                    signal = 'Nghiêng nhẹ Player';
+                } else {
+                    bet = 'B';
+                    confidence = 52;
+                    signal = 'Nghiêng nhẹ Banker';
+                }
+
+                return { bet, confidence, signal };
+            }
+
+            // ===== CẬP NHẬT GIAO DIỆN =====
+            function updateUI() {
+                // Dự đoán
+                const prediction = predict(history);
+                if (prediction.bet) {
+                    const betName = prediction.bet === 'P' ? 'PLAYER' : 'BANKER';
+                    const betColor = prediction.bet === 'P' ? '#ff4444' : '#4488ff';
+                    predictDisplay.textContent = betName;
+                    predictDisplay.style.color = betColor;
+                    confidenceDisplay.textContent = prediction.confidence + '%';
+                    signalDisplay.textContent = '📡 ' + prediction.signal;
+                    signalDisplay.style.color = prediction.confidence >= 70 ? '#0f0' : '#ffa500';
+                } else {
+                    predictDisplay.textContent = '--';
+                    predictDisplay.style.color = '#888';
+                    confidenceDisplay.textContent = '--';
+                    signalDisplay.textContent = prediction.signal;
+                    signalDisplay.style.color = '#888';
+                }
+
+                // Lịch sử
+                historyCount.textContent = history.length;
+                if (history.length === 0) {
+                    historyContainer.innerHTML = '<span class="no-data">Chưa có dữ liệu</span>';
+                } else {
+                    const display = history.slice(-30);
+                    historyContainer.innerHTML = display.map((r, i) => {
+                        const cls = r === 'P' ? 'player' : r === 'B' ? 'banker' : 'tie';
+                        return `<span class="dot ${cls}" style="animation-delay:${i*0.02}s">${r}</span>`;
+                    }).join('');
+                }
+
+                // Lưu localStorage
+                localStorage.setItem('baccarat_history_html', JSON.stringify(history));
+            }
+
+            // ===== THÊM KẾT QUẢ MỚI =====
+            function addResult(result) {
+                // Chỉ thêm nếu khác kết quả cuối cùng (tránh trùng lặp do bấm nhiều lần)
+                if (history.length > 0 && history[history.length - 1] === result) {
+                    // Cho phép thêm trùng nếu là TIE (hòa có thể xuất hiện liên tiếp)
+                    if (result !== 'T') return;
+                }
+                history.push(result);
+                if (history.length > MAX_HISTORY) {
+                    history = history.slice(-MAX_HISTORY);
+                }
+                updateUI();
+                resetAutoHide();
+            }
+
+            // ===== XÓA KẾT QUẢ CUỐI =====
+            function undoLast() {
+                if (history.length === 0) return;
+                history.pop();
+                updateUI();
+                resetAutoHide();
+            }
+
+            // ===== XÓA TẤT CẢ =====
+            function clearAll() {
+                if (history.length === 0) return;
+                if (confirm('Xóa toàn bộ lịch sử ' + history.length + ' ván?')) {
+                    history = [];
+                    updateUI();
+                }
+            }
+
+            // ===== EVENT LISTENERS =====
+            inputButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const result = this.getAttribute('data-result');
+                    addResult(result);
+                    // Rung nhẹ nút tròn khi thêm kết quả
+                    circleBtn.style.transform = 'scale(1.1)';
+                    setTimeout(() => { circleBtn.style.transform = 'scale(1)'; }, 150);
+                });
+            });
+
+            btnUndo.addEventListener('click', undoLast);
+            btnClear.addEventListener('click', clearAll);
+
+            // Phím tắt bàn phím (cho desktop)
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'p' || e.key === 'P') {
+                    addResult('P');
+                    e.preventDefault();
+                } else if (e.key === 'b' || e.key === 'B') {
+                    addResult('B');
+                    e.preventDefault();
+                } else if (e.key === 't' || e.key === 'T') {
+                    addResult('T');
+                    e.preventDefault();
+                } else if (e.ctrlKey && e.key === 'z') {
+                    undoLast();
+                    e.preventDefault();
+                } else if (e.key === 'Escape') {
+                    isPanelOpen = false;
+                    panel.classList.remove('show');
+                    clearTimeout(autoHideTimer);
+                }
+            });
+
+            // ===== KHỞI ĐỘNG =====
+            updateUI();
+            console.log('✅ Baccarat Dự Đoán Menu Tròn đã sẵn sàng!');
+            console.log('🖱 Kéo nút 🔮 để di chuyển - Nhấn để mở bảng');
+            console.log('⌨ Phím tắt: P = Player, B = Banker, T = Tie, Ctrl+Z = Undo, Esc = Đóng');
+        })();
+    </script>
 </body>
 </html>
