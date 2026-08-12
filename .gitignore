@@ -1,6 +1,4 @@
-# ========================
 # OS generated files
-# ========================
 .DS_Store
 .DS_Store?
 ._*
@@ -10,9 +8,7 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# ========================
 # Editor directories & files
-# ========================
 .vscode/
 .idea/
 *.swp
@@ -21,22 +17,17 @@ desktop.ini
 *.sublime-workspace
 *.sublime-project
 
-# ========================
 # Logs & temporary files
-# ========================
 *.log
 *.tmp
 *.bak
 *.orig
 
-# ========================
-# Project specific
-# ========================
-# Dữ liệu cá nhân export từ tool (nếu có)
+# Project data exports (personal history)
 baccarat_export*.json
 history_backup*.json
 
-# File nén không cần thiết
+# Archive files
 *.zip
 *.rar
 *.7z
