@@ -32,13 +32,7 @@ desktop.ini
 # ========================
 # Project specific
 # ========================
-# Local configuration (nếu có)
-config.local.js
-.env
-.env.local
-.env.*.local
-
-# Dữ liệu cá nhân export từ tool
+# Dữ liệu cá nhân export từ tool (nếu có)
 baccarat_export*.json
 history_backup*.json
 
@@ -47,10 +41,3 @@ history_backup*.json
 *.rar
 *.7z
 *.tar.gz
-
-# ========================
-# Dependencies (nếu sau này dùng Node.js)
-# ========================
-node_modules/
-package-lock.json
-yarn.lock
