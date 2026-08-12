@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Baccarat Smart Signal</title>
+    <title>Baccarat Smart Signal - Chỉ dự đoán khi rõ ràng</title>
     <style>
         :root {
             --bg: #0a0a14;
@@ -36,7 +36,6 @@
             background: #222; color: #aaa; margin-top: 4px;
         }
         .signal-strong { background: #1a3a1a; color: #4caf50; }
-        .signal-weak { background: #3a2a1a; color: #ff9800; }
         .signal-none { background: #3a1a1a; color: #f44336; }
         .buttons { display: flex; gap: 8px; }
         .btn-result {
@@ -172,7 +171,7 @@
 
     function getResultsArray() { return history.map(h => h.result); }
 
-    // Phát hiện tín hiệu MẠNH
+    // Phát hiện tín hiệu MẠNH - chỉ khi thực sự rõ ràng
     function detectStrongSignal() {
         const arr = getResultsArray().filter(r => r !== 'Tie'); // Bỏ qua Tie cho phân tích chính
         if (arr.length < 5) return null;
@@ -183,6 +182,11 @@
         let streak = 1;
         for (let i = arr.length - 2; i >= 0; i--) { if (arr[i] === last) streak++; else break; }
         if (streak >= 4) {
+            // Nếu bệt rất dài (>=6) thì khả năng gãy cao hơn
+            if (streak >= 6) {
+                const opposite = last === 'Banker' ? 'Player' : 'Banker';
+                return { bet: opposite, confidence: 75, reason: `Bệt ${last} quá dài (${streak}), dự đoán gãy` };
+            }
             return { bet: last, confidence: 80, reason: `Bệt ${last} (${streak} ván)` };
         }
         
@@ -192,6 +196,12 @@
             const isAlt = last4.every((r, i) => i === 0 || r !== last4[i - 1]);
             if (isAlt) {
                 const next = last4[3] === 'Player' ? 'Banker' : 'Player';
+                // Kiểm tra xem trước đó có phải 1-1 kéo dài không
+                if (arr.length >= 6) {
+                    const last6 = arr.slice(-6);
+                    const isAlt6 = last6.every((r, i) => i === 0 || r !== last6[i - 1]);
+                    if (isAlt6) return { bet: next, confidence: 85, reason: 'Cầu 1-1 kéo dài' };
+                }
                 return { bet: next, confidence: 78, reason: 'Cầu 1-1 hoàn hảo' };
             }
         }
@@ -203,26 +213,27 @@
             if (last8 === 'BBPPBBPP') return { bet: 'Banker', confidence: 85, reason: 'Cầu 2-2' };
         }
         
-        // 4. Xu hướng nghiêng mạnh (MA 20 chênh lệch >10%)
+        // 4. Xu hướng nghiêng mạnh (MA 20 chênh lệch >10%) - chỉ khi không có bệt/1-1
         if (arr.length >= 20) {
             const last20 = arr.slice(-20);
             const bankerCount = last20.filter(r => r === 'Banker').length;
             const ratio = bankerCount / 20;
+            // Chỉ dự đoán khi xu hướng thực sự rõ ràng (>60% hoặc <40%)
             if (ratio > 0.6) return { bet: 'Banker', confidence: Math.round(ratio * 100), reason: `Nghiêng Banker (${Math.round(ratio*100)}%)` };
             if (ratio < 0.4) return { bet: 'Player', confidence: Math.round((1-ratio) * 100), reason: `Nghiêng Player (${Math.round((1-ratio)*100)}%)` };
         }
         
-        // 5. Bệt 3 + MA ủng hộ
-        if (streak === 3 && arr.length >= 10) {
-            const last10 = arr.slice(-10);
-            const bCount = last10.filter(r => r === 'Banker').length;
-            const ratio = bCount / 10;
-            if ((last === 'Banker' && ratio > 0.5) || (last === 'Player' && ratio < 0.5)) {
-                return { bet: last, confidence: 65, reason: `Bệt 3 + xu hướng` };
+        // 5. Bệt 3 + xu hướng ủng hộ (chỉ khi đủ dữ liệu)
+        if (streak === 3 && arr.length >= 15) {
+            const last15 = arr.slice(-15);
+            const bCount = last15.filter(r => r === 'Banker').length;
+            const ratio = bCount / 15;
+            if ((last === 'Banker' && ratio > 0.55) || (last === 'Player' && ratio < 0.45)) {
+                return { bet: last, confidence: 65, reason: `Bệt 3 + xu hướng ủng hộ` };
             }
         }
 
-        return null; // Không có tín hiệu mạnh
+        return null; // Không có tín hiệu đủ mạnh -> không dự đoán
     }
 
     function predict() {
@@ -232,7 +243,7 @@
             return { ...signal, signalStrength: 'strong' };
         } else {
             lastPredictedBet = null;
-            return { bet: null, confidence: 0, reason: 'Không có tín hiệu rõ ràng', signalStrength: 'none' };
+            return { bet: null, confidence: 0, reason: 'Không rõ cầu - không dự đoán', signalStrength: 'none' };
         }
     }
 
@@ -283,9 +294,10 @@
             signalBadge.textContent = 'Tín hiệu MẠNH';
             signalBadge.className = 'signal-badge signal-strong';
         } else {
-            predictionEl.innerHTML = '⏸ CHỜ';
+            predictionEl.innerHTML = '⏸ KHÔNG DỰ ĐOÁN';
+            predictionEl.style.color = '#888';
             confidenceEl.textContent = '--';
-            signalBadge.textContent = 'Không tín hiệu';
+            signalBadge.textContent = 'Không rõ cầu';
             signalBadge.className = 'signal-badge signal-none';
         }
 
