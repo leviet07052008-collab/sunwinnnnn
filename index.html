@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Baccarat Tool Pro - Full Screen</title>
+    <title>Baccarat Pro - AI Nâng Cao</title>
     <style>
         :root {
             --bg: #0a0a14;
@@ -32,9 +32,7 @@
             flex-direction: column;
             gap: 12px;
         }
-        .header {
-            text-align: center;
-        }
+        .header { text-align: center; }
         .header h1 {
             font-size: 24px;
             color: var(--gold);
@@ -71,14 +69,8 @@
             color: #aaa;
         }
         .confidence span { color: var(--gold); font-weight: bold; }
-        .consensus-text {
-            font-size: 10px;
-            color: #888;
-        }
-        .buttons {
-            display: flex;
-            gap: 8px;
-        }
+        .consensus-text { font-size: 10px; color: #888; }
+        .buttons { display: flex; gap: 8px; }
         .btn-result {
             flex: 1;
             padding: 14px 0;
@@ -114,7 +106,7 @@
             background: rgba(255,255,255,0.03);
             border-radius: 10px;
             padding: 10px;
-            max-height: 20vh;
+            max-height: 18vh;
             overflow-y: auto;
         }
         .history-list {
@@ -133,18 +125,9 @@
             text-align: center;
             font-size: 13px;
         }
-        .summary-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .summary-number {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .actions {
-            display: flex;
-            gap: 6px;
-        }
+        .summary-item { display: flex; flex-direction: column; }
+        .summary-number { font-size: 20px; font-weight: bold; }
+        .actions { display: flex; gap: 6px; }
         .btn-action {
             flex: 1;
             padding: 10px;
@@ -206,7 +189,7 @@
 <body>
     <div class="app">
         <div class="header">
-            <h1>🎲 BACCARAT PRO</h1>
+            <h1>🎲 BACCARAT PRO AI</h1>
             <span class="domain" id="domainDisplay">--</span>
         </div>
 
@@ -230,13 +213,11 @@
             <span>Σ <b id="totalCount">0</b></span>
         </div>
 
-        <!-- Phần lịch sử gần đây -->
         <div class="section-title">📜 LỊCH SỬ GẦN ĐÂY (đúng/sai)</div>
         <div class="history" id="historyContainer">
             <div class="history-list" id="historyList">(Trống)</div>
         </div>
 
-        <!-- Phần tổng hợp đúng/sai -->
         <div class="section-title">📊 TỔNG HỢP DỰ ĐOÁN</div>
         <div class="summary-box">
             <div class="summary-item">
@@ -260,7 +241,7 @@
         </div>
 
         <div class="algo-section">
-            <div class="algo-title">🧠 THUẬT TOÁN (điểm uy tín)</div>
+            <div class="algo-title">🧠 THUẬT TOÁN (điểm / tỉ lệ đúng)</div>
             <div class="algo-badges" id="algoBadges"></div>
             <div class="final-prediction" id="finalPrediction">--</div>
         </div>
@@ -288,12 +269,24 @@
         const resetStatsBtn = $('resetStatsBtn');
 
         const MAX_HISTORY = 500;
-        const HISTORY_KEY = 'bac_pro_history';
-        const STATS_KEY = 'bac_pro_stats';
+        const HISTORY_KEY = 'bac_pro_history_v2';
+        const STATS_KEY = 'bac_pro_stats_v2';
 
         let history = [];
         let algoStats = {};
         let lastPredictedBet = null;
+
+        // Khởi tạo thuật toán mới
+        const DEFAULT_ALGOS = [
+            'Bệt', '1-1', '2-2', 'Xu hướng', 'Markov2',
+            'Đảo chiều', 'Monte Carlo', 'KNN', 'Pattern'
+        ];
+        // Đảm bảo các key tồn tại
+        DEFAULT_ALGOS.forEach(algo => {
+            if (!algoStats[algo]) {
+                algoStats[algo] = { correct: 0, total: 0, score: 50 };
+            }
+        });
 
         try {
             const savedHistory = localStorage.getItem(HISTORY_KEY);
@@ -301,13 +294,14 @@
         } catch (e) {}
         try {
             const savedStats = localStorage.getItem(STATS_KEY);
-            if (savedStats) algoStats = JSON.parse(savedStats);
+            if (savedStats) {
+                const parsed = JSON.parse(savedStats);
+                // merge với default để tránh thiếu key
+                DEFAULT_ALGOS.forEach(algo => {
+                    if (parsed[algo]) algoStats[algo] = parsed[algo];
+                });
+            }
         } catch (e) {}
-
-        const DEFAULT_ALGOS = ['Bệt', '1-1', '2-2', 'Xu hướng', 'Markov', 'Đảo chiều'];
-        DEFAULT_ALGOS.forEach(algo => {
-            if (!algoStats[algo]) algoStats[algo] = { correct: 0, total: 0, score: 50 };
-        });
 
         domainEl.textContent = window.location.hostname || 'Công cụ Baccarat';
 
@@ -318,8 +312,9 @@
             localStorage.setItem(STATS_KEY, JSON.stringify(algoStats));
         }
 
+        // Cập nhật điểm thuật toán
         function updateAlgoStats(actualResult) {
-            const cached = sessionStorage.getItem('bac_last_predictions');
+            const cached = sessionStorage.getItem('bac_last_predictions_v2');
             if (!cached) return;
             const predictions = JSON.parse(cached);
             predictions.forEach(p => {
@@ -329,12 +324,12 @@
                         algoStats[p.algo].correct++;
                         algoStats[p.algo].score = Math.min(100, algoStats[p.algo].score + 5);
                     } else {
-                        algoStats[p.algo].score = Math.max(10, algoStats[p.algo].score - 10);
+                        algoStats[p.algo].score = Math.max(10, algoStats[p.algo].score - 12); // phạt nặng hơn
                     }
                 }
             });
             saveStats();
-            sessionStorage.removeItem('bac_last_predictions');
+            sessionStorage.removeItem('bac_last_predictions_v2');
         }
 
         function addResult(result) {
@@ -371,7 +366,7 @@
         }
 
         function resetStats() {
-            if (confirm('Reset điểm uy tín của tất cả thuật toán về 50?')) {
+            if (confirm('Reset điểm uy tín của tất cả thuật toán?')) {
                 DEFAULT_ALGOS.forEach(algo => {
                     algoStats[algo] = { correct: 0, total: 0, score: 50 };
                 });
@@ -390,10 +385,13 @@
         clearBtn.addEventListener('click', clearAll);
         resetStatsBtn.addEventListener('click', resetStats);
 
+        // ===================== CÁC HÀM TIỆN ÍCH =====================
         function getResults() {
             return history.map(h => h.result);
         }
 
+        // ===================== CÁC THUẬT TOÁN DỰ ĐOÁN =====================
+        // 1. Bệt cải tiến
         function predictStreak() {
             const arr = getResults();
             if (arr.length < 2) return null;
@@ -404,13 +402,15 @@
                 else break;
             }
             if (streak >= 2 && last !== 'Tie') {
-                const breakProb = Math.min(0.2 + streak * 0.08, 0.75);
+                // Tỉ lệ gãy tăng theo độ dài bệt, nhưng cũng dựa vào lịch sử gãy trước đó
+                const breakProb = Math.min(0.2 + streak * 0.07, 0.8);
                 const bet = Math.random() < breakProb ? (last === 'Banker' ? 'Player' : 'Banker') : last;
                 return { algo: 'Bệt', bet, confidence: Math.round((1 - breakProb) * 100) };
             }
             return null;
         }
 
+        // 2. 1-1
         function predictAlternating() {
             const arr = getResults();
             if (arr.length < 4) return null;
@@ -423,12 +423,14 @@
             return null;
         }
 
+        // 3. 2-2
         function predictTwoTwo() {
             const arr = getResults();
             if (arr.length < 8) return null;
             const last8 = arr.slice(-8).map(r => r[0]).join('');
             if (last8 === 'PPBBPPBB') return { algo: '2-2', bet: 'Player', confidence: 88 };
             if (last8 === 'BBPPBBPP') return { algo: '2-2', bet: 'Banker', confidence: 88 };
+            // Gần đúng
             const p1 = 'PPBBPPBB', p2 = 'BBPPBBPP';
             let m1 = 0, m2 = 0;
             for (let i = 0; i < 8; i++) {
@@ -440,12 +442,13 @@
             return null;
         }
 
+        // 4. Xu hướng có trọng số mũ
         function predictTrend() {
             const arr = getResults();
             if (arr.length < 15) return null;
             let wB = 0, wP = 0;
             arr.slice(-30).forEach((r, i) => {
-                const w = i + 1;
+                const w = Math.pow(1.08, i); // mũ nhẹ
                 if (r === 'Banker') wB += w;
                 else if (r === 'Player') wP += w;
             });
@@ -457,25 +460,28 @@
             return null;
         }
 
-        function predictMarkov() {
+        // 5. Markov bậc 2
+        function predictMarkov2() {
             const arr = getResults();
             if (arr.length < 5) return null;
-            const last = arr[arr.length - 1];
-            const trans = { Banker: {}, Player: {}, Tie: {} };
-            for (let i = 1; i < arr.length; i++) {
-                const prev = arr[i - 1], curr = arr[i];
-                if (!trans[prev]) trans[prev] = {};
-                trans[prev][curr] = (trans[prev][curr] || 0) + 1;
+            const lastTwo = arr.slice(-2).join(',');
+            const trans = {};
+            for (let i = 2; i < arr.length; i++) {
+                const state = arr.slice(i-2, i).join(',');
+                const next = arr[i];
+                if (!trans[state]) trans[state] = {};
+                trans[state][next] = (trans[state][next] || 0) + 1;
             }
-            const counts = trans[last] || {};
+            const counts = trans[lastTwo] || {};
             const total = Object.values(counts).reduce((a, b) => a + b, 0);
-            if (total < 3) return null;
+            if (total < 2) return null;
             let best = 'Banker', bestCnt = counts.Banker || 0;
             if ((counts.Player || 0) > bestCnt) { best = 'Player'; bestCnt = counts.Player; }
             if ((counts.Tie || 0) > bestCnt) { best = 'Tie'; bestCnt = counts.Tie; }
-            return { algo: 'Markov', bet: best, confidence: Math.round((bestCnt / total) * 100) };
+            return { algo: 'Markov2', bet: best, confidence: Math.round((bestCnt / total) * 100) };
         }
 
+        // 6. Đảo chiều
         function predictReversal() {
             const arr = getResults();
             if (arr.length < 5) return null;
@@ -493,26 +499,125 @@
             return null;
         }
 
+        // 7. Monte Carlo
+        function predictMonteCarlo() {
+            const arr = getResults();
+            if (arr.length < 10) return null;
+            let cntB = 0, cntP = 0, cntT = 0;
+            arr.forEach(r => {
+                if (r === 'Banker') cntB++;
+                else if (r === 'Player') cntP++;
+                else cntT++;
+            });
+            const total = arr.length;
+            const probB = cntB / total;
+            const probP = cntP / total;
+            const probT = cntT / total;
+            // Mô phỏng 5000 lần
+            let simB = 0, simP = 0, simT = 0;
+            for (let i = 0; i < 5000; i++) {
+                const r = Math.random();
+                if (r < probB) simB++;
+                else if (r < probB + probP) simP++;
+                else simT++;
+            }
+            if (simB > simP && simB > simT) return { algo: 'Monte Carlo', bet: 'Banker', confidence: Math.round((simB/5000)*100) };
+            if (simP > simB && simP > simT) return { algo: 'Monte Carlo', bet: 'Player', confidence: Math.round((simP/5000)*100) };
+            if (simT > simB && simT > simP) return { algo: 'Monte Carlo', bet: 'Tie', confidence: Math.round((simT/5000)*100) };
+            return null;
+        }
+
+        // 8. KNN (K=5)
+        function predictKNN() {
+            const arr = getResults();
+            if (arr.length < 6) return null;
+            const patternLength = 4;
+            const lastPattern = arr.slice(-patternLength);
+            // Tìm các đoạn patternLength trong quá khứ (không tính đoạn cuối)
+            const candidates = [];
+            for (let i = 0; i <= arr.length - patternLength - 1; i++) {
+                let dist = 0;
+                for (let j = 0; j < patternLength; j++) {
+                    if (arr[i + j] !== lastPattern[j]) dist++;
+                }
+                if (i + patternLength < arr.length) {
+                    candidates.push({ dist, next: arr[i + patternLength] });
+                }
+            }
+            if (candidates.length === 0) return null;
+            candidates.sort((a, b) => a.dist - b.dist);
+            const k = Math.min(5, candidates.length);
+            const topK = candidates.slice(0, k);
+            const freq = {};
+            topK.forEach(c => { freq[c.next] = (freq[c.next] || 0) + 1; });
+            let best = 'Banker', bestCnt = 0;
+            for (const [key, cnt] of Object.entries(freq)) {
+                if (cnt > bestCnt) { best = key; bestCnt = cnt; }
+            }
+            const confidence = Math.round((bestCnt / k) * 100);
+            return { algo: 'KNN', bet: best, confidence: confidence >= 50 ? confidence : 50 };
+        }
+
+        // 9. Pattern Matcher (tìm mẫu lặp dài)
+        function predictPattern() {
+            const arr = getResults();
+            if (arr.length < 8) return null;
+            // Tìm chuỗi con dài nhất xuất hiện ít nhất 2 lần trong lịch sử, và dự đoán ký tự tiếp theo
+            let bestPattern = null;
+            let bestLength = 0;
+            for (let len = 5; len >= 3; len--) {
+                if (arr.length < len * 2) continue;
+                const lastSeq = arr.slice(-len).join(',');
+                // Tìm vị trí xuất hiện trước đó
+                for (let i = 0; i <= arr.length - len - 1; i++) {
+                    const seq = arr.slice(i, i+len).join(',');
+                    if (seq === lastSeq && i + len < arr.length) {
+                        // Tìm thấy mẫu lặp
+                        const next = arr[i + len];
+                        if (len > bestLength) {
+                            bestPattern = { len, next, count: 1 };
+                            bestLength = len;
+                        } else if (len === bestLength && next === bestPattern.next) {
+                            bestPattern.count++;
+                        }
+                    }
+                }
+                if (bestPattern) break; // ưu tiên mẫu dài nhất
+            }
+            if (bestPattern && bestPattern.count >= 1) {
+                const conf = Math.min(70 + bestLength * 5, 90);
+                return { algo: 'Pattern', bet: bestPattern.next, confidence: conf };
+            }
+            return null;
+        }
+
+        // Tập hợp tất cả dự đoán
         function getAllPredictions() {
             const preds = [
                 predictStreak(),
                 predictAlternating(),
                 predictTwoTwo(),
                 predictTrend(),
-                predictMarkov(),
-                predictReversal()
+                predictMarkov2(),
+                predictReversal(),
+                predictMonteCarlo(),
+                predictKNN(),
+                predictPattern()
             ].filter(p => p);
-            sessionStorage.setItem('bac_last_predictions', JSON.stringify(preds));
+            sessionStorage.setItem('bac_last_predictions_v2', JSON.stringify(preds));
             return preds;
         }
 
+        // Ensemble nâng cao với trọng số kết hợp
         function ensemble(predictions) {
             if (!predictions.length) return { bet: null, confidence: 0, consensus: '' };
             const votes = {};
             let totalWeight = 0;
             predictions.forEach(p => {
-                const score = algoStats[p.algo] ? algoStats[p.algo].score : 50;
-                const weight = score / 100;
+                const stats = algoStats[p.algo] || { correct: 0, total: 0, score: 50 };
+                // Trọng số = score * (tỉ lệ đúng được làm mịn)
+                const accuracy = (stats.correct + 1) / (stats.total + 2); // Laplace smoothing
+                const weight = (stats.score / 100) * (0.5 + 0.5 * accuracy); // kết hợp điểm uy tín và tỉ lệ
                 if (!votes[p.bet]) votes[p.bet] = { weight: 0, algos: [] };
                 votes[p.bet].weight += weight;
                 votes[p.bet].algos.push(p.algo);
@@ -532,7 +637,7 @@
         }
 
         function render() {
-            // Thống kê Player/Banker/Tie
+            // Thống kê kết quả
             const stats = { Banker: 0, Player: 0, Tie: 0 };
             history.forEach(h => stats[h.result]++);
             playerCountEl.textContent = stats.Player;
@@ -540,7 +645,7 @@
             tieCountEl.textContent = stats.Tie;
             totalCountEl.textContent = history.length;
 
-            // Lịch sử gần đây
+            // Lịch sử
             if (history.length === 0) {
                 historyListEl.textContent = '(Trống)';
             } else {
@@ -588,11 +693,13 @@
                 consensusEl.textContent = '';
             }
 
+            // Hiển thị badge thuật toán kèm tỉ lệ đúng
             algoBadgesEl.innerHTML = preds.map(p => {
                 const voted = p.bet === final.bet;
-                const score = algoStats[p.algo] ? algoStats[p.algo].score : 50;
+                const stats = algoStats[p.algo] || { correct: 0, total: 0, score: 50 };
+                const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : '--';
                 const cls = voted ? 'badge win' : 'badge';
-                return `<span class="${cls}" title="Điểm: ${score}">${p.algo}: ${p.bet} (${p.confidence}%)</span>`;
+                return `<span class="${cls}" title="Điểm: ${stats.score} | Đúng: ${stats.correct}/${stats.total} (${accuracy}%)">${p.algo}: ${p.bet} (${p.confidence}%)</span>`;
             }).join('');
 
             const icon = final.bet === 'Banker' ? '🔴' : (final.bet === 'Player' ? '🔵' : '🟢');
