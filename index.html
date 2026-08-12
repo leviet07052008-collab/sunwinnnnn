@@ -3,712 +3,570 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Baccarat Dự Đoán - Menu Tròn</title>
+    <title>Baccarat Tool Pro - Full Screen</title>
     <style>
         :root {
-            --bg: #0a0a0a;
+            --bg: #0a0a14;
             --gold: #ffd700;
-            --player: #ff4444;
-            --banker: #4488ff;
-            --tie: #aaa;
-            --panel-bg: rgba(10, 10, 10, 0.95);
+            --player: #4488ff;
+            --banker: #ff4444;
+            --tie: #44cc44;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #111;
-            font-family: 'Segoe UI', 'Courier New', monospace;
+            background: var(--bg);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #ddd;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
-            overflow: hidden;
-        }
-
-        /* Nền watermark hướng dẫn */
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #222;
-            font-size: 14px;
-            text-align: center;
-            pointer-events: none;
-            z-index: 0;
-            line-height: 1.8;
-        }
-        .watermark span {
-            display: block;
-            font-size: 12px;
-            color: #333;
-        }
-
-        /* Nút tròn nổi */
-        #circle-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 99999;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-            border: 2px solid var(--gold);
-            box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(255, 215, 0, 0.1);
-            cursor: grab;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 22px;
-            color: var(--gold);
-            transition: box-shadow 0.3s, transform 0.2s;
-            animation: pulse-glow 2.5s infinite;
+            align-items: flex-start;
+            padding: 15px;
         }
-        #circle-btn:active {
-            cursor: grabbing;
-            transform: scale(0.93);
-        }
-        #circle-btn:hover {
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 0 0 60px rgba(255, 215, 0, 0.4);
-        }
-        @keyframes pulse-glow {
-            0%, 100% {
-                box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2);
-            }
-            50% {
-                box-shadow: 0 0 28px rgba(255, 215, 0, 0.8), 0 0 55px rgba(255, 215, 0, 0.35);
-            }
-        }
-
-        /* Bảng điều khiển */
-        #panel {
-            position: fixed;
-            top: 15px;
-            right: 80px;
-            z-index: 99998;
-            width: 260px;
-            background: var(--panel-bg);
-            border: 1px solid var(--gold);
-            border-radius: 14px;
-            padding: 14px;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.35);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            display: none;
+        .app {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
             flex-direction: column;
-            gap: 10px;
-            color: #ccc;
-            font-size: 12px;
-            animation: fadeSlide 0.25s ease;
+            gap: 12px;
         }
-        #panel.show {
-            display: flex;
+        .header {
+            text-align: center;
         }
-        @keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateX(12px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-            padding-bottom: 6px;
-        }
-        .panel-title {
+        .header h1 {
+            font-size: 24px;
             color: var(--gold);
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(255,215,0,0.3);
         }
-        .panel-close {
-            background: none;
-            border: none;
-            color: #f55;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
+        .domain {
+            font-size: 10px;
+            color: #0ff;
+            background: #2a2a4a;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 4px;
         }
-        .panel-close:hover {
-            color: #f00;
-        }
-
-        /* Ô dự đoán */
-        .predict-box {
-            background: rgba(255, 215, 0, 0.08);
-            border: 1px dashed var(--gold);
-            border-radius: 10px;
-            padding: 10px;
+        .predict-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 14px;
+            padding: 16px;
             text-align: center;
         }
         .predict-label {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--gold);
-            text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 4px;
+            text-transform: uppercase;
         }
-        .predict-result {
-            font-size: 26px;
+        .predict-value {
+            font-size: 34px;
             font-weight: 900;
-            letter-spacing: 1px;
+            margin: 6px 0;
         }
         .confidence {
-            font-size: 10px;
+            font-size: 12px;
             color: #aaa;
-            margin-top: 2px;
         }
-        .confidence span {
-            color: var(--gold);
-            font-weight: bold;
+        .confidence span { color: var(--gold); font-weight: bold; }
+        .consensus-text {
+            font-size: 10px;
+            color: #888;
         }
-
-        /* Nút nhập liệu */
-        .input-row {
+        .buttons {
             display: flex;
             gap: 8px;
-            justify-content: center;
         }
-        .btn-input {
+        .btn-result {
             flex: 1;
-            padding: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 0;
+            border-radius: 10px;
+            border: 2px solid #555;
+            background: rgba(255,255,255,0.04);
             color: #fff;
-            font-weight: 700;
-            font-size: 14px;
+            font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.15s;
-            letter-spacing: 1px;
+            transition: 0.2s;
         }
-        .btn-player {
-            border-color: var(--player);
-            color: var(--player);
+        .btn-player { border-color: var(--player); color: var(--player); background: rgba(68,136,255,0.1); }
+        .btn-player:active { background: rgba(68,136,255,0.25); }
+        .btn-banker { border-color: var(--banker); color: var(--banker); background: rgba(255,68,68,0.1); }
+        .btn-banker:active { background: rgba(255,68,68,0.25); }
+        .btn-tie { border-color: var(--tie); color: var(--tie); background: rgba(68,204,68,0.1); }
+        .btn-tie:active { background: rgba(68,204,68,0.2); }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            color: #aaa;
         }
-        .btn-player:hover,
-        .btn-player:active {
-            background: rgba(255, 68, 68, 0.25);
-            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        .stats b { font-size: 16px; }
+        .history {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 25vh;
+            overflow-y: auto;
         }
-        .btn-banker {
-            border-color: var(--banker);
-            color: var(--banker);
+        .history-title {
+            font-size: 11px;
+            color: var(--gold);
+            margin-bottom: 4px;
+            font-weight: bold;
         }
-        .btn-banker:hover,
-        .btn-banker:active {
-            background: rgba(68, 136, 255, 0.25);
-            box-shadow: 0 0 15px rgba(68, 136, 255, 0.4);
+        .history-list {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: #ccc;
         }
-        .btn-tie {
-            border-color: var(--tie);
-            color: var(--tie);
-        }
-        .btn-tie:hover,
-        .btn-tie:active {
-            background: rgba(170, 170, 170, 0.2);
-            box-shadow: 0 0 15px rgba(170, 170, 170, 0.3);
-        }
-
-        /* Hàng nút phụ */
-        .action-row {
+        .actions {
             display: flex;
             gap: 6px;
-            justify-content: center;
         }
         .btn-action {
-            padding: 6px 10px;
-            border-radius: 6px;
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
             border: 1px solid #555;
-            background: rgba(255, 255, 255, 0.03);
-            color: #aaa;
-            font-size: 10px;
+            background: rgba(255,255,255,0.04);
+            color: #ccc;
+            font-weight: bold;
+            font-size: 12px;
             cursor: pointer;
-            transition: all 0.15s;
         }
-        .btn-action:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+        .btn-undo { border-color: #ffaa00; color: #ffaa00; }
+        .btn-undo:active { background: rgba(255,170,0,0.2); }
+        .btn-clear { border-color: #ff4444; color: #ff4444; }
+        .btn-clear:active { background: rgba(255,68,68,0.2); }
+        .btn-reset { border-color: #0ff; color: #0ff; }
+        .btn-reset:active { background: rgba(0,255,255,0.2); }
+        .algo-section {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            padding: 10px;
         }
-        .btn-undo {
-            border-color: #ffa500;
-            color: #ffa500;
+        .algo-title {
+            font-weight: bold;
+            color: var(--gold);
+            font-size: 12px;
+            margin-bottom: 6px;
         }
-        .btn-clear {
-            border-color: #f55;
-            color: #f55;
-        }
-
-        /* Lịch sử */
-        .history-section {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 6px;
-        }
-        .history-label {
-            font-size: 10px;
-            color: #0ff;
-            margin-bottom: 4px;
-        }
-        .history-dots {
+        .algo-badges {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
-            min-height: 20px;
-            align-items: center;
+            gap: 3px;
+            margin-bottom: 8px;
         }
-        .dot {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
+        .badge {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 8px;
             font-size: 9px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            animation: popIn 0.3s ease;
+            background: #222;
+            border: 1px solid #444;
+            color: #aaa;
         }
-        @keyframes popIn {
-            0% {
-                transform: scale(0);
-            }
-            60% {
-                transform: scale(1.3);
-            }
-            100% {
-                transform: scale(1);
-            }
+        .badge.win {
+            background: #2a2a1a;
+            border-color: var(--gold);
+            color: var(--gold);
         }
-        .dot.player {
-            background: var(--player);
-        }
-        .dot.banker {
-            background: var(--banker);
-        }
-        .dot.tie {
-            background: var(--tie);
-        }
-
-        .no-data {
-            color: #555;
-            font-size: 10px;
-            font-style: italic;
-        }
-
-        .signal-text {
-            font-size: 10px;
-            color: #0f0;
+        .final-prediction {
+            font-size: 18px;
             text-align: center;
-            margin-top: 2px;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            #circle-btn {
-                width: 44px;
-                height: 44px;
-                font-size: 18px;
-                top: 8px;
-                right: 8px;
-            }
-            #panel {
-                width: 220px;
-                right: 58px;
-                top: 8px;
-                padding: 10px;
-                gap: 7px;
-                font-size: 10px;
-            }
-            .btn-input {
-                padding: 8px 0;
-                font-size: 12px;
-            }
-            .dot {
-                width: 15px;
-                height: 15px;
-                font-size: 7px;
-            }
-            .predict-result {
-                font-size: 20px;
-            }
+            font-weight: bold;
+            padding: 8px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Watermark hướng dẫn -->
-    <div class="watermark">
-        🎰 BACCARAT DỰ ĐOÁN<br>
-        <span>Nhấn nút tròn 🔮 góc phải để mở</span><br>
-        <span>Nhập kết quả P / B / T</span>
-    </div>
-
-    <!-- Nút tròn -->
-    <div id="circle-btn" title="Baccarat Dự Đoán">🔮</div>
-
-    <!-- Bảng điều khiển -->
-    <div id="panel">
-        <div class="panel-header">
-            <span class="panel-title">🔮 DỰ ĐOÁN</span>
-            <button class="panel-close" id="btn-close" title="Đóng">✕</button>
+    <div class="app">
+        <div class="header">
+            <h1>🎲 BACCARAT PRO</h1>
+            <span class="domain" id="domainDisplay">--</span>
         </div>
 
-        <!-- Ô dự đoán -->
-        <div class="predict-box">
-            <div class="predict-label">CỬA TIẾP THEO</div>
-            <div class="predict-result" id="predict-display">--</div>
-            <div class="confidence">Độ tin: <span id="confidence-display">--</span></div>
-            <div class="signal-text" id="signal-display"></div>
+        <div class="predict-card">
+            <div class="predict-label">🔮 DỰ ĐOÁN TIẾP THEO</div>
+            <div class="predict-value" id="prediction">--</div>
+            <div class="confidence">Độ tin cậy: <span id="confidence">--</span></div>
+            <div class="consensus-text" id="consensus"></div>
         </div>
 
-        <!-- Nút nhập liệu -->
-        <div class="input-row">
-            <button class="btn-input btn-player" data-result="P" title="Player thắng">P</button>
-            <button class="btn-input btn-banker" data-result="B" title="Banker thắng">B</button>
-            <button class="btn-input btn-tie" data-result="T" title="Hòa">T</button>
+        <div class="buttons">
+            <button class="btn-result btn-player" data-result="Player">🔵 PLAYER</button>
+            <button class="btn-result btn-banker" data-result="Banker">🔴 BANKER</button>
+            <button class="btn-result btn-tie" data-result="Tie">🟢 TIE</button>
         </div>
 
-        <!-- Nút phụ -->
-        <div class="action-row">
-            <button class="btn-action btn-undo" id="btn-undo" title="Hoàn tác">↩ Xóa cuối</button>
-            <button class="btn-action btn-clear" id="btn-clear" title="Xóa tất cả">🗑 Clear</button>
+        <div class="stats">
+            <span>🔵 <b id="playerCount">0</b> Player</span>
+            <span>🔴 <b id="bankerCount">0</b> Banker</span>
+            <span>🟢 <b id="tieCount">0</b> Tie</span>
+            <span>Σ <b id="totalCount">0</b></span>
         </div>
 
-        <!-- Lịch sử -->
-        <div class="history-section">
-            <div class="history-label">📜 LỊCH SỬ (<span id="history-count">0</span> ván)</div>
-            <div class="history-dots" id="history-container">
-                <span class="no-data">Chưa có dữ liệu</span>
-            </div>
+        <div class="history">
+            <div class="history-title">📜 LỊCH SỬ (✅ đúng / ❌ sai)</div>
+            <div class="history-list" id="historyList">(Trống)</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-action btn-undo" id="undoBtn">↩ HOÀN TÁC</button>
+            <button class="btn-action btn-clear" id="clearBtn">🗑 XÓA TẤT CẢ</button>
+            <button class="btn-action btn-reset" id="resetStatsBtn">🔄 RESET THỐNG KÊ</button>
+        </div>
+
+        <div class="algo-section">
+            <div class="algo-title">🧠 THUẬT TOÁN (điểm uy tín)</div>
+            <div class="algo-badges" id="algoBadges"></div>
+            <div class="final-prediction" id="finalPrediction">--</div>
         </div>
     </div>
 
     <script>
-        (function() {
-            // ===== DOM ELEMENTS =====
-            const circleBtn = document.getElementById('circle-btn');
-            const panel = document.getElementById('panel');
-            const btnClose = document.getElementById('btn-close');
-            const predictDisplay = document.getElementById('predict-display');
-            const confidenceDisplay = document.getElementById('confidence-display');
-            const signalDisplay = document.getElementById('signal-display');
-            const historyContainer = document.getElementById('history-container');
-            const historyCount = document.getElementById('history-count');
-            const btnUndo = document.getElementById('btn-undo');
-            const btnClear = document.getElementById('btn-clear');
-            const inputButtons = document.querySelectorAll('.btn-input');
+    (function() {
+        // Lấy các phần tử
+        const $ = (id) => document.getElementById(id);
+        const domainEl = $('domainDisplay');
+        const predictionEl = $('prediction');
+        const confidenceEl = $('confidence');
+        const consensusEl = $('consensus');
+        const playerCountEl = $('playerCount');
+        const bankerCountEl = $('bankerCount');
+        const tieCountEl = $('tieCount');
+        const totalCountEl = $('totalCount');
+        const historyListEl = $('historyList');
+        const algoBadgesEl = $('algoBadges');
+        const finalPredictionEl = $('finalPrediction');
+        const undoBtn = $('undoBtn');
+        const clearBtn = $('clearBtn');
+        const resetStatsBtn = $('resetStatsBtn');
 
-            // ===== STATE =====
-            let history = JSON.parse(localStorage.getItem('baccarat_history_html') || '[]');
-            const MAX_HISTORY = 60;
-            let isPanelOpen = false;
-            let autoHideTimer = null;
+        // Cấu hình
+        const MAX_HISTORY = 500;
+        const HISTORY_KEY = 'bac_pro_history';
+        const STATS_KEY = 'bac_pro_stats';
 
-            // ===== KÉO THẢ NÚT TRÒN =====
-            let isDragging = false;
-            let dragStartX, dragStartY, btnStartLeft, btnStartTop;
+        // Trạng thái
+        let history = [];
+        let algoStats = {};
+        let lastPredictedBet = null;
 
-            circleBtn.addEventListener('mousedown', function(e) {
-                if (e.button !== 0) return;
-                isDragging = true;
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
-                btnStartLeft = circleBtn.offsetLeft;
-                btnStartTop = circleBtn.offsetTop;
-                circleBtn.style.cursor = 'grabbing';
-                e.preventDefault();
-            });
+        // Khởi tạo dữ liệu từ localStorage
+        try {
+            const savedHistory = localStorage.getItem(HISTORY_KEY);
+            if (savedHistory) history = JSON.parse(savedHistory);
+        } catch (e) {}
+        try {
+            const savedStats = localStorage.getItem(STATS_KEY);
+            if (savedStats) algoStats = JSON.parse(savedStats);
+        } catch (e) {}
 
-            document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                const deltaX = e.clientX - dragStartX;
-                const deltaY = e.clientY - dragStartY;
-                circleBtn.style.left = (btnStartLeft + deltaX) + 'px';
-                circleBtn.style.top = (btnStartTop + deltaY) + 'px';
-                circleBtn.style.right = 'auto';
-                circleBtn.style.bottom = 'auto';
-                // Di chuyển panel theo nút
-                panel.style.top = circleBtn.style.top;
-                panel.style.right = 'auto';
-                panel.style.left = (parseInt(circleBtn.style.left) - 270) + 'px';
-            });
+        // Đảm bảo các thuật toán mặc định có trong stats
+        const DEFAULT_ALGOS = ['Bệt', '1-1', '2-2', 'Xu hướng', 'Markov', 'Đảo chiều'];
+        DEFAULT_ALGOS.forEach(algo => {
+            if (!algoStats[algo]) algoStats[algo] = { correct: 0, total: 0, score: 50 };
+        });
 
-            document.addEventListener('mouseup', function() {
-                if (isDragging) {
-                    // Nếu chỉ click (không kéo), toggle panel
-                    const moved = Math.abs(circleBtn.offsetLeft - btnStartLeft) > 3 ||
-                        Math.abs(circleBtn.offsetTop - btnStartTop) > 3;
-                    if (!moved) {
-                        togglePanel();
+        // Hiển thị domain
+        domainEl.textContent = window.location.hostname || 'Công cụ Baccarat';
+
+        // Hàm lưu dữ liệu
+        function saveHistory() {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        }
+        function saveStats() {
+            localStorage.setItem(STATS_KEY, JSON.stringify(algoStats));
+        }
+
+        // Cập nhật thống kê thuật toán sau khi biết kết quả thực tế
+        function updateAlgoStats(actualResult) {
+            const cached = sessionStorage.getItem('bac_last_predictions');
+            if (!cached) return;
+            const predictions = JSON.parse(cached);
+            predictions.forEach(p => {
+                if (p.algo && algoStats[p.algo]) {
+                    algoStats[p.algo].total++;
+                    if (p.bet === actualResult) {
+                        algoStats[p.algo].correct++;
+                        algoStats[p.algo].score = Math.min(100, algoStats[p.algo].score + 5);
+                    } else {
+                        algoStats[p.algo].score = Math.max(10, algoStats[p.algo].score - 10);
                     }
                 }
-                isDragging = false;
-                circleBtn.style.cursor = 'grab';
             });
+            saveStats();
+            sessionStorage.removeItem('bac_last_predictions');
+        }
 
-            // Touch events
-            circleBtn.addEventListener('touchstart', function(e) {
-                isDragging = true;
-                dragStartX = e.touches[0].clientX;
-                dragStartY = e.touches[0].clientY;
-                btnStartLeft = circleBtn.offsetLeft;
-                btnStartTop = circleBtn.offsetTop;
-                e.preventDefault();
+        // Thêm kết quả mới
+        function addResult(result) {
+            const wasCorrect = (lastPredictedBet !== null) ? (result === lastPredictedBet) : null;
+            if (lastPredictedBet !== null) {
+                updateAlgoStats(result);
+            }
+            history.push({
+                result: result,
+                time: new Date().toLocaleTimeString(),
+                correct: wasCorrect
             });
-
-            document.addEventListener('touchmove', function(e) {
-                if (!isDragging) return;
-                const deltaX = e.touches[0].clientX - dragStartX;
-                const deltaY = e.touches[0].clientY - dragStartY;
-                circleBtn.style.left = (btnStartLeft + deltaX) + 'px';
-                circleBtn.style.top = (btnStartTop + deltaY) + 'px';
-                circleBtn.style.right = 'auto';
-                circleBtn.style.bottom = 'auto';
-                panel.style.top = circleBtn.style.top;
-                panel.style.right = 'auto';
-                panel.style.left = (parseInt(circleBtn.style.left) - 270) + 'px';
-            });
-
-            document.addEventListener('touchend', function() {
-                if (isDragging) {
-                    const moved = Math.abs(circleBtn.offsetLeft - btnStartLeft) > 5 ||
-                        Math.abs(circleBtn.offsetTop - btnStartTop) > 5;
-                    if (!moved) {
-                        togglePanel();
-                    }
-                }
-                isDragging = false;
-            });
-
-            // ===== TOGGLE PANEL =====
-            function togglePanel() {
-                isPanelOpen = !isPanelOpen;
-                if (isPanelOpen) {
-                    panel.classList.add('show');
-                    resetAutoHide();
-                } else {
-                    panel.classList.remove('show');
-                    clearTimeout(autoHideTimer);
-                }
+            if (history.length > MAX_HISTORY) {
+                history = history.slice(-MAX_HISTORY);
             }
+            saveHistory();
+            lastPredictedBet = null;
+            render();
+        }
 
-            btnClose.addEventListener('click', function(e) {
-                e.stopPropagation();
-                isPanelOpen = false;
-                panel.classList.remove('show');
-                clearTimeout(autoHideTimer);
-            });
+        // Hoàn tác
+        function undo() {
+            if (history.length === 0) return;
+            history.pop();
+            saveHistory();
+            render();
+        }
 
-            // Tự động ẩn panel sau 10 giây không tương tác
-            function resetAutoHide() {
-                clearTimeout(autoHideTimer);
-                autoHideTimer = setTimeout(() => {
-                    if (isPanelOpen) {
-                        isPanelOpen = false;
-                        panel.classList.remove('show');
-                    }
-                }, 10000);
+        // Xóa tất cả
+        function clearAll() {
+            if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử?')) {
+                history = [];
+                saveHistory();
+                render();
             }
+        }
 
-            panel.addEventListener('mouseenter', () => clearTimeout(autoHideTimer));
-            panel.addEventListener('mouseleave', () => { if (isPanelOpen) resetAutoHide(); });
-            panel.addEventListener('touchstart', () => clearTimeout(autoHideTimer));
-
-            // ===== THUẬT TOÁN DỰ ĐOÁN =====
-            function predict(seq) {
-                if (seq.length < 2) {
-                    return { bet: null, confidence: 0, signal: 'Cần ít nhất 2 ván' };
-                }
-
-                const recent20 = seq.slice(-20);
-                const last = seq[seq.length - 1];
-
-                // Đếm streak
-                let streak = 1;
-                for (let i = seq.length - 2; i >= 0; i--) {
-                    if (seq[i] === last) streak++;
-                    else break;
-                }
-
-                // Kiểm tra 1-1 xen kẽ
-                const recent8 = seq.slice(-8);
-                let isAlternating = recent8.length >= 4;
-                for (let i = 1; i < recent8.length; i++) {
-                    if (recent8[i] === recent8[i - 1]) {
-                        isAlternating = false;
-                        break;
-                    }
-                }
-
-                // Đếm tần suất
-                const countP = recent20.filter(r => r === 'P').length;
-                const countB = recent20.filter(r => r === 'B').length;
-                const total = recent20.length || 1;
-
-                let bet, confidence, signal;
-
-                if (streak >= 5) {
-                    bet = last === 'P' ? 'B' : 'P';
-                    confidence = 82;
-                    signal = `🔥 Bệt ${streak} tay - BẮT GÃY`;
-                } else if (streak === 4) {
-                    bet = last === 'P' ? 'B' : 'P';
-                    confidence = 72;
-                    signal = `Bệt 4 tay - Chuẩn bị gãy`;
-                } else if (isAlternating && recent8.length >= 4) {
-                    bet = last === 'P' ? 'B' : 'P';
-                    confidence = 78;
-                    signal = '🔄 Cầu 1-1 hoàn hảo';
-                } else if (streak === 3) {
-                    bet = last === 'P' ? 'B' : 'P';
-                    confidence = 62;
-                    signal = 'Bệt 3 - Có thể gãy';
-                } else if (countP > countB * 1.4) {
-                    bet = 'P';
-                    confidence = 58;
-                    signal = '📈 Nghiêng Player mạnh';
-                } else if (countB > countP * 1.4) {
-                    bet = 'B';
-                    confidence = 58;
-                    signal = '📈 Nghiêng Banker mạnh';
-                } else if (countP > countB) {
-                    bet = 'P';
-                    confidence = 52;
-                    signal = 'Nghiêng nhẹ Player';
-                } else {
-                    bet = 'B';
-                    confidence = 52;
-                    signal = 'Nghiêng nhẹ Banker';
-                }
-
-                return { bet, confidence, signal };
-            }
-
-            // ===== CẬP NHẬT GIAO DIỆN =====
-            function updateUI() {
-                // Dự đoán
-                const prediction = predict(history);
-                if (prediction.bet) {
-                    const betName = prediction.bet === 'P' ? 'PLAYER' : 'BANKER';
-                    const betColor = prediction.bet === 'P' ? '#ff4444' : '#4488ff';
-                    predictDisplay.textContent = betName;
-                    predictDisplay.style.color = betColor;
-                    confidenceDisplay.textContent = prediction.confidence + '%';
-                    signalDisplay.textContent = '📡 ' + prediction.signal;
-                    signalDisplay.style.color = prediction.confidence >= 70 ? '#0f0' : '#ffa500';
-                } else {
-                    predictDisplay.textContent = '--';
-                    predictDisplay.style.color = '#888';
-                    confidenceDisplay.textContent = '--';
-                    signalDisplay.textContent = prediction.signal;
-                    signalDisplay.style.color = '#888';
-                }
-
-                // Lịch sử
-                historyCount.textContent = history.length;
-                if (history.length === 0) {
-                    historyContainer.innerHTML = '<span class="no-data">Chưa có dữ liệu</span>';
-                } else {
-                    const display = history.slice(-30);
-                    historyContainer.innerHTML = display.map((r, i) => {
-                        const cls = r === 'P' ? 'player' : r === 'B' ? 'banker' : 'tie';
-                        return `<span class="dot ${cls}" style="animation-delay:${i*0.02}s">${r}</span>`;
-                    }).join('');
-                }
-
-                // Lưu localStorage
-                localStorage.setItem('baccarat_history_html', JSON.stringify(history));
-            }
-
-            // ===== THÊM KẾT QUẢ MỚI =====
-            function addResult(result) {
-                // Chỉ thêm nếu khác kết quả cuối cùng (tránh trùng lặp do bấm nhiều lần)
-                if (history.length > 0 && history[history.length - 1] === result) {
-                    // Cho phép thêm trùng nếu là TIE (hòa có thể xuất hiện liên tiếp)
-                    if (result !== 'T') return;
-                }
-                history.push(result);
-                if (history.length > MAX_HISTORY) {
-                    history = history.slice(-MAX_HISTORY);
-                }
-                updateUI();
-                resetAutoHide();
-            }
-
-            // ===== XÓA KẾT QUẢ CUỐI =====
-            function undoLast() {
-                if (history.length === 0) return;
-                history.pop();
-                updateUI();
-                resetAutoHide();
-            }
-
-            // ===== XÓA TẤT CẢ =====
-            function clearAll() {
-                if (history.length === 0) return;
-                if (confirm('Xóa toàn bộ lịch sử ' + history.length + ' ván?')) {
-                    history = [];
-                    updateUI();
-                }
-            }
-
-            // ===== EVENT LISTENERS =====
-            inputButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const result = this.getAttribute('data-result');
-                    addResult(result);
-                    // Rung nhẹ nút tròn khi thêm kết quả
-                    circleBtn.style.transform = 'scale(1.1)';
-                    setTimeout(() => { circleBtn.style.transform = 'scale(1)'; }, 150);
+        // Reset thống kê
+        function resetStats() {
+            if (confirm('Reset điểm uy tín của tất cả thuật toán về 50?')) {
+                DEFAULT_ALGOS.forEach(algo => {
+                    algoStats[algo] = { correct: 0, total: 0, score: 50 };
                 });
+                saveStats();
+                render();
+            }
+        }
+
+        // Gắn sự kiện cho các nút kết quả
+        document.querySelectorAll('.btn-result').forEach(btn => {
+            btn.addEventListener('click', function() {
+                addResult(this.getAttribute('data-result'));
             });
+        });
 
-            btnUndo.addEventListener('click', undoLast);
-            btnClear.addEventListener('click', clearAll);
+        // Gắn sự kiện cho các nút hành động
+        undoBtn.addEventListener('click', undo);
+        clearBtn.addEventListener('click', clearAll);
+        resetStatsBtn.addEventListener('click', resetStats);
 
-            // Phím tắt bàn phím (cho desktop)
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'p' || e.key === 'P') {
-                    addResult('P');
-                    e.preventDefault();
-                } else if (e.key === 'b' || e.key === 'B') {
-                    addResult('B');
-                    e.preventDefault();
-                } else if (e.key === 't' || e.key === 'T') {
-                    addResult('T');
-                    e.preventDefault();
-                } else if (e.ctrlKey && e.key === 'z') {
-                    undoLast();
-                    e.preventDefault();
-                } else if (e.key === 'Escape') {
-                    isPanelOpen = false;
-                    panel.classList.remove('show');
-                    clearTimeout(autoHideTimer);
+        // Lấy mảng kết quả
+        function getResults() {
+            return history.map(h => h.result);
+        }
+
+        // --- CÁC THUẬT TOÁN DỰ ĐOÁN ---
+        function predictStreak() {
+            const arr = getResults();
+            if (arr.length < 2) return null;
+            const last = arr[arr.length - 1];
+            let streak = 1;
+            for (let i = arr.length - 2; i >= 0; i--) {
+                if (arr[i] === last) streak++;
+                else break;
+            }
+            if (streak >= 2 && last !== 'Tie') {
+                const breakProb = Math.min(0.2 + streak * 0.08, 0.75);
+                const bet = Math.random() < breakProb ? (last === 'Banker' ? 'Player' : 'Banker') : last;
+                return { algo: 'Bệt', bet, confidence: Math.round((1 - breakProb) * 100) };
+            }
+            return null;
+        }
+
+        function predictAlternating() {
+            const arr = getResults();
+            if (arr.length < 4) return null;
+            const last4 = arr.slice(-4);
+            const isAlt = last4.every((r, i) => i === 0 || r !== last4[i - 1]);
+            if (isAlt) {
+                const next = last4[3] === 'Player' ? 'Banker' : 'Player';
+                return { algo: '1-1', bet: next, confidence: 75 };
+            }
+            return null;
+        }
+
+        function predictTwoTwo() {
+            const arr = getResults();
+            if (arr.length < 8) return null;
+            const last8 = arr.slice(-8).map(r => r[0]).join('');
+            if (last8 === 'PBPB') return null; // không phải 2-2
+            if (last8 === 'PPBBPPBB') return { algo: '2-2', bet: 'Player', confidence: 88 };
+            if (last8 === 'BBPPBBPP') return { algo: '2-2', bet: 'Banker', confidence: 88 };
+            // Gần đúng
+            const p1 = 'PPBBPPBB', p2 = 'BBPPBBPP';
+            let m1 = 0, m2 = 0;
+            for (let i = 0; i < 8; i++) {
+                if (last8[i] === p1[i]) m1++;
+                if (last8[i] === p2[i]) m2++;
+            }
+            if (m1 >= 7) return { algo: '2-2(~)', bet: 'Player', confidence: 70 };
+            if (m2 >= 7) return { algo: '2-2(~)', bet: 'Banker', confidence: 70 };
+            return null;
+        }
+
+        function predictTrend() {
+            const arr = getResults();
+            if (arr.length < 15) return null;
+            let wB = 0, wP = 0;
+            arr.slice(-30).forEach((r, i) => {
+                const w = i + 1;
+                if (r === 'Banker') wB += w;
+                else if (r === 'Player') wP += w;
+            });
+            const total = wB + wP;
+            if (total < 40) return null;
+            const bRate = wB / total;
+            if (bRate > 0.53) return { algo: 'Xu hướng', bet: 'Banker', confidence: Math.round(bRate * 100) };
+            if (bRate < 0.47) return { algo: 'Xu hướng', bet: 'Player', confidence: Math.round((1 - bRate) * 100) };
+            return null;
+        }
+
+        function predictMarkov() {
+            const arr = getResults();
+            if (arr.length < 5) return null;
+            const last = arr[arr.length - 1];
+            const trans = { Banker: {}, Player: {}, Tie: {} };
+            for (let i = 1; i < arr.length; i++) {
+                const prev = arr[i - 1], curr = arr[i];
+                if (!trans[prev]) trans[prev] = {};
+                trans[prev][curr] = (trans[prev][curr] || 0) + 1;
+            }
+            const counts = trans[last] || {};
+            const total = Object.values(counts).reduce((a, b) => a + b, 0);
+            if (total < 3) return null;
+            let best = 'Banker', bestCnt = counts.Banker || 0;
+            if ((counts.Player || 0) > bestCnt) { best = 'Player'; bestCnt = counts.Player; }
+            if ((counts.Tie || 0) > bestCnt) { best = 'Tie'; bestCnt = counts.Tie; }
+            return { algo: 'Markov', bet: best, confidence: Math.round((bestCnt / total) * 100) };
+        }
+
+        function predictReversal() {
+            const arr = getResults();
+            if (arr.length < 5) return null;
+            const last = arr[arr.length - 1];
+            let streak = 1;
+            for (let i = arr.length - 2; i >= 0; i--) {
+                if (arr[i] === last) streak++;
+                else break;
+            }
+            if (streak >= 4 && last !== 'Tie') {
+                const next = last === 'Banker' ? 'Player' : 'Banker';
+                const conf = Math.min(60 + streak * 5, 85);
+                return { algo: 'Đảo chiều', bet: next, confidence: conf };
+            }
+            return null;
+        }
+
+        function getAllPredictions() {
+            const preds = [
+                predictStreak(),
+                predictAlternating(),
+                predictTwoTwo(),
+                predictTrend(),
+                predictMarkov(),
+                predictReversal()
+            ].filter(p => p);
+            sessionStorage.setItem('bac_last_predictions', JSON.stringify(preds));
+            return preds;
+        }
+
+        function ensemble(predictions) {
+            if (!predictions.length) return { bet: null, confidence: 0, consensus: '' };
+            const votes = {};
+            let totalWeight = 0;
+            predictions.forEach(p => {
+                const score = algoStats[p.algo] ? algoStats[p.algo].score : 50;
+                const weight = score / 100;
+                if (!votes[p.bet]) votes[p.bet] = { weight: 0, algos: [] };
+                votes[p.bet].weight += weight;
+                votes[p.bet].algos.push(p.algo);
+                totalWeight += weight;
+            });
+            let bestBet = null, bestWeight = 0;
+            for (const [bet, data] of Object.entries(votes)) {
+                if (data.weight > bestWeight) {
+                    bestBet = bet;
+                    bestWeight = data.weight;
                 }
-            });
+            }
+            const finalConf = totalWeight > 0 ? Math.round((bestWeight / totalWeight) * 100) : 0;
+            const algoNames = votes[bestBet] ? votes[bestBet].algos.join(', ') : '';
+            const consensus = `${algoNames} đồng thuận`;
+            return { bet: bestBet, confidence: finalConf, consensus };
+        }
 
-            // ===== KHỞI ĐỘNG =====
-            updateUI();
-            console.log('✅ Baccarat Dự Đoán Menu Tròn đã sẵn sàng!');
-            console.log('🖱 Kéo nút 🔮 để di chuyển - Nhấn để mở bảng');
-            console.log('⌨ Phím tắt: P = Player, B = Banker, T = Tie, Ctrl+Z = Undo, Esc = Đóng');
-        })();
+        function render() {
+            // Thống kê
+            const stats = { Banker: 0, Player: 0, Tie: 0 };
+            history.forEach(h => stats[h.result]++);
+            playerCountEl.textContent = stats.Player;
+            bankerCountEl.textContent = stats.Banker;
+            tieCountEl.textContent = stats.Tie;
+            totalCountEl.textContent = history.length;
+
+            // Lịch sử
+            if (history.length === 0) {
+                historyListEl.textContent = '(Trống)';
+            } else {
+                const recent = history.slice(-20).reverse();
+                let text = '';
+                recent.forEach(item => {
+                    const icon = item.result === 'Banker' ? '🔴' : (item.result === 'Player' ? '🔵' : '🟢');
+                    let status = '';
+                    if (item.correct === true) status = ' ✅';
+                    else if (item.correct === false) status = ' ❌';
+                    text += `${icon} ${item.result.padEnd(8)} ${item.time}${status}\n`;
+                });
+                historyListEl.textContent = text;
+            }
+
+            // Dự đoán
+            const preds = getAllPredictions();
+            const final = ensemble(preds);
+            lastPredictedBet = final.bet;
+
+            if (final.bet) {
+                const icon = final.bet === 'Banker' ? '🔴' : (final.bet === 'Player' ? '🔵' : '🟢');
+                predictionEl.innerHTML = `${icon} ${final.bet}`;
+                confidenceEl.textContent = final.confidence + '%';
+                consensusEl.textContent = final.consensus;
+            } else {
+                predictionEl.innerHTML = '--';
+                confidenceEl.textContent = 'Cần thêm dữ liệu';
+                consensusEl.textContent = '';
+            }
+
+            // Hiển thị các badge thuật toán
+            algoBadgesEl.innerHTML = preds.map(p => {
+                const voted = p.bet === final.bet;
+                const score = algoStats[p.algo] ? algoStats[p.algo].score : 50;
+                const cls = voted ? 'badge win' : 'badge';
+                return `<span class="${cls}" title="Điểm: ${score}">${p.algo}: ${p.bet} (${p.confidence}%)</span>`;
+            }).join('');
+
+            const icon = final.bet === 'Banker' ? '🔴' : (final.bet === 'Player' ? '🔵' : '🟢');
+            finalPredictionEl.innerHTML = `${icon} <b>${final.bet || '--'}</b> (${final.confidence || 0}%)`;
+        }
+
+        // Render lần đầu
+        render();
+    })();
     </script>
 </body>
 </html>
