@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro - MA Adaptive</title>
+    <title>Baccarat Smart Signal</title>
     <style>
         :root {
             --bg: #0a0a14;
@@ -31,12 +31,13 @@
         .predict-value { font-size: 34px; font-weight: 900; margin: 6px 0; }
         .confidence { font-size: 12px; color: #aaa; }
         .confidence span { color: var(--gold); font-weight: bold; }
-        .warning-box {
-            background: rgba(255,0,0,0.15); border: 1px solid #f44336; border-radius: 8px;
-            padding: 8px; margin-top: 8px; font-size: 12px; color: #f44336; text-align: center;
-            display: none;
+        .signal-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px;
+            background: #222; color: #aaa; margin-top: 4px;
         }
-        .warning-box.show { display: block; }
+        .signal-strong { background: #1a3a1a; color: #4caf50; }
+        .signal-weak { background: #3a2a1a; color: #ff9800; }
+        .signal-none { background: #3a1a1a; color: #f44336; }
         .buttons { display: flex; gap: 8px; }
         .btn-result {
             flex: 1; padding: 14px 0; border-radius: 10px; border: 2px solid #555;
@@ -68,29 +69,21 @@
         .btn-clear:active { background: rgba(255,68,68,0.2); }
         .btn-reset { border-color: #0ff; color: #0ff; }
         .btn-reset:active { background: rgba(0,255,255,0.2); }
-        .algo-section { background: rgba(255,255,255,0.02); border-radius: 10px; padding: 10px; }
-        .algo-title { font-weight: bold; color: var(--gold); font-size: 12px; margin-bottom: 6px; }
-        .info-row {
-            display: flex; justify-content: space-around; font-size: 10px; color: #aaa; margin-bottom: 6px;
-        }
-        .final-prediction {
-            font-size: 18px; text-align: center; font-weight: bold; padding: 8px;
-            background: rgba(255,255,255,0.03); border-radius: 8px;
-        }
+        .info-text { font-size: 10px; color: #888; margin-top: 4px; text-align: center; }
     </style>
 </head>
 <body>
 <div class="app">
     <div class="header">
-        <h1>🎲 BACCARAT MA ADAPTIVE</h1>
+        <h1>🎲 BACCARAT SMART SIGNAL</h1>
         <span class="domain" id="domainDisplay">--</span>
     </div>
 
     <div class="predict-card">
-        <div class="predict-label">🔮 DỰ ĐOÁN TIẾP THEO</div>
+        <div class="predict-label">🔮 DỰ ĐOÁN</div>
         <div class="predict-value" id="prediction">--</div>
         <div class="confidence">Độ tin cậy: <span id="confidence">--</span></div>
-        <div id="warningBox" class="warning-box">⚠️ Xu hướng không rõ ràng – cân nhắc không cược</div>
+        <span class="signal-badge" id="signalBadge">Đang phân tích...</span>
     </div>
 
     <div class="buttons">
@@ -109,12 +102,12 @@
     <div class="section-title">📜 LỊCH SỬ GẦN ĐÂY (đúng/sai)</div>
     <div class="history"><div class="history-list" id="historyList">(Trống)</div></div>
 
-    <div class="section-title">📊 TỔNG HỢP DỰ ĐOÁN</div>
+    <div class="section-title">📊 THỐNG KÊ DỰ ĐOÁN</div>
     <div class="summary-box">
         <div class="summary-item"><span>✅ Đúng</span><span class="summary-number" id="correctCount" style="color:#4caf50;">0</span></div>
         <div class="summary-item"><span>❌ Sai</span><span class="summary-number" id="incorrectCount" style="color:#f44336;">0</span></div>
         <div class="summary-item"><span>📈 Tỉ lệ</span><span class="summary-number" id="accuracyRate" style="color:#ffd700;">--</span></div>
-        <div class="summary-item"><span>🎯 10 ván</span><span class="summary-number" id="recentAccuracy" style="color:#ffd700;">--</span></div>
+        <div class="summary-item"><span>🎯 Độ chọn lọc</span><span class="summary-number" id="selectivity" style="color:#ffd700;">--</span></div>
     </div>
 
     <div class="actions">
@@ -122,17 +115,7 @@
         <button class="btn-action btn-clear" id="clearBtn">🗑 XÓA TẤT CẢ</button>
         <button class="btn-action btn-reset" id="resetStatsBtn">🔄 RESET</button>
     </div>
-
-    <div class="algo-section">
-        <div class="algo-title">📊 CHỈ BÁO XU HƯỚNG</div>
-        <div class="info-row">
-            <span>MA(10): <b id="ma10">--</b></span>
-            <span>MA(20): <b id="ma20">--</b></span>
-            <span>MA(30): <b id="ma30">--</b></span>
-            <span>Cửa sổ: <b id="activeWindow">--</b></span>
-        </div>
-        <div class="final-prediction" id="finalPrediction">--</div>
-    </div>
+    <div class="info-text" id="infoText">Hệ thống chỉ dự đoán khi có tín hiệu mạnh để tăng tỉ lệ đúng.</div>
 </div>
 
 <script>
@@ -141,7 +124,7 @@
     const domainEl = $('domainDisplay');
     const predictionEl = $('prediction');
     const confidenceEl = $('confidence');
-    const warningBox = $('warningBox');
+    const signalBadge = $('signalBadge');
     const playerCountEl = $('playerCount');
     const bankerCountEl = $('bankerCount');
     const tieCountEl = $('tieCount');
@@ -150,74 +133,35 @@
     const correctCountEl = $('correctCount');
     const incorrectCountEl = $('incorrectCount');
     const accuracyRateEl = $('accuracyRate');
-    const recentAccuracyEl = $('recentAccuracy');
-    const ma10El = $('ma10');
-    const ma20El = $('ma20');
-    const ma30El = $('ma30');
-    const activeWindowEl = $('activeWindow');
-    const finalPredictionEl = $('finalPrediction');
+    const selectivityEl = $('selectivity');
     const undoBtn = $('undoBtn');
     const clearBtn = $('clearBtn');
     const resetStatsBtn = $('resetStatsBtn');
+    const infoText = $('infoText');
 
     const MAX_HISTORY = 500;
-    const HISTORY_KEY = 'bac_ma_history';
-    const STATS_KEY = 'bac_ma_stats';
-
+    const HISTORY_KEY = 'bac_smart_history';
     let history = [];
-    // Lưu hiệu suất của từng cửa sổ MA
-    let windowPerformance = { 10: { correct: 0, total: 0 }, 20: { correct: 0, total: 0 }, 30: { correct: 0, total: 0 } };
-    let activeWindowSize = 20; // mặc định 20
-
     try { const saved = localStorage.getItem(HISTORY_KEY); if (saved) history = JSON.parse(saved); } catch (e) {}
-    try {
-        const savedStats = localStorage.getItem(STATS_KEY);
-        if (savedStats) {
-            const parsed = JSON.parse(savedStats);
-            if (parsed.windowPerformance) windowPerformance = parsed.windowPerformance;
-            if (parsed.activeWindowSize) activeWindowSize = parsed.activeWindowSize;
-        }
-    } catch (e) {}
 
     domainEl.textContent = window.location.hostname || 'Công cụ Baccarat';
 
     function saveHistory() { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
-    function saveStats() {
-        localStorage.setItem(STATS_KEY, JSON.stringify({ windowPerformance, activeWindowSize }));
-    }
 
     let lastPredictedBet = null;
-    let lastUsedWindow = null;
 
     function addResult(result) {
         const wasCorrect = (lastPredictedBet !== null) ? (result === lastPredictedBet) : null;
-        // Cập nhật hiệu suất cửa sổ đã dùng
-        if (wasCorrect !== null && lastUsedWindow) {
-            if (windowPerformance[lastUsedWindow]) {
-                windowPerformance[lastUsedWindow].total++;
-                if (wasCorrect) windowPerformance[lastUsedWindow].correct++;
-            }
-            // Chọn lại cửa sổ tốt nhất
-            chooseBestWindow();
-            saveStats();
-        }
         history.push({ result, time: new Date().toLocaleTimeString(), correct: wasCorrect });
         if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
         saveHistory();
         lastPredictedBet = null;
-        lastUsedWindow = null;
         render();
     }
 
     function undo() { if (history.length === 0) return; history.pop(); saveHistory(); render(); }
     function clearAll() { if (confirm('Xóa toàn bộ lịch sử?')) { history = []; saveHistory(); render(); } }
-    function resetStats() {
-        if (confirm('Reset hiệu suất MA?')) {
-            windowPerformance = { 10: { correct: 0, total: 0 }, 20: { correct: 0, total: 0 }, 30: { correct: 0, total: 0 } };
-            activeWindowSize = 20;
-            saveStats(); render();
-        }
-    }
+    function resetStats() { if (confirm('Reset?')) { history = []; saveHistory(); render(); } }
 
     document.querySelectorAll('.btn-result').forEach(btn => {
         btn.addEventListener('click', () => addResult(btn.getAttribute('data-result')));
@@ -228,63 +172,67 @@
 
     function getResultsArray() { return history.map(h => h.result); }
 
-    function calculateMA(windowSize) {
-        const arr = getResultsArray();
-        const filtered = arr.filter(r => r === 'Banker' || r === 'Player').slice(-windowSize);
-        if (filtered.length < 3) return 0.5; // không đủ dữ liệu -> mặc định cân bằng
-        const bankerCount = filtered.filter(r => r === 'Banker').length;
-        return bankerCount / filtered.length;
-    }
+    // Phát hiện tín hiệu MẠNH
+    function detectStrongSignal() {
+        const arr = getResultsArray().filter(r => r !== 'Tie'); // Bỏ qua Tie cho phân tích chính
+        if (arr.length < 5) return null;
 
-    function chooseBestWindow() {
-        const windows = [10, 20, 30];
-        let best = 20;
-        let bestScore = -1;
-        windows.forEach(w => {
-            const perf = windowPerformance[w];
-            // Dùng tỉ lệ đúng với Laplace smoothing
-            const score = (perf.correct + 1) / (perf.total + 2);
-            if (score > bestScore) {
-                bestScore = score;
-                best = w;
-            }
-        });
-        activeWindowSize = best;
-    }
-
-    // Phát hiện cầu rõ ràng: bệt dài (>=4) hoặc 1-1 hoàn hảo (>=4)
-    function detectStrongPattern() {
-        const arr = getResultsArray().filter(r => r !== 'Tie');
-        if (arr.length < 4) return null;
-        // Bệt
         const last = arr[arr.length - 1];
+        
+        // 1. Bệt dài >= 4
         let streak = 1;
         for (let i = arr.length - 2; i >= 0; i--) { if (arr[i] === last) streak++; else break; }
-        if (streak >= 4) return { type: 'Bệt', next: last, confidence: 85 };
-        // 1-1
-        const last4 = arr.slice(-4);
-        const isAlt = last4.every((r, i) => i === 0 || r !== last4[i - 1]);
-        if (isAlt) return { type: '1-1', next: last4[3] === 'Player' ? 'Banker' : 'Player', confidence: 80 };
-        return null;
+        if (streak >= 4) {
+            return { bet: last, confidence: 80, reason: `Bệt ${last} (${streak} ván)` };
+        }
+        
+        // 2. 1-1 hoàn hảo >= 4 ván
+        if (arr.length >= 4) {
+            const last4 = arr.slice(-4);
+            const isAlt = last4.every((r, i) => i === 0 || r !== last4[i - 1]);
+            if (isAlt) {
+                const next = last4[3] === 'Player' ? 'Banker' : 'Player';
+                return { bet: next, confidence: 78, reason: 'Cầu 1-1 hoàn hảo' };
+            }
+        }
+        
+        // 3. 2-2 rõ ràng (8 ván)
+        if (arr.length >= 8) {
+            const last8 = arr.slice(-8).map(r => r[0]).join('');
+            if (last8 === 'PPBBPPBB') return { bet: 'Player', confidence: 85, reason: 'Cầu 2-2' };
+            if (last8 === 'BBPPBBPP') return { bet: 'Banker', confidence: 85, reason: 'Cầu 2-2' };
+        }
+        
+        // 4. Xu hướng nghiêng mạnh (MA 20 chênh lệch >10%)
+        if (arr.length >= 20) {
+            const last20 = arr.slice(-20);
+            const bankerCount = last20.filter(r => r === 'Banker').length;
+            const ratio = bankerCount / 20;
+            if (ratio > 0.6) return { bet: 'Banker', confidence: Math.round(ratio * 100), reason: `Nghiêng Banker (${Math.round(ratio*100)}%)` };
+            if (ratio < 0.4) return { bet: 'Player', confidence: Math.round((1-ratio) * 100), reason: `Nghiêng Player (${Math.round((1-ratio)*100)}%)` };
+        }
+        
+        // 5. Bệt 3 + MA ủng hộ
+        if (streak === 3 && arr.length >= 10) {
+            const last10 = arr.slice(-10);
+            const bCount = last10.filter(r => r === 'Banker').length;
+            const ratio = bCount / 10;
+            if ((last === 'Banker' && ratio > 0.5) || (last === 'Player' && ratio < 0.5)) {
+                return { bet: last, confidence: 65, reason: `Bệt 3 + xu hướng` };
+            }
+        }
+
+        return null; // Không có tín hiệu mạnh
     }
 
     function predict() {
-        const pattern = detectStrongPattern();
-        if (pattern) {
-            // Nếu có cầu rõ ràng, ưu tiên theo cầu
-            lastUsedWindow = 'pattern';
-            return { bet: pattern.next, confidence: pattern.confidence, reason: `Cầu ${pattern.type}` };
-        }
-        // Sử dụng MA động
-        const ma = calculateMA(activeWindowSize);
-        lastUsedWindow = activeWindowSize;
-        if (ma > 0.53) {
-            return { bet: 'Banker', confidence: Math.round(ma * 100), reason: `MA(${activeWindowSize}) = ${(ma*100).toFixed(0)}%` };
-        } else if (ma < 0.47) {
-            return { bet: 'Player', confidence: Math.round((1 - ma) * 100), reason: `MA(${activeWindowSize}) = ${(ma*100).toFixed(0)}%` };
+        const signal = detectStrongSignal();
+        if (signal) {
+            lastPredictedBet = signal.bet;
+            return { ...signal, signalStrength: 'strong' };
         } else {
-            // MA gần 0.5, cảnh báo
-            return { bet: ma >= 0.5 ? 'Banker' : 'Player', confidence: Math.round(Math.max(ma, 1-ma) * 100), reason: `MA(${activeWindowSize}) cân bằng`, warning: true };
+            lastPredictedBet = null;
+            return { bet: null, confidence: 0, reason: 'Không có tín hiệu rõ ràng', signalStrength: 'none' };
         }
     }
 
@@ -297,6 +245,7 @@
         tieCountEl.textContent = statsRes.Tie;
         totalCountEl.textContent = history.length;
 
+        // Lịch sử
         if (history.length === 0) {
             historyListEl.textContent = '(Trống)';
         } else {
@@ -309,51 +258,38 @@
             historyListEl.textContent = text;
         }
 
-        let correctTotal = 0, incorrectTotal = 0;
-        let recentCorrect = 0, recentTotal = 0;
-        const recentHistory = history.slice(-10);
-        recentHistory.forEach(item => {
-            if (item.correct === true) recentCorrect++;
-            if (item.correct !== null) recentTotal++;
-        });
+        // Thống kê dự đoán
+        let correctTotal = 0, incorrectTotal = 0, totalPredictions = 0;
         history.forEach(item => {
             if (item.correct === true) correctTotal++;
             else if (item.correct === false) incorrectTotal++;
         });
+        totalPredictions = correctTotal + incorrectTotal;
         correctCountEl.textContent = correctTotal;
         incorrectCountEl.textContent = incorrectTotal;
-        const totalPreds = correctTotal + incorrectTotal;
-        accuracyRateEl.textContent = totalPreds > 0 ? Math.round((correctTotal / totalPreds) * 100) + '%' : '--';
-        recentAccuracyEl.textContent = recentTotal > 0 ? Math.round((recentCorrect / recentTotal) * 100) + '%' : '--';
-
-        // Cập nhật chỉ báo MA
-        const ma10 = calculateMA(10);
-        const ma20 = calculateMA(20);
-        const ma30 = calculateMA(30);
-        ma10El.textContent = (ma10 * 100).toFixed(0) + '%';
-        ma20El.textContent = (ma20 * 100).toFixed(0) + '%';
-        ma30El.textContent = (ma30 * 100).toFixed(0) + '%';
-        activeWindowEl.textContent = activeWindowSize;
+        const accuracy = totalPredictions > 0 ? Math.round((correctTotal / totalPredictions) * 100) : 0;
+        accuracyRateEl.textContent = totalPredictions > 0 ? accuracy + '%' : '--';
+        // Độ chọn lọc: tỉ lệ số lần đưa ra dự đoán / tổng số ván
+        const selectivity = history.length > 0 ? Math.round((totalPredictions / history.length) * 100) : 0;
+        selectivityEl.textContent = selectivity + '%';
 
         const prediction = predict();
-        lastPredictedBet = prediction.bet;
-
+        
+        // Cập nhật giao diện dự đoán
         if (prediction.bet) {
-            const icon = prediction.bet === 'Banker' ? '🔴' : (prediction.bet === 'Player' ? '🔵' : '🟢');
+            const icon = prediction.bet === 'Banker' ? '🔴' : '🔵';
             predictionEl.innerHTML = `${icon} ${prediction.bet}`;
             confidenceEl.textContent = prediction.confidence + '%';
+            signalBadge.textContent = 'Tín hiệu MẠNH';
+            signalBadge.className = 'signal-badge signal-strong';
         } else {
-            predictionEl.innerHTML = '--';
-            confidenceEl.textContent = 'Cần thêm dữ liệu';
-        }
-        if (prediction.warning) {
-            warningBox.classList.add('show');
-        } else {
-            warningBox.classList.remove('show');
+            predictionEl.innerHTML = '⏸ CHỜ';
+            confidenceEl.textContent = '--';
+            signalBadge.textContent = 'Không tín hiệu';
+            signalBadge.className = 'signal-badge signal-none';
         }
 
-        const icon = prediction.bet === 'Banker' ? '🔴' : (prediction.bet === 'Player' ? '🔵' : '🟢');
-        finalPredictionEl.innerHTML = `${icon} <b>${prediction.bet || '--'}</b> (${prediction.confidence || 0}%)<br><small>${prediction.reason || ''}</small>`;
+        infoText.textContent = prediction.reason || 'Hệ thống chỉ dự đoán khi có tín hiệu mạnh.';
     }
 
     render();
